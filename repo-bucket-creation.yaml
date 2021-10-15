@@ -1,0 +1,39 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: "The following template creates an S3 Bucket to store the repository."
+
+
+Resources:
+
+  rS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: True
+        BlockPublicPolicy: True
+        IgnorePublicAcls: True
+        RestrictPublicBuckets: True
+ 
+  rS3BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref rS3Bucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Id: BucketDeliveryPolicy
+        Statement:
+        - Sid: BucketOwnerAccess
+          Effect: Allow
+          Principal:
+            AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
+          Action: s3:*
+          Resource:
+            - !Sub arn:aws:s3:::${rS3Bucket}/*
+            - !Sub arn:aws:s3:::${rS3Bucket}
+
+Outputs:
+  oBucketName:
+    Value: !Ref rS3Bucket

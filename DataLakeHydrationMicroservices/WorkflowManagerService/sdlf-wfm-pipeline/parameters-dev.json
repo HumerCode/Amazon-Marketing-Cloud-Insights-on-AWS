@@ -1,0 +1,26 @@
+[
+    {
+        "ParameterKey": "pTeamName",
+        "ParameterValue": "demoteam"
+    },
+    {
+        "ParameterKey": "pMicroserviceName",
+        "ParameterValue": "wfm"
+    },
+    {
+        "ParameterKey": "pPipelineName",
+        "ParameterValue": "dlhs"
+    },
+    {
+        "ParameterKey": "pEnvironment",
+        "ParameterValue": "dev"
+    },
+    {
+        "ParameterKey": "pDatasetName",
+        "ParameterValue": "amcdataset"
+    },
+    {
+        "ParameterKey": "pSnsEmailSubscriber",
+        "ParameterValue": "nobody@demo.com"
+    }
+]

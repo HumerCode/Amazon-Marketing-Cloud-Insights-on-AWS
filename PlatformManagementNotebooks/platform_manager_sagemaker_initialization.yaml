@@ -1,0 +1,289 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Automated deployment infrastructure
+
+Parameters:
+  pRepoS3Path:
+    Type: String
+
+Resources:
+  rCodeBuildServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: codebuild.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: root
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Resource: "*"
+                Effect: Allow
+                Action:
+                  - cloudformation:CreateChangeSet
+                  - cloudformation:CreateStack
+                  - cloudformation:CreateStackSet
+                  - cloudformation:DescribeChangeSet
+                  - cloudformation:DescribeStackEvents
+                  - cloudformation:DescribeStackResource
+                  - cloudformation:DescribeStackResources
+                  - cloudformation:DescribeStacks
+                  - cloudformation:DescribeStacks
+                  - cloudformation:DescribeStackSet
+                  - cloudformation:DescribeStackSetOperation
+                  - cloudformation:ExecuteChangeSet
+                  - cloudformation:GetTemplate
+                  - cloudformation:GetTemplateSummary
+                  - cloudformation:TagResource
+                  - cloudformation:UpdateStack
+                  - cloudformation:UpdateStackSet
+                  - cloudformation:ValidateTemplate
+              - Resource: "*"
+                Effect: Allow
+                Action:
+                  - codebuild:BatchGetProjects
+                  - codebuild:CreateProject
+                  - codebuild:DeleteProject
+              - Resource: "*"
+                Effect: Allow
+                Action:
+                  - codecommit:CreateBranch
+                  - codecommit:CreateRepository
+                  - codecommit:GitPush
+                  - codecommit:TagResource
+                  - codecommit:UpdateDefaultBranch
+              - Resource: "*"
+                Effect: Allow
+                Action:
+                  - codepipeline:CreatePipeline
+                  - codepipeline:GetPipeline
+                  - codepipeline:GetPipelineState
+                  - codepipeline:TagResource
+              - Resource: "*"
+                Effect: Allow
+                Action:
+                  - events:DescribeRule
+                  - events:PutRule
+                  - events:PutTargets
+                  - events:TagResource
+              - Resource: "*"
+                Effect: Allow
+                Action:
+                  - iam:AttachRolePolicy
+                  - iam:CreateRole
+                  - iam:DeleteRole
+                  - iam:GetRole
+                  - iam:GetRolePolicy
+                  - iam:PassRole
+                  - iam:PutRolePolicy
+                  - iam:TagRole
+                  - iam:DetachRolePolicy
+                  - iam:DeleteRolePolicy
+              - Resource: "*"
+                Effect: Allow
+                Action:
+                  - lakeformation:GetDataLakeSettings
+                  - lakeformation:PutDataLakeSettings
+              - Resource: "*"
+                Effect: Allow
+                Action:
+                  - kms:CreateAlias
+                  - kms:DeleteAlias
+                  - kms:CreateGrant
+                  - kms:CreateKey
+                  - kms:Decrypt
+                  - kms:DescribeKey
+                  - kms:EnableKeyRotation
+                  - kms:Encrypt
+                  - kms:GenerateDataKey
+                  - kms:ListAliases
+                  - kms:ListResourceTags
+                  - kms:PutKeyPolicy
+                  - kms:TagResource
+              - Resource: "*"
+                Effect: Allow
+                Action:
+                  - lambda:AddPermission
+                  - lambda:CreateFunction
+                  - lambda:GetFunction
+                  - lambda:GetFunctionConfiguration
+                  - lambda:TagResource
+              - Resource: "*"
+                Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+              - Resource: "*"
+                Effect: Allow
+                Action:
+                  - s3:CreateBucket
+                  - s3:GetBucketPolicy
+                  - s3:PutBucketPolicy
+                  - s3:PutBucketTagging
+                  - s3:PutEncryptionConfiguration
+                  - s3:PutBucketPublicAccessBlock
+                  - s3:Put*
+                  - s3:Get*
+                  - s3:List*
+              - Resource: "*"
+                Effect: Allow
+                Action:
+                  - ssm:AddTagsToResource
+                  - ssm:GetParameter
+                  - ssm:GetParameters
+                  - ssm:PutParameter
+                  - ssm:UpdateServiceSetting
+              - Resource: "*"
+                Effect: Allow
+                Action:
+                  - sagemaker:CreateNotebookInstanceLifecycleConfig
+                  - sagemaker:CreateNotebookInstance
+                  - sagemaker:DescribeNotebookInstanceLifecycleConfig
+                  - sagemaker:DescribeNotebookInstance
+                  - sagemaker:DeleteNotebookInstanceLifecycleConfig
+                  - sagemaker:DeleteNotebookInstance
+              - Resource: "*"
+                Effect: Allow
+                Action:
+                  - sts:GetCallerIdentity
+
+  
+  rLambdaTriggerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: root
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - codebuild:BatchGetBuilds
+                  - codebuild:StartBuild
+                Resource:
+                  - !GetAtt rCodeBuildProject.Arn
+
+  rCodeBuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Artifacts:
+        Type: NO_ARTIFACTS
+      Environment:
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/standard:4.0
+        Type: LINUX_CONTAINER
+        EnvironmentVariables:
+          - Name: REPO
+            Type: PLAINTEXT
+            Value: !Ref pRepoS3Path
+      ServiceRole: !GetAtt rCodeBuildServiceRole.Arn
+      TimeoutInMinutes: 30
+      Source:
+        Type: NO_SOURCE
+        BuildSpec: |
+          version: 0.2
+          phases:
+            install:
+              runtime-versions:
+                  python: 3.7
+            build:
+              commands:
+                - echo Configuring AWS credentials
+                - echo $REPO
+                - echo AWS_CONTAINER_CREDENTIALS_RELATIVE_URI $AWS_CONTAINER_CREDENTIALS_RELATIVE_URI
+                - curl -qL -o aws_credentials.json http://169.254.170.2/$AWS_CONTAINER_CREDENTIALS_RELATIVE_URI > aws_credentials.json
+                - aws configure set aws_access_key_id `jq -r '.AccessKeyId' aws_credentials.json`
+                - aws configure set aws_secret_access_key `jq -r '.SecretAccessKey' aws_credentials.json`
+                - aws configure set aws_session_token `jq -r '.Token' aws_credentials.json`
+                - aws configure set default.region $AWS_REGION
+                - aws s3 sync $REPO ./PlatformManagementNotebooks/
+                - cd ./PlatformManagementNotebooks/
+                - chmod +x ./deploy.sh
+                - ./deploy.sh
+          artifacts:
+            files:
+              - "*"
+              - "**/*"
+
+  rLambdaTrigger:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: python3.7
+      Timeout: 120
+      MemorySize: 128
+      Handler: index.lambda_handler
+      Role: !GetAtt rLambdaTriggerRole.Arn
+      Environment:
+        Variables:
+          CODE_BUILD_PROJECT: !Ref rCodeBuildProject
+      Code:
+        ZipFile: |
+          import os
+          import json
+
+          import boto3
+          from botocore.exceptions import ClientError
+          from urllib.request import Request, urlopen
+
+          CODE_BUILD_PROJECT = os.getenv('CODE_BUILD_PROJECT')
+          cb = boto3.client('codebuild')
+
+          def send_response(e, c, rs, rd):
+              r = json.dumps({
+                  "Status": rs,
+                  "Reason": "CloudWatch Log Stream: " + c.log_stream_name,
+                  "PhysicalResourceId": e['LogicalResourceId'],
+                  "StackId": e['StackId'],
+                  "RequestId": e['RequestId'],
+                  "LogicalResourceId": e['LogicalResourceId'],
+                  "Data": rd
+              })
+              d = str.encode(r)
+              h = {
+                  'content-type': '',
+                  'content-length': str(len(d))
+              }
+              req = Request(e['ResponseURL'], data=d, method='PUT', headers=h)
+              r = urlopen(req)
+
+          def lambda_handler(event, context):
+              request_type = event['RequestType']
+              try:
+                  if request_type == 'Create':
+                      cb.start_build(projectName=CODE_BUILD_PROJECT)
+                      send_response(event, context, "SUCCESS", {
+                                    "Message": "Created"})
+
+                  else:
+                      send_response(event, context, "SUCCESS", {
+                                    "Message": "Function Not Applicable"})
+              except Exception as e:
+                  send_response(
+                      event,
+                      context,
+                      "FAILED",
+                      {
+                          "Message": "Exception"
+                      }
+                  )
+                  raise e
+
+  rCustomLambdaTrigger:
+    Type: Custom::LambdaTrigger
+    Properties:
+      ServiceToken: !GetAtt rLambdaTrigger.Arn
+  

@@ -1,0 +1,46 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: "AWS::Serverless-2016-10-31"
+Description: "Contains all the resources necessary for the wofkflow management microservice"
+
+
+Parameters:
+  pTeamName:
+    Type: String
+    AllowedPattern: '[a-z0-9]{2,10}'
+  pMicroserviceName:
+    Type: String
+    AllowedPattern: '[a-z0-9]{2,12}'
+  pPipelineName:
+    Type: String
+    AllowedPattern: '[a-z0-9]{2,10}'
+  pAthenaResultsS3BucketName:
+    Type: String
+  pEnvironment:
+    Type: String
+
+Resources:
+
+  rAthenaWorkGroup:
+    Type: AWS::Athena::WorkGroup
+    Properties:
+      Name: !Sub "${pMicroserviceName}-${pTeamName}-${pPipelineName}-AthenaWorkgroup"
+      Description: !Sub "Athena Workgroup used by the ${pMicroserviceName} ${pTeamName} ${pPipelineName} Service"
+      State: ENABLED
+      Tags:
+        - Key: 'tagging-policy'
+          Value: !Join [ '-', [ !Ref pMicroserviceName, !Ref pTeamName, !Ref pPipelineName,  "common" ] ]
+      WorkGroupConfiguration:
+        BytesScannedCutoffPerQuery: 200000000
+        EnforceWorkGroupConfiguration: false
+        PublishCloudWatchMetricsEnabled: false
+        RequesterPaysEnabled: true
+        ResultConfiguration:
+          OutputLocation: !Sub "s3://${pAthenaResultsS3BucketName}/${pMicroserviceName}-${pTeamName}-${pEnvironment}-athenaresults/"
+          EncryptionConfiguration:
+            EncryptionOption: SSE_S3
+
+Outputs:
+  oAthenaWorkGroupName:
+    Value: !Ref rAthenaWorkGroup
+  oAthenaWorkGroupS3OutputLocation:
+    Value: !Sub "s3://${pAthenaResultsS3BucketName}/${pMicroserviceName}-${pTeamName}-${pEnvironment}-athenaresults/"

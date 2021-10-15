@@ -1,0 +1,263 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: "AWS::Serverless-2016-10-31"
+Description: "Contains all the resources necessary for a single dataset"
+
+Parameters:
+  pAnalyticsBucket:
+    Description: "The analytics bucket for the solution"
+    Type: "AWS::SSM::Parameter::Value<String>"
+    Default: "/SDLF/S3/AnalyticsBucket"
+  pApp:
+    Description: "Name of the application"
+    Type: "AWS::SSM::Parameter::Value<String>"
+    Default: "/SDLF/Misc/pApp"
+  pCentralBucket:
+    Description: "The central bucket for the solution"
+    Type: "AWS::SSM::Parameter::Value<String>"
+    Default: "/SDLF/S3/CentralBucket"
+  pDatasetName:
+    Description: "The name of the dataset (all lowercase, no symbols or spaces)"
+    Type: String
+    AllowedPattern: '[a-z0-9]{2,14}'
+  pEnvironment:
+    Description: "Environment name"
+    Type: "AWS::SSM::Parameter::Value<String>"
+    Default: "/SDLF/Misc/pEnv"
+  pOrg:
+    Description: "Name of the organization owning the datalake"
+    Type: "AWS::SSM::Parameter::Value<String>"
+    Default: "/SDLF/Misc/pOrg"
+  pPipelineBucket:
+    Description: "The artifactory bucket used by CodeBuild and CodePipeline"
+    Type: "AWS::SSM::Parameter::Value<String>"
+    Default: "/SDLF/S3/ArtifactsBucket"
+  pPipelineName:
+    Description: "The name of the pipeline (all lowercase, no symbols or spaces)"
+    Type: String
+    AllowedPattern: '[a-z0-9]*'
+  pStageBucket:
+    Description: "The stage bucket for the solution"
+    Type: "AWS::SSM::Parameter::Value<String>"
+    Default: "/SDLF/S3/StageBucket"
+  pTeamName:
+    Description: "Name of the team owning the pipeline (all lowercase, no symbols or spaces)"
+    Type: String
+    AllowedPattern: '[a-z0-9]*'
+
+Resources:
+  ######## SQS #########
+  rQueueRoutingPostStep:
+    Type: 'AWS::SQS::Queue'
+    Properties:
+      QueueName: !Join ['-', ["sdlf", !Ref pTeamName, !Ref pDatasetName, "queue-b.fifo"]]
+      FifoQueue: True
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt rDeadLetterQueueRoutingPostStep.Arn
+        maxReceiveCount: 1
+      VisibilityTimeout: 60
+      KmsMasterKeyId: !Sub '{{resolve:ssm:/SDLF/KMS/${pTeamName}/InfraKeyId:1}}'
+  rDeadLetterQueueRoutingPostStep:
+    Type: 'AWS::SQS::Queue'
+    Properties:
+      QueueName: !Join ['-', ["sdlf", !Ref pTeamName, !Ref pDatasetName, "dlq-b.fifo"]]
+      FifoQueue: True
+      MessageRetentionPeriod: 1209600
+      VisibilityTimeout: 60
+      KmsMasterKeyId: !Sub '{{resolve:ssm:/SDLF/KMS/${pTeamName}/InfraKeyId:1}}'
+
+  ######## TRIGGERS #########
+  rPostStateRule:
+    Type: "AWS::Events::Rule"
+    Properties:
+      Name: !Join ['-', ["sdlf", !Ref pTeamName, !Ref pDatasetName, "rule-b"]]
+      Description: Trigger StageB Routing Lambda every 5 minutes
+      State: ENABLED
+      ScheduleExpression: "cron(*/5 * * * ? *)"
+      Targets:
+        - Id: !Join ['-', ["sdlf", !Ref pTeamName, !Ref pDatasetName, "rule-b"]]
+          Arn: !Join [':', ['arn:aws:lambda', !Ref 'AWS::Region', !Ref 'AWS::AccountId', 'function', !Join ['-', ["sdlf", !Ref pTeamName, !Ref pPipelineName, "routing-b"]]]]
+          Input: !Sub |
+            {
+              "team": "${pTeamName}",
+              "pipeline": "${pPipelineName}",
+              "pipeline_stage": "StageB",
+              "dataset": "${pDatasetName}",
+              "org": "${pOrg}",
+              "app": "${pApp}",
+              "env": "${pEnvironment}"
+            }
+  rPermissionEventsInvokeRoutingLambda:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Join ['-', ["sdlf", !Ref pTeamName, !Ref pPipelineName, "routing-b"]]
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn: !GetAtt rPostStateRule.Arn
+
+  ######## GLUE #########
+#  rGlueDataCatalog:
+#    Type: AWS::Glue::Database
+#    Properties:
+#      CatalogId: !Ref AWS::AccountId
+#      DatabaseInput:
+#        Description: !Sub "${pTeamName} team ${pDatasetName} metadata catalog"
+#        Name: !Join ['_', [!Ref pOrg, !Ref pApp, !Ref pEnvironment, !Ref pTeamName, !Ref pDatasetName, "db"]]
+
+  rGlueDataCatalogStage:
+    Type: AWS::Glue::Database
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseInput:
+        Description: !Sub "${pTeamName} team ${pDatasetName} metadata catalog"
+        Name: !Join ['_', [!Ref pTeamName, !Ref pDatasetName, !Ref pEnvironment, "stage"]]
+
+  rGlueDataCatalogAnalytics:
+    Type: AWS::Glue::Database
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseInput:
+        Description: !Sub "${pTeamName} team ${pDatasetName} metadata catalog"
+        Name: !Join ['_', [!Ref pTeamName, !Ref pDatasetName, !Ref pEnvironment, "analytics"]]
+
+  rGlueJobLakeFormationPermissions:
+    Type: "AWS::LakeFormation::Permissions"
+    Properties:
+      DataLakePrincipal:
+        DataLakePrincipalIdentifier: !Sub '{{resolve:ssm:/SDLF/IAM/${pTeamName}/GlueJobRoleArn:1}}'
+      Permissions:
+        - "CREATE_TABLE"
+        - "ALTER"
+        - "DROP"
+      Resource:
+        DatabaseResource:
+          Name: !Ref rGlueDataCatalogStage
+
+  rGlueCrawlerAnalyticsLakeFormationPermissions:
+    Type: "AWS::LakeFormation::Permissions"
+    Properties:
+      DataLakePrincipal:
+        DataLakePrincipalIdentifier: !Sub '{{resolve:ssm:/SDLF/IAM/${pTeamName}/GlueJobRoleArn:1}}'
+      Permissions:
+        - "CREATE_TABLE"
+        - "ALTER"
+        - "DROP"
+      Resource:
+        DatabaseResource:
+          Name: !Ref rGlueDataCatalogAnalytics
+
+#  rLambdaStageALakeFormationPermissions:
+#    Type: "AWS::LakeFormation::Permissions"
+#    Properties:
+#      DataLakePrincipal:
+#        DataLakePrincipalIdentifier: !Sub '{{resolve:ssm:/SDLF/IAM/${pTeamName}/${pPipelineName}/LambdaExecutionStep2RoleArn:1}}'
+#      Permissions:
+#        - "CREATE_TABLE"
+#        - "ALTER"
+#        - "DROP"
+#      Resource:
+#        DatabaseResource:
+#          Name: !Ref rGlueDataCatalogStage
+  
+  
+  ########Lake Formation Setting #########
+  rDataLakeSettings:
+    Type: AWS::LakeFormation::DataLakeSettings
+    Properties:
+      Admins:
+        - DataLakePrincipalIdentifier: !Sub arn:aws:iam::${AWS::AccountId}:role/sdlf-${pTeamName}-cicd-codebuild-${AWS::Region}
+
+
+  ######## SSM #########
+  rQueueRoutingPostStepSsm:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: !Sub "/SDLF/SQS/${pTeamName}/${pDatasetName}StageBQueue"
+      Type: "String"
+      Value: !Select [ "5", !Split [":", !GetAtt rQueueRoutingPostStep.Arn]]
+      Description: !Sub "Name of the StageB ${pTeamName} ${pDatasetName} Queue"
+
+  rDeadLetterQueueRoutingPostStepSsm:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: !Sub "/SDLF/SQS/${pTeamName}/${pDatasetName}StageBDLQ"
+      Type: "String"
+      Value: !Select [ "5", !Split [":", !GetAtt rDeadLetterQueueRoutingPostStep.Arn]]
+      Description: !Sub "Name of the StageB ${pTeamName} ${pDatasetName} DLQ"
+
+#  rGlueDataCatalogSsm:
+#    Type: "AWS::SSM::Parameter"
+#    Properties:
+#      Name: !Sub "/SDLF/Glue/${pTeamName}/${pDatasetName}/DataCatalog"
+#      Type: "String"
+#      Value: !Ref rGlueDataCatalog
+#      Description: !Sub "${pTeamName} team ${pDatasetName} metadata catalog"
+
+  rGlueDataCatalogGoldSsm:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: !Sub "/SDLF/Glue/${pTeamName}/${pDatasetName}/GoldDataCatalog"
+      Type: "String"
+      Value: !Ref rGlueDataCatalogStage
+      Description: !Sub "${pTeamName} team ${pDatasetName} metadata gold catalog"
+
+  rGlueDataCatalogSilverSsm:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: !Sub "/SDLF/Glue/${pTeamName}/${pDatasetName}/SilverDataCatalog"
+      Type: "String"
+      Value: !Ref rGlueDataCatalogStage
+      Description: !Sub "${pTeamName} team ${pDatasetName} metadata silver catalog"
+
+  rGlueDataCatalogStageSsm:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: !Sub "/SDLF/Glue/${pTeamName}/${pDatasetName}/StageDataCatalog"
+      Type: "String"
+      Value: !Ref rGlueDataCatalogStage
+      Description: !Sub "${pTeamName} team ${pDatasetName} metadata stage catalog"
+
+
+  ######## Glue Job #########
+  rDatasetGlueJob:
+    Type: AWS::Glue::Job
+    Properties:
+      Command:
+        Name: pythonshell
+        PythonVersion: 3
+        ScriptLocation: ./glue-jobs/src/amc-glue-job.py
+      DefaultArguments:
+        '--job-bookmark-option': job-bookmark-disable
+        '--enable-metrics': ''
+        '--extra-py-files': !Sub "s3://${pPipelineBucket}/glue_wheels/${pTeamName}/awswrangler-2.5.0-py3-none-any.whl,s3://${pPipelineBucket}/glue_wheels/${pTeamName}/boto3-1.17.78-py2.py3-none-any.whl,s3://${pPipelineBucket}/glue_wheels/${pTeamName}/awscli-1.19.78-py2.py3-none-any.whl"
+      ExecutionProperty:
+        MaxConcurrentRuns: 500
+      MaxRetries: 0
+      MaxCapacity: 1
+      GlueVersion: '1.0'
+      Name: !Sub sdlf-${pTeamName}-${pDatasetName}-glue-job
+      SecurityConfiguration: !Sub "sdlf-${pTeamName}-glue-security-config"
+      Role: !Sub '{{resolve:ssm:/SDLF/IAM/${pTeamName}/GlueJobRoleArn:1}}'
+
+
+### END USER PERMISSIONS ###
+  rDataLakeMgrLakeFormationPermissionsStage:
+    Type: "AWS::LakeFormation::Permissions"
+    Properties:
+      DataLakePrincipal:
+        DataLakePrincipalIdentifier: !Sub '{{resolve:ssm:/SDLF/IAM/${pTeamName}/DataLakeMgrArn:1}}'
+      Permissions:
+        - "DESCRIBE"
+      Resource:
+        DatabaseResource:
+          Name: !Ref rGlueDataCatalogStage
+
+  rDataLakeUsersLakeFormationPermissionsStage:
+    Type: "AWS::LakeFormation::Permissions"
+    Properties:
+      DataLakePrincipal:
+        DataLakePrincipalIdentifier: !Sub '{{resolve:ssm:/SDLF/IAM/${pTeamName}/DataLakeUsersArn:1}}'
+      Permissions:
+        - "DESCRIBE"
+      Resource:
+        DatabaseResource:
+          Name: !Ref rGlueDataCatalogStage
