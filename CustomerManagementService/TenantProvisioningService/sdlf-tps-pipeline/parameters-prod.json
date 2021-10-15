@@ -1,0 +1,26 @@
+[
+    {
+        "ParameterKey": "pTeamName",
+        "ParameterValue": "engineering"
+    },
+    {
+        "ParameterKey": "pPipelineName",
+        "ParameterValue": "main"
+    },
+    {
+        "ParameterKey": "pStageAStateMachineRepository",
+        "ParameterValue": "stageA"
+    },
+    {
+        "ParameterKey": "pStageBStateMachineRepository",
+        "ParameterValue": "stageB"
+    },
+    {
+        "ParameterKey": "pStageABranch",
+        "ParameterValue": "master"
+    },
+    {
+         "ParameterKey": "pStageBBranch",
+         "ParameterValue": "master"
+    }
+]

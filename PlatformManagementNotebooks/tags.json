@@ -1,0 +1,18 @@
+[
+  {
+    "Key": "appName",
+    "Value": "Platform Manager Notebook"
+  },
+  {
+    "Key": "environment",
+    "Value": "dev"
+  },
+  {
+    "Key": "module",
+    "Value": "amc delivery kit"
+  },
+  {
+    "Key": "provider",
+    "Value": "AdTech Solutions"
+  }
+]

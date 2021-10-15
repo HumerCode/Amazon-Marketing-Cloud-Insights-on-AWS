@@ -1,0 +1,515 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: "AWS::Serverless-2016-10-31"
+Description: "Contains all the resources necessary for the wofkflow management microservice"
+
+Parameters:
+  pTeamName:
+    Type: String
+    AllowedPattern: '[a-z0-9]{2,10}'
+  pMicroserviceName:
+    AllowedPattern: '[a-z0-9]{2,12}'
+    Type: String
+  pEnvironment:
+    Description: "Environment name."
+    Type: String
+    AllowedValues: ["dev", "test", "prod"]
+  pPipelineName:
+    Type: String
+    AllowedPattern: '[a-z0-9]{2,10}'
+  pDynamoDBAMCExecutionStatus:
+    Type: String
+  pDynamoDBAMCExecutionStatusStreamArn:
+    Type: String
+  pDynamoDBAMCWorkflows:
+    Type: String
+  pDynamoDBAMCWorkflowsStreamArn:
+    Type: String
+  pDynamoDBCustomerConfig:
+    Type: String
+  pDynamoDBCustomerConfigStreamArn:
+    Type: String
+  pDynamoDBAMCWorkflowSchedules:
+    Type: String
+  pDynamoDBAMCWorkflowSchedulesStreamArn:
+    Type: String
+  pRoleLambdaSyncWorkflowStatuses:
+    Type: String
+  pRoleLambdaWorkflowTableTrigger:
+    Type: String
+  pRoleLambdaWorkflowStatusTrigger:
+    Type: String
+  pRoleLambdaRunWorkFlowByCampaign:
+    Type: String
+  pRoleLambdaEventQueueConsumer:
+    Type: String
+  pRoleLambdaEventQueueProducer:
+    Type: String
+  pRoleLambdaAmcApiInterface:
+    Type: String
+  pAthenaWorkGroup:
+    Type: String
+  pAthenaWorkGroupS3OutputLocation:
+    Type: String
+  pRoleLambdaWorkflowScheduleTrigger:
+    Type: String
+  pRoleLambdaCustomerConfigTrigger:
+    Type: String
+  # pCustomerConfigQueue:
+  #   Type: String
+  # pWorkflowLibraryQueue:
+  #   Type: String
+  pRoleLambdaCustomerConfigQueueConsumer:
+    Type: String
+  pRoleLambdaWorkflowLibraryQueueConsumer:
+    Type: String
+  pAPIGatewayInvokeAMCApiPolicy:
+    Type: String
+  pDynamoDBAMCWorkflowLibrary:
+    Type: String
+  pDynamoDBAMCWorkflowLibraryStreamArn:
+    Type: String
+  pRoleLambdaWorkflowLibraryTrigger:
+    Type: String
+  pPowerToolsLibLayer:
+    Type: String
+  pRoleLambdaGenerateExecutionResubmissions:
+    Type: String
+  pKMSKeyId:
+    Type: String
+  pRoleLambdaCustomScheduler:
+    Type: String
+
+#  pPowerToolsLayer:
+#    Type: "AWS::SSM::Parameter::Value<String>"
+#    Description: "The ARN of the latest PowerTools Lambda Layer"
+#  pCRHelperLayer:
+#    Type: "AWS::SSM::Parameter::Value<String>"
+#    Description: "The ARN of the latest CR Helper Lambda Layer"
+
+#TODO ADD GLOBAL HANDLER FOR POWERTOOLS
+Globals:
+  Function:
+      Handler: lambda_function.lambda_handler
+
+Resources:
+
+#### LAMBDA LAYERS ########
+#  rLambdaLayerAWSPowerToolsPython:
+#    Type: AWS::Lambda::LayerVersion
+#    Properties:
+#      CompatibleRuntimes:
+#        - python3.6
+#        - python3.7
+#      Content: ../lambda-layers/sdlf-ats-PowerTools.zip
+#      Description: AWS Labs Lambda power tools Python https://awslabs.github.io/aws-lambda-powertools-python
+#      LayerName: !Join ['-', [!Ref pMicroserviceName, !Ref pTeamName, !Ref pPipelineName,  "awslabs-lambda-powertools-python"]]
+#      LicenseInfo: "Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the 'Software'), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so."
+
+  rLambdaLayercrhelper:
+    Type: AWS::Lambda::LayerVersion
+    Properties:
+      CompatibleRuntimes:
+        - python3.6
+      Content: ../lambda-layers/crhelper-36.zip
+      Description: crhelper crhelper-2.0.6 for python 3.6
+      LayerName: !Join ['-', [!Ref pMicroserviceName, !Ref pTeamName, !Ref pPipelineName,  "crhelper-36"]]
+      LicenseInfo: "Apache License Version 2.0"
+
+  rWFMLambdaLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: !Join ['-', [!Ref pMicroserviceName, !Ref pTeamName, !Ref pPipelineName,  "wfm-layer"]]
+      Description: Workflow Manager Lambda Layer
+      ContentUri: ../lambda-layers/wfm-layer/
+      CompatibleRuntimes:
+        - python3.6
+        - python3.7
+        - python3.8
+      LicenseInfo: "Apache License Version 2.0"
+      RetentionPolicy: Delete
+
+####### Lambda Permissions ############
+  ###Allow Cloudwatch rules to invoke Execution Queue producer ########
+  rLambdaAllowCloudwatchRuleInvokeQueueProducer:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: "lambda:InvokeFunction"
+      FunctionName: !Ref rLambdaWorkflowExecutionQueueProducer
+      Principal: "events.amazonaws.com"
+      SourceArn: !Sub "arn:aws:events:${AWS::Region}:${AWS::AccountId}:rule/*"
+
+  ###Allow Cloudwatch rules to invoke RunByCampaign ########
+  rLambdaAllowCloudwatchRuleInvokeQueueRunByCampaign:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: "lambda:InvokeFunction"
+      FunctionName: !Ref rLambdaRunWorkflowByCampaign
+      Principal: "events.amazonaws.com"
+      SourceArn: !Sub "arn:aws:events:${AWS::Region}:${AWS::AccountId}:rule/*"
+
+######## LAMBDAS ###########
+
+#sync-workflow-statuses.zip'
+  rLambdaSyncWorkflowStatuses: # sync-workflow-statuses.zip.
+    Type: "AWS::Serverless::Function"
+    Properties:
+      CodeUri: ../lambda/SyncWorkflowStatuses/src
+      FunctionName: !Sub "${pMicroserviceName}-${pTeamName}-${pPipelineName}-SyncWorkflowStatuses"
+      Layers:
+        - !Ref rWFMLambdaLayer
+        - !Ref pPowerToolsLibLayer
+      Environment:
+        Variables:
+          CUSTOMERS_DYNAMODB_TABLE: !Ref pDynamoDBCustomerConfig
+          DEFAULT_DYNAMODB_RECORD_UPDATE_BATCH_SIZE: "50"
+          DEFAULT_DYNAMODB_BATCH_DELAY_SECONDS: "3"
+      Runtime: python3.6
+      Description: "Synchronizes workflow execution statues from AMC to a dynamoDB Table"
+      MemorySize: 2048
+      Timeout: 900
+      Role: !Ref pRoleLambdaSyncWorkflowStatuses
+
+#GenerateDateRangeValues
+  rLambdaGenerateDateRangeValues: # GenerateDateRangeValues.
+    Type: "AWS::Serverless::Function"
+    Properties:
+      CodeUri: ../lambda/GenerateDateRangeValues/src
+      FunctionName: !Sub "${pMicroserviceName}-${pTeamName}-${pPipelineName}-GenerateDateRangeValues"
+      Layers:
+        - !Ref pPowerToolsLibLayer
+      Runtime: python3.6
+      Description: "Generates date range values which can be used in submitting multiple workflow executions"
+      MemorySize: 2048
+      Timeout: 900
+      Policies:
+        - "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+
+#GenerateDateRangeValues
+  rLambdaGenerateExecutionResubmissions: # GenerateDateRangeValues.
+    Type: "AWS::Serverless::Function"
+    Properties:
+      CodeUri: ../lambda/GenerateExecutionResubmissions/src
+      FunctionName: !Sub "${pMicroserviceName}-${pTeamName}-${pPipelineName}-GenerateExecutionResubmissions"
+      Layers:
+        - !Ref pPowerToolsLibLayer
+        - !Ref rWFMLambdaLayer
+      Environment:
+        Variables:
+          CUSTOMERS_DYNAMODB_TABLE: !Ref pDynamoDBCustomerConfig
+          EXECUTION_STATUS_TABLE: !Ref pDynamoDBAMCExecutionStatus
+      Runtime: python3.6
+      Description: "Generates date range values which can be used in submitting multiple workflow executions"
+      MemorySize: 2048
+      Timeout: 900
+      Role: !Ref pRoleLambdaGenerateExecutionResubmissions
+
+#WorkflowTableTrigger.zip
+  rLambdaWorkflowTableTrigger: # WorkflowTableTrigger.zip
+    Type: "AWS::Serverless::Function"
+    Properties:
+      CodeUri: ../lambda/WorkflowTableTrigger/src
+      FunctionName: !Join ['-', [!Ref pMicroserviceName, !Ref pTeamName, !Ref pPipelineName, "WorkflowTableTrigger"]]
+      Layers:
+        - !Ref rWFMLambdaLayer
+        - !Ref pPowerToolsLibLayer
+      Environment:
+        Variables:
+          AMC_API_INTERFACE_FUNCTION_NAME: !Ref rLambdaAmcApiInterface
+          WORKFLOWS_TABLE_NAME: !Ref pDynamoDBAMCWorkflows
+      Runtime: python3.6
+      Description: "Synchronizes workflow table records from the workflow DyanmoDB table to AMC"
+      MemorySize: 128
+      Timeout: 600
+      Events:
+        Stream:
+          Type: DynamoDB
+          Properties:
+            Stream: !Ref pDynamoDBAMCWorkflowsStreamArn
+            BatchSize: 5 # How many items we want to process at once
+            StartingPosition: TRIM_HORIZON
+      Role: !Ref pRoleLambdaWorkflowTableTrigger
+
+#WorkflowStatusTableTrigger.zip'
+  rLambdaWorkflowStatusTrigger: # WorkflowStatusTrigger.
+    Type: "AWS::Serverless::Function"
+    Properties:
+      CodeUri: ../lambda/WorkflowStatusTrigger/src
+      FunctionName: !Join ['-', [!Ref pMicroserviceName, !Ref pTeamName, !Ref pPipelineName, "WorkflowStatusTrigger"]]
+      Layers:
+        - !Ref rWFMLambdaLayer
+        - !Ref pPowerToolsLibLayer
+      Environment:
+        Variables:
+          CUSTOMERS_DYNAMODB_TABLE: !Ref pDynamoDBCustomerConfig
+          EXECUTION_STATUS_TABLE: !Ref pDynamoDBAMCExecutionStatus
+          IGNORE_STATUS_LIST: "PENDING,RUNNING,SUCCEEDED,PUBLISHING"
+      Runtime: python3.6
+      Description: "A lambda function that process a DynamoDB Stream of workflow statuses to generate alerts"
+      MemorySize: 2048
+      Timeout: 900
+      Events:
+        Stream:
+          Type: DynamoDB
+          Properties:
+            Stream: !Ref pDynamoDBAMCExecutionStatusStreamArn
+            BatchSize: 5 # How many items we want to process at once
+            StartingPosition: TRIM_HORIZON
+      Role: !Ref pRoleLambdaWorkflowStatusTrigger
+
+#amc-api-interface.zip'
+  rLambdaAmcApiInterface: # amc-api-interface.
+    Type: "AWS::Serverless::Function"
+    Properties:
+      CodeUri: ../lambda/AmcApiInterface/src
+      FunctionName: !Join ['-', [!Ref pMicroserviceName, !Ref pTeamName, !Ref pPipelineName, "AmcApiInterface"]]
+      Layers:
+        - !Ref rWFMLambdaLayer
+        - !Ref pPowerToolsLibLayer
+      Environment:
+        Variables:
+          CUSTOMERS_DYNAMODB_TABLE: !Ref pDynamoDBCustomerConfig
+          SYNC_WORKFLOW_STATUSES_LAMBDA_FUNCTION_NAME : !Ref rLambdaSyncWorkflowStatuses
+      Runtime: python3.6
+      Description: "A lambda interface that acts as a wrapper for the AMC REST API"
+      MemorySize: 2048
+      Timeout: 900
+      Role: !Ref pRoleLambdaAmcApiInterface
+
+
+#workflowExecutionQueueConsumer.zip'
+  rLambdaWorkflowExecutionQueueConsumer: # workflow execution queue consumer
+    Type: "AWS::Serverless::Function"
+    Properties:
+      CodeUri: ../lambda/WorkflowExecutionQueueConsumer/src
+      FunctionName: !Join ['-', [!Ref pMicroserviceName, !Ref pTeamName, !Ref pPipelineName, "WorkflowExecutionQueueConsumer"]]
+      Layers:
+        - !Ref rWFMLambdaLayer
+        - !Ref pPowerToolsLibLayer
+      Environment:
+        Variables:
+          CUSTOMERS_DYNAMODB_TABLE: !Ref pDynamoDBCustomerConfig
+      Runtime: python3.6
+      Description: "Consumes from the Workflow Execution SQS queue and submits them to the AMC API Endpoint as a new exeuction"
+      MemorySize: 2048
+      Timeout: 900
+      Role: !Ref pRoleLambdaEventQueueConsumer
+  
+##Lambda Function CustomerConfigQueueConsumer ##
+#   rLambdaCustomerConfigQueueConsumer: # workflow execution queue consumer
+#     Type: "AWS::Serverless::Function"
+#     Properties:
+#       CodeUri: ../lambda/CustomerConfigQueueConsumer/src
+#       FunctionName: !Join ['-', [!Ref pMicroserviceName, !Ref pTeamName, !Ref pPipelineName, "CustomerConfigQueueConsumer"]] 
+#       Layers:
+#         - !Ref rWFMLambdaLayer
+#         - !Ref pPowerToolsLibLayer
+#       Environment:
+#         Variables:
+#           CUSTOMERS_DYNAMODB_TABLE: !Ref pDynamoDBCustomerConfig
+#       Runtime: python3.6
+#       Description: "Consumes from the Customer Config SQS queue and updates the records in DynamoDB"
+#       MemorySize: 2048
+#       Timeout: 900
+#       Role: !Ref pRoleLambdaCustomerConfigQueueConsumer
+
+# ##Lambda Function WorkflowLibraryQueueConsumer ##
+#   rLambdaWorkflowLibraryQueueConsumer: # workflow execution queue consumer
+#     Type: "AWS::Serverless::Function"
+#     Properties:
+#       CodeUri: ../lambda/WorkflowLibraryQueueConsumer/src
+#       FunctionName: !Join ['-', [!Ref pMicroserviceName, !Ref pTeamName, !Ref pPipelineName, "WorkflowLibraryQueueConsumer"]] 
+#       Layers:
+#         - !Ref rWFMLambdaLayer
+#         - !Ref pPowerToolsLibLayer
+#       Environment:
+#         Variables:
+#           TARGET_DYNAMODB_TABLE: !Ref pDynamoDBAMCWorkflowLibrary
+#           MICROSERVICE_NAME: !Ref pMicroserviceName
+#       Runtime: python3.6
+#       Description: "Consumes from the Workflow Library SQS queue and Writes the records to the Workflow Library DynamoDB Table"
+#       MemorySize: 2048
+#       Timeout: 900
+#       Role: !Ref pRoleLambdaWorkflowLibraryQueueConsumer
+##Lambda Workflow Schedule Trigger ##
+  rLambdaWorkflowScheduleTrigger: 
+    Type: "AWS::Serverless::Function"
+    Properties:
+      CodeUri: ../lambda/WorkflowScheduleTrigger/src
+      FunctionName: !Join ['-', [!Ref pMicroserviceName, !Ref pTeamName, !Ref pPipelineName, "rLambdaWorkflowScheduleTrigger"]]
+      Layers:
+        - !Ref rWFMLambdaLayer
+        - !Ref pPowerToolsLibLayer
+      Environment:
+        Variables:
+          EXECUTION_QUEUE_PRODUCER_LAMBA_ARN: !GetAtt rLambdaWorkflowExecutionQueueProducer.Arn
+          RUN_WORKFLOW_BY_CAMPAIGN_LAMBDA_ARN: !GetAtt rLambdaRunWorkflowByCampaign.Arn
+      Runtime: python3.6
+      Description: "A Trigger that creates Cloudwatch Rules to submit workflow executions to the workflow exeuction queue producer based on records inserted into the WorkflowSchedule DynamoDB Table"
+      MemorySize: 2048
+      Timeout: 900
+      Events:
+        Stream:
+          Type: DynamoDB
+          Properties:
+            Stream: !Ref pDynamoDBAMCWorkflowSchedulesStreamArn
+            MaximumRetryAttempts: 1
+            BatchSize: 5 # How many items we want to process at once
+            StartingPosition: TRIM_HORIZON
+      Role: !Ref pRoleLambdaWorkflowScheduleTrigger
+
+## Lambda RunWorkflowByCampaign ##
+  rLambdaRunWorkflowByCampaign:
+    Type: "AWS::Serverless::Function"
+    Properties:
+      CodeUri: ../lambda/RunWorkflowByCampaign/src
+      Environment:
+        Variables:
+          CUSTOMERS_DYNAMODB_TABLE: !Ref pDynamoDBCustomerConfig
+          ATHENA_WORKGROUP: !Ref pAthenaWorkGroup
+          QUEUE_WORKFLOW_EXECUTION_LAMBDA_FUNCTION_NAME: !Ref rLambdaWorkflowExecutionQueueProducer
+      FunctionName: !Join ['-', [!Ref pMicroserviceName, !Ref pTeamName, !Ref pPipelineName, "ExecuteWorkflowByCampaign"]]
+      Layers:
+        - !Ref rWFMLambdaLayer
+        - !Ref pPowerToolsLibLayer
+      Runtime: python3.6
+      Description: "This function will execute the specified workflow and pass campaignID as a parameter from a specified Athena Table"
+      MemorySize: 2048
+      Timeout: 900
+      Role: !Ref pRoleLambdaRunWorkFlowByCampaign
+## Lambda Workflow Execution Queue Producer ##
+  rLambdaWorkflowExecutionQueueProducer:
+    Type: "AWS::Serverless::Function"
+    Properties:
+      CodeUri: ../lambda/WorkflowExecutionQueueProducer/src
+      Environment:
+        Variables:
+          CUSTOMERS_DYNAMODB_TABLE: !Ref pDynamoDBCustomerConfig
+      FunctionName: !Join ['-', [!Ref pMicroserviceName, !Ref pTeamName, !Ref pPipelineName, "ExecutionQueueProducer"]]
+      Layers:
+        - !Ref rWFMLambdaLayer
+        - !Ref pPowerToolsLibLayer
+      Runtime: python3.6
+      Description: "Queues a workflow exeuction in SQS to be submitted to the AMC API Interface once the Consuming lambda determins that the AMC Instance does not have too many concurrent executions running"
+      MemorySize: 2048
+      Timeout: 900
+      Role: !Ref pRoleLambdaEventQueueProducer
+
+## Lambda Event Source Mapping CustomerConfigQueue ##
+  # rLambdaEventMappingCustomerConfigQueue:
+  #   Type: AWS::Lambda::EventSourceMapping
+  #   Properties: 
+  #     BatchSize: 1
+  #     Enabled: true
+  #     EventSourceArn: !Ref pCustomerConfigQueue
+  #     FunctionName: !Ref rLambdaCustomerConfigQueueConsumer
+
+## Lambda Event Source Mapping WorkflowLibraryQueue ##
+  # rLambdaEventMappingWorkflowLibraryQueue:
+  #   Type: AWS::Lambda::EventSourceMapping
+  #   Properties: 
+  #     BatchSize: 1
+  #     Enabled: true
+  #     EventSourceArn: !Ref pWorkflowLibraryQueue
+  #     FunctionName: !Ref rLambdaWorkflowLibraryQueueConsumer
+
+## Lambda Workflow Customer Config Trigger ##
+  rLambdaWorkflowCustomerConfigTrigger:
+    Type: "AWS::Serverless::Function"
+    Properties:
+      CodeUri: ../lambda/CustomerConfigTrigger/src
+      FunctionName: !Join ['-', [!Ref pMicroserviceName, !Ref pTeamName, !Ref pPipelineName, "CustomerConfigTrigger"]]
+      Layers:
+        - !Ref rWFMLambdaLayer
+        - !Ref pPowerToolsLibLayer
+      Environment:
+        Variables:
+          EXECUTION_QUEUE_PRODUCER_LAMBA_ARN: !GetAtt rLambdaWorkflowExecutionQueueProducer.Arn
+          WORKFLOW_LIBRARY_TRIGGER_LAMBDA_FUNCTION_NAME: !Ref rLambdaWorkflowLibraryTrigger
+          CUSTOMERS_DYNAMODB_TABLE: !Ref pDynamoDBCustomerConfig
+          CUSTOMERS_DYNAMODB_TABLE: !Ref pDynamoDBCustomerConfig
+          KMS_MASTER_KEY: !Ref pKMSKeyId
+          TEAM: !Ref pTeamName
+          MICROSERVICE: !Ref pMicroserviceName
+          PIPELINE: !Ref pPipelineName
+          ENV: !Ref pEnvironment
+          AMC_ENDPOINT_IAM_POLICY_ARN: !Ref pAPIGatewayInvokeAMCApiPolicy
+      Runtime: python3.6
+      Description: !Sub "A Trigger that is invoked when records are modified in the customer config table, this will create an AMC Executions SQS Queue and update the AMC API Invoke policy to include the customer's AMC instance"
+      MemorySize: 2048
+      Timeout: 900
+      Events:
+        Stream:
+          Type: DynamoDB
+          Properties:
+            Stream: !Ref pDynamoDBCustomerConfigStreamArn
+            BatchSize: 5
+            StartingPosition: TRIM_HORIZON
+      Role: !Ref pRoleLambdaCustomerConfigTrigger
+
+# ## Lambda Workflow Library Trigger
+  rLambdaWorkflowLibraryTrigger:
+    Type: "AWS::Serverless::Function"
+    Properties:
+      CodeUri: ../lambda/WorkflowLibraryTrigger/src
+      FunctionName: !Join ['-', [!Ref pMicroserviceName, !Ref pTeamName, !Ref pPipelineName, "WorkflowLibraryTrigger"]]
+      Layers:
+        - !Ref rWFMLambdaLayer
+        - !Ref pPowerToolsLibLayer
+      Environment:
+        Variables:
+          CUSTOMERS_DYNAMODB_TABLE: !Ref pDynamoDBCustomerConfig
+          WORKFLOW_LIBRARY_DYNAMODB_TABLE: !Ref pDynamoDBAMCWorkflowLibrary
+          WORKFLOWS_TABLE_NAME: !Ref pDynamoDBAMCWorkflows
+          WORKFLOW_SCHEDULE_TABLE: !Ref pDynamoDBAMCWorkflowSchedules
+          CLOUDWATCH_RULE_NAME_PREFIX: !Ref pMicroserviceName
+      Runtime: python3.6
+      Description: !Sub "A Trigger that is invoked when records are modified in the Workflow Library table, this will create workflows and schedule them to run based on their default schedule configuration"
+      MemorySize: 2048
+      Timeout: 900
+      Events:
+        Stream:
+          Type: DynamoDB
+          Properties:
+            Stream: !Ref pDynamoDBAMCWorkflowLibraryStreamArn
+            BatchSize: 5
+            StartingPosition: TRIM_HORIZON
+      Role: !Ref pRoleLambdaWorkflowLibraryTrigger
+  
+  ## Lambda WFM Custom Workflow Scheduler
+  rLambdaCustomScheduler:
+    Type: "AWS::Serverless::Function"
+    Properties:
+      CodeUri: ../lambda/CustomScheduler/src
+      FunctionName: !Join ['-', [!Ref pMicroserviceName, !Ref pTeamName, !Ref pPipelineName, "CustomScheduler"]]
+      Layers:
+        - !Ref rWFMLambdaLayer
+        - !Ref pPowerToolsLibLayer
+      Environment:
+        Variables:
+          WORKFLOW_SCHEDULE_TABLE: !Ref pDynamoDBAMCWorkflowSchedules
+          CLOUDWATCH_RULE_NAME_PREFIX: !Ref pMicroserviceName
+          RUN_WORKFLOW_BY_CAMPAIGN_LAMBDA_ARN: !GetAtt rLambdaRunWorkflowByCampaign.Arn
+          EXECUTION_QUEUE_PRODUCER_LAMBA_ARN: !GetAtt rLambdaWorkflowExecutionQueueProducer.Arn
+      Runtime: python3.6
+      Description: !Sub "This function will query workflows based on their frequency from AMCWorkflowSchedules table and pass payload to WorkflowExecutionQueueProducer Lambda"
+      MemorySize: 2048
+      Timeout: 900
+      Role: !Ref pRoleLambdaCustomScheduler
+
+Outputs:
+  oLambdaLayerAWSPowerToolsPython:
+    Value: !Ref pPowerToolsLibLayer
+  oLambdaLayercrhelper:
+    Value: !Ref rLambdaLayercrhelper
+  oLambdaSyncWorkflowStatuses:
+    Value: !GetAtt rLambdaSyncWorkflowStatuses.Arn
+  oLambdaWorkflowTableTrigger:
+    Value: !GetAtt rLambdaWorkflowTableTrigger.Arn
+  oLambdaAmcApiInterface:
+    Value: !GetAtt rLambdaAmcApiInterface.Arn
+  oLambdaWorkflowExecutionQueueConsumer:
+    Value: !GetAtt rLambdaWorkflowExecutionQueueConsumer.Arn
+  oLambdaGenerateExecutionResubmissions:
+    Value: !GetAtt rLambdaGenerateExecutionResubmissions.Arn
+  oLambdaCustomScheduler:
+    Value: !GetAtt rLambdaCustomScheduler.Arn

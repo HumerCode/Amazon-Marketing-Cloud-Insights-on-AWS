@@ -1,0 +1,26 @@
+[
+    {
+        "ParameterKey": "pTeamName",
+        "ParameterValue": "demoteam"
+    },
+    {
+        "ParameterKey": "pPipelineName",
+        "ParameterValue": "adv"
+    },
+    {
+        "ParameterKey": "pStageAStateMachineRepository",
+        "ParameterValue": "sdlf-demoteam-stageA"
+    },
+    {
+        "ParameterKey": "pStageBStateMachineRepository",
+        "ParameterValue": "sdlf-demoteam-stageB"
+    },
+    {
+        "ParameterKey": "pStageABranch",
+        "ParameterValue": "dev"
+    },
+    {
+         "ParameterKey": "pStageBBranch",
+         "ParameterValue": "dev"
+    }
+]

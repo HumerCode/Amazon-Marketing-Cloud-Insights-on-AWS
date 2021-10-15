@@ -1,0 +1,168 @@
+AMC API Interface Events
+
+{
+  "method": "createWorkflow",
+    "customerId": "atcsamsungimin",
+  "payload": {
+      "workflowId": "active_campaigns_advertisers1",
+      "sqlQuery": "with campaigns as (      SELECT      advertiser,   advertiser_id,   campaign,   campaign_id, campaign_start_date, campaign_end_date      FROM display_impressions      GROUP BY   advertiser,   advertiser_id,   campaign,   campaign_id, campaign_start_date, campaign_end_date      UNION SELECT      advertiser, advertiser_id, campaign, campaign_id, campaign_start_date, campaign_end_date      FROM display_clicks      GROUP BY   advertiser, advertiser_id, campaign, campaign_id, campaign_start_date, campaign_end_date      UNION SELECT      advertiser, advertiser_id, campaign, campaign_id, campaign_start_date, campaign_end_date      FROM amazon_attributed_events_by_traffic_time      GROUP BY   advertiser, advertiser_id, campaign, campaign_id, campaign_start_date, campaign_end_date)  select   CONCAT(CAST(BUILT_IN_PARAMETER('TIME_WINDOW_START') as date) , ' - ', CAST(BUILT_IN_PARAMETER('TIME_WINDOW_END') as DATE)) AS date_range,   CAST(BUILT_IN_PARAMETER('TIME_WINDOW_START') AS date) AS time_window_start,   CAST(BUILT_IN_PARAMETER('TIME_WINDOW_END') AS date) AS time_window_end,   advertiser, advertiser_id, campaign, campaign_id, campaign_start_date, campaign_end_date from campaigns group by advertiser, advertiser_id, campaign, campaign_id, campaign_start_date, campaign_end_date",
+      "filteredMetricsDiscriminatorColumn": "filtered"
+  }
+  }
+  
+}
+
+{
+  "method": "getWorkflows",
+  "customerId": "atcsamsungimin"
+}
+
+{
+  "method": "getWorkflow",
+  "customerId": "atcsamsungimin",
+  "payload": {
+      "workflowId": "active_campaigns_advertisers1"
+  }
+}
+
+
+{
+"method": "deleteWorkflow",
+"customerId": "atcsamsungimin",
+"payload": {
+    "workflowId": "active_campaigns_advertisers1",
+    "sqlQuery": "with campaigns as (      SELECT      advertiser,   advertiser_id,   campaign,   campaign_id, campaign_start_date, campaign_end_date      FROM display_impressions      GROUP BY   advertiser,   advertiser_id,   campaign,   campaign_id, campaign_start_date, campaign_end_date      UNION SELECT      advertiser, advertiser_id, campaign, campaign_id, campaign_start_date, campaign_end_date      FROM display_clicks      GROUP BY   advertiser, advertiser_id, campaign, campaign_id, campaign_start_date, campaign_end_date      UNION SELECT      advertiser, advertiser_id, campaign, campaign_id, campaign_start_date, campaign_end_date      FROM amazon_attributed_events_by_traffic_time      GROUP BY   advertiser, advertiser_id, campaign, campaign_id, campaign_start_date, campaign_end_date)  select   CONCAT(CAST(BUILT_IN_PARAMETER('TIME_WINDOW_START') as date) , ' - ', CAST(BUILT_IN_PARAMETER('TIME_WINDOW_END') as DATE)) AS date_range,   CAST(BUILT_IN_PARAMETER('TIME_WINDOW_START') AS date) AS time_window_start,   CAST(BUILT_IN_PARAMETER('TIME_WINDOW_END') AS date) AS time_window_end,   advertiser, advertiser_id, campaign, campaign_id, campaign_start_date, campaign_end_date from campaigns group by advertiser, advertiser_id, campaign, campaign_id, campaign_start_date, campaign_end_date",
+    "filteredMetricsDiscriminatorColumn": "filtered"
+}
+
+}
+
+
+{
+"method": "executeWorkflow",
+"customerId": "atcsamsungimin",
+  "payload": {
+    "workflowId": "active_campaigns_advertisers1",
+    "timeWindowStart": "2021-01-15T00:00:00",
+    "timeWindowEnd": "2021-01-20T00:00:00",
+    "timeWindowType": "EXPLICIT",
+    "timeWindowTimeZone": "America/New_York"
+  }
+}
+
+
+{
+"method": "getExecutionStatus",
+"customerId": "progressiveats",
+"workflowExecutionId" : "1c9a477e-3d10-4f2b-a92a-0a1738acb174"
+
+}
+
+{
+"method": "getExecutionStatus",
+"customerId": "progressiveats",
+"workflowId" : "active_campaigns_advertisers"
+
+}
+
+
+{
+"method": "deleteWorkflowExecution",
+"customerId": "progressiveats",
+  "payload": {
+    "workflowExecutionId": "6c28fea9-3dfd-49df-a1d5-0e2fc70685f5"
+  }
+}
+
+
+{
+"method": "deleteWorkflowExecutions",
+"customerId": "progressiveats",
+  "payload": {
+      "workflowExecutionIds" : [
+          "9f450c83-74e4-4709-ab6f-b0e16eeb2efd",
+      "002fc94b-4500-4128-a1ea-910facbf3832"
+      ]
+    
+  }
+}
+
+
+{
+    "customerId": "progressiveats",
+"method": "getAllExecutionStatuses"
+
+}
+
+
+{
+    "customerId": "progressiveats",
+"method": "getRunningExecutions"
+}
+
+
+
+
+
+
+Workflow Execution Producer
+
+{
+  "customerId": "amciwnsyxbf",
+  "payload": {
+    "workflowId": "DSP_Daily",
+    "timeWindowStart": "2020-05-01T00:00:00",
+    "timeWindowEnd": "2020-05-02T00:00:00",
+    "timeWindowType": "EXPLICIT",
+    "timeWindowTimeZone": "America/New_York"
+  }
+}
+
+{
+  "customerId": "atckdpus",
+  "payload": {
+    "workflowId": "test_workflow",
+    "timeWindowStart": "2020-10-01T00:00:00",
+    "timeWindowEnd": "2020-10-02T00:00:00",
+    "timeWindowType": "EXPLICIT"
+  }
+}
+
+
+
+Run Workflow by campaign events
+
+{
+"customerId" : "progressiveats",
+  "workflow_id": "lift_report",
+  "additionalWhereClause": " campaign_id in (7059800800901,7728778100801)",
+  
+    "campaignAttributionLagDays": 14,
+    "campaignListDatabaseName": "progressiveats_datalake_prod_amc_db",
+    "campaignListTableName": "progressive_grouped_campaigns",
+    "maximumCampaignAgeDays": 120,
+    "minimumCampaignAgeDays": 3,
+    
+  "custom_parameters": {
+    "workflow_executed_date": "now()"
+
+  }
+}
+
+
+
+
+
+{
+  "method": "executeWorkflow",
+  "payload": {
+    "workflowId": "DSP_Daily",
+    "timeWindowStart": "FIRSTDAYOFOFFSETMONTH(0)",
+    "timeWindowEnd": "TODAY(-1)",
+    "timeWindowType": "EXPLICIT",
+    "timeWindowTimeZone": "America/New_York",
+    "parameterValues": {
+      "workflow_executed_date": "now()"
+    }
+  }
+}

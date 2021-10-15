@@ -1,0 +1,22 @@
+[
+    {
+        "ParameterKey": "pTeamName",
+        "ParameterValue": "demoteam"
+    },
+    {
+        "ParameterKey": "pDatalakeLibraryRepositoryName",
+        "ParameterValue": "sdlf-demoteam-datalakeLibrary"
+    },
+    {
+        "ParameterKey": "pPipLibrariesRepositoryName",
+        "ParameterValue": "sdlf-demoteam-pipLibrary"
+    },
+    {
+        "ParameterKey": "pLibrariesBranchName",
+        "ParameterValue": "dev"
+    },
+    {
+        "ParameterKey": "pSNSNotificationsEmail",
+        "ParameterValue": "nobody@demo.com"
+    }
+] 
