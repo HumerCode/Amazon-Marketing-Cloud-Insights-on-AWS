@@ -13,7 +13,7 @@ The purpose of the delivery kit is to enable more self-service analytics for cus
 
 
 ## Reference Architecture
-![Alt](AMCDeliveryKit-Architecture.png)
+![Alt](docs/images/AMCDeliveryKit-Architecture.png)
 
 ## Modules Deployed
   1. [Serverless Datalake FrameWork](DataLake/ServerlessDatalakeFramework/aws-serverless-data-lake-framework/README.md)

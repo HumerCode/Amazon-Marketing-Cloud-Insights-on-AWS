@@ -1,10 +1,11 @@
+##TODO: restrict S3 Actions
+##TODO: Do we need to tage the bucket with the tags from the tags.json
+
+
 AWSTemplateFormatVersion: 2010-09-09
-Description: "The following template creates an S3 Bucket to store the repository."
-
-
+Description: "The following template creates an S3 Bucket to store the repository." (qs-xxxxxxxxx)
 Resources:
-
-  rS3Bucket:
+  RepoS3Bucket:
     Type: AWS::S3::Bucket
     Properties:
       BucketEncryption:
@@ -16,11 +17,10 @@ Resources:
         BlockPublicPolicy: True
         IgnorePublicAcls: True
         RestrictPublicBuckets: True
- 
-  rS3BucketPolicy:
+  RepoS3BucketPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
-      Bucket: !Ref rS3Bucket
+      Bucket: !Ref RepoS3Bucket
       PolicyDocument:
         Version: '2012-10-17'
         Id: BucketDeliveryPolicy
@@ -28,12 +28,11 @@ Resources:
         - Sid: BucketOwnerAccess
           Effect: Allow
           Principal:
-            AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
+            AWS: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:root
           Action: s3:*
           Resource:
-            - !Sub arn:aws:s3:::${rS3Bucket}/*
-            - !Sub arn:aws:s3:::${rS3Bucket}
-
+            - !Sub arn:${AWS::Partition}:s3:::${RepoS3Bucket}/*
+            - !Sub arn:${AWS::Partition}:s3:::${RepoS3Bucket}
 Outputs:
-  oBucketName:
-    Value: !Ref rS3Bucket
+  RepoBucketName:
+    Value: !Ref RepoS3Bucket

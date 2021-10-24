@@ -1,12 +1,51 @@
+##TODO: restrict Role Actions & Resources
+
 AWSTemplateFormatVersion: 2010-09-09
 Description: Automated deployment infrastructure
 
 Parameters:
-  pRepoS3Path:
+  EmailAddress:
+    Description: 'Email address used for Amazon DevOps Guru SNS subscription.'
     Type: String
-
+    Default: robot@example.com
+  Username:
+    AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
+    ConstraintDescription: 'Must begin with a letter and contain only alphanumeric characters.'
+    Default: robot
+    Description: 'The user name.'
+    MaxLength: '16'
+    MinLength: '1'
+    Type: String
+  QSS3BucketName:
+    AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
+    ConstraintDescription: The Quick Start bucket name can include numbers, lowercase
+      letters, uppercase letters, and hyphens (-). It cannot start or end with a
+      hyphen (-).
+    Default: aws-quickstart
+    Description: Name of the S3 bucket for your copy of the Quick Start assets.
+      Keep the default name unless you are customizing the template.
+      Changing the name updates code references to point to a new Quick
+      Start location. This name can include numbers, lowercase letters,
+      uppercase letters, and hyphens, but do not start or end with a hyphen (-).
+      See https://aws-quickstart.github.io/option1.html.
+    Type: String
+  QSS3KeyPrefix:
+    AllowedPattern: ^([0-9a-zA-Z-.]+/)*$
+    ConstraintDescription: The Quick Start S3 key prefix can include numbers, lowercase letters,
+      uppercase letters, hyphens (-), and forward slashes (/).
+    Default: quickstart-amazon-marketing-cloud/
+    Description: S3 key prefix that is used to simulate a directory for your copy of the
+      Quick Start assets. Keep the default prefix unless you are customizing
+      the template. Changing this prefix updates code references to point to
+      a new Quick Start location. This prefix can include numbers, lowercase
+      letters, uppercase letters, hyphens (-), and forward slashes (/). End with a forward slash.
+      See https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingMetadata.html
+      and https://aws-quickstart.github.io/option1.html.
+    Type: String
+Conditions:
+  UsingDefaultBucket: !Equals [ !Ref QSS3BucketName, 'aws-quickstart' ]
 Resources:
-  rCodeBuildServiceRole:
+  CodeBuildServiceRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -148,8 +187,7 @@ Resources:
                   - dynamodb:PutItem
                   - dynamodb:Get*
                   - dynamodb:List*
-
-  rLambdaTriggerRole:
+  LambdaTriggerRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -160,7 +198,7 @@ Resources:
               Service: lambda.amazonaws.com
             Action: sts:AssumeRole
       ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - !Sub arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Policies:
         - PolicyName: root
           PolicyDocument:
@@ -171,9 +209,8 @@ Resources:
                   - codebuild:BatchGetBuilds
                   - codebuild:StartBuild
                 Resource:
-                  - !GetAtt rCodeBuildProject.Arn
-
-  rCodeBuildProject:
+                  - !GetAtt CodeBuildProject.Arn
+  CodeBuildProject:
     Type: AWS::CodeBuild::Project
     Properties:
       Artifacts:
@@ -183,10 +220,19 @@ Resources:
         Image: aws/codebuild/standard:4.0
         Type: LINUX_CONTAINER
         EnvironmentVariables:
-          - Name: REPO
+          - Name: S3BUCKET
             Type: PLAINTEXT
-            Value: !Ref pRepoS3Path
-      ServiceRole: !GetAtt rCodeBuildServiceRole.Arn
+            Value: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+          - Name: PREFIX
+            Type: PLAINTEXT
+            Value: !Ref QSS3KeyPrefix
+          - Name: EMAILADDRESS
+            Type: PLAINTEXT
+            Value: !Ref EmailAddress
+          - Name: USERNAME
+            Type: PLAINTEXT
+            Value: !Ref Username
+      ServiceRole: !GetAtt CodeBuildServiceRole.Arn
       TimeoutInMinutes: 120
       Source:
         Type: NO_SOURCE
@@ -199,35 +245,34 @@ Resources:
             build:
               commands:
                 - echo Configuring AWS credentials
-                - echo $REPO
+                - echo $S3BUCKET
                 - echo AWS_CONTAINER_CREDENTIALS_RELATIVE_URI $AWS_CONTAINER_CREDENTIALS_RELATIVE_URI
                 - curl -qL -o aws_credentials.json http://169.254.170.2/$AWS_CONTAINER_CREDENTIALS_RELATIVE_URI > aws_credentials.json
                 - aws configure set aws_access_key_id `jq -r '.AccessKeyId' aws_credentials.json`
                 - aws configure set aws_secret_access_key `jq -r '.SecretAccessKey' aws_credentials.json`
                 - aws configure set aws_session_token `jq -r '.Token' aws_credentials.json`
                 - aws configure set default.region $AWS_REGION
-                - aws s3 sync $REPO ./amc-analytics-delivery-kit/
+                - aws s3 sync s3://$S3BUCKET/$PREFIX ./amc-analytics-delivery-kit/
                 - cd ./amc-analytics-delivery-kit/
-                - git config --global user.email "robot@example.com"
-                - git config --global user.name "robot"
-                - chmod +x ./initial_deployment.sh
-                - ./initial_deployment.sh -f -rp ${REPO}
+                - git config --global user.email $EMAILADDRESS
+                - git config --global user.name $USERNAME
+                - chmod +x ./scripts/initial_deployment.sh
+                - ./scripts/initial_deployment.sh -f -rp s3://$S3BUCKET/$PREFIX
           artifacts:
             files:
               - "*"
               - "**/*"
-
-  rLambdaTrigger:
+  LambdaTrigger:
     Type: AWS::Lambda::Function
     Properties:
       Runtime: python3.7
       Timeout: 120
       MemorySize: 128
       Handler: index.lambda_handler
-      Role: !GetAtt rLambdaTriggerRole.Arn
+      Role: !GetAtt LambdaTriggerRole.Arn
       Environment:
         Variables:
-          CODE_BUILD_PROJECT: !Ref rCodeBuildProject
+          CODE_BUILD_PROJECT: !Ref CodeBuildProject
       Code:
         ZipFile: |
           import os
@@ -279,8 +324,7 @@ Resources:
                       }
                   )
                   raise e
-
-  rCustomLambdaTrigger:
+  CustomLambdaTrigger:
     Type: Custom::LambdaTrigger
     Properties:
-      ServiceToken: !GetAtt rLambdaTrigger.Arn
+      ServiceToken: !GetAtt LambdaTrigger.Arn
