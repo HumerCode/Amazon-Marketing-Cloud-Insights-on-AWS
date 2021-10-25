@@ -16,7 +16,6 @@ Metadata:
       - Label:
           default: Prerequists
         Parameters:
-          - RepoS3Bucket
           - EmailAddress
           - Username
       - Label:
@@ -33,14 +32,6 @@ Metadata:
       QSS3BucketRegion:
         default: Quick Start S3 bucket Region
 Parameters:
-  RepoS3Bucket:
-    AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
-    ConstraintDescription: The repo bucket name can include numbers, lowercase
-      letters, uppercase letters, and hyphens (-). It cannot start or end with a
-      hyphen (-).
-    Default: amazon-mc-repo-bucket
-    Description: Name of the S3 bucket user for your Code Commit repo.
-    Type: String
   EmailAddress:
     Description: 'Email address used for Amazon DevOps Guru SNS subscription.'
     Type: String
@@ -53,7 +44,7 @@ Parameters:
     MaxLength: '16'
     MinLength: '1'
     Type: String
-QSS3BucketName:
+  QSS3BucketName:
     AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
     ConstraintDescription: The Quick Start bucket name can include numbers, lowercase
       letters, uppercase letters, and hyphens (-). It cannot start or end with a
@@ -90,16 +81,6 @@ QSS3BucketName:
 Conditions:
   UsingDefaultBucket: !Equals [ !Ref QSS3BucketName, 'aws-quickstart' ]
 Resources:
-  AMCRepoBucket:
-    Type: 'AWS::CloudFormation::Stack'
-    Properties:
-      TemplateURL:
-        !Sub
-          - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}submodules/quickstart-aws-vpc/templates/quickstart-repo-bucket-creation.template.yaml'
-          - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
-            S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
-      Parameters:
-        RepoS3Bucket: !Ref RepoS3Bucket
   DeliveryKitAllInitiization:
     Type: AWS::CloudFormation::Stack
     Properties:
