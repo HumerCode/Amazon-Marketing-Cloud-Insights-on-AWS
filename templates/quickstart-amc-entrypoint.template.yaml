@@ -90,7 +90,6 @@ Resources:
           - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
             S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
-        RepoS3Bucket: !GetAtt AMCRepoBucket.Outputs.Name
         EmailAddress: !Ref EmailAddress
         Username: !Ref Username
         QSS3BucketRegion: !Ref QSS3BucketRegion
