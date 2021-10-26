@@ -92,6 +92,6 @@ Resources:
       Parameters:
         EmailAddress: !Ref EmailAddress
         Username: !Ref Username
-        QSS3BucketRegion: !Ref QSS3BucketRegion
+        #QSS3BucketRegion: !Ref QSS3BucketRegion
         QSS3BucketName: !Ref QSS3BucketName
         QSS3KeyPrefix: !Ref QSS3KeyPrefix
