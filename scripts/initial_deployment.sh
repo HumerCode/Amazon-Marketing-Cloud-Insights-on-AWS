@@ -62,8 +62,8 @@ function deploy_sdlf_pipeline()
         --template-body file://${DIRNAME}/DataLake/template_foundation_sdlf.yaml \
         --capabilities "CAPABILITY_NAMED_IAM" "CAPABILITY_AUTO_EXPAND" \
         --parameters \
-            ParameterKey=pRepoS3Path,ParameterValue=${REPO}/DataLake/ServerlessDatalakeFramework/aws-serverless-data-lake-framework \
-            ParameterKey=pConfigFile,ParameterValue=${REPO}/DataLake/ServerlessDatalakeFramework/ats-customer-config/demoCustomer \
+            ParameterKey=pRepoS3Path,ParameterValue=${REPO}DataLake/ServerlessDatalakeFramework/aws-serverless-data-lake-framework \
+            ParameterKey=pConfigFile,ParameterValue=${REPO}DataLake/ServerlessDatalakeFramework/ats-customer-config/demoCustomer \
         --region ${REGION} \
         --profile ${DEVOPS_PROFILE} \
         --tags file://$DIRNAME/DataLake/ServerlessDatalakeFramework/aws-serverless-data-lake-framework/tags.json
@@ -79,8 +79,8 @@ function deploy_tps_pipeline()
         --template-body file://${DIRNAME}/CustomerManagementService/template_tps_microservice_initialization.yaml \
         --capabilities "CAPABILITY_NAMED_IAM" "CAPABILITY_AUTO_EXPAND" \
         --parameters \
-            ParameterKey=pRepoS3Path,ParameterValue=${REPO}/CustomerManagementService/TenantProvisioningService/sdlf-tps-pipeline \
-            ParameterKey=pConfigFile,ParameterValue=${REPO}/CustomerManagementService/TenantProvisioningService/ats-customer-config/demoCustomer/tps-config/parameters-dev.json \
+            ParameterKey=pRepoS3Path,ParameterValue=${REPO}CustomerManagementService/TenantProvisioningService/sdlf-tps-pipeline \
+            ParameterKey=pConfigFile,ParameterValue=${REPO}CustomerManagementService/TenantProvisioningService/ats-customer-config/demoCustomer/tps-config/parameters-dev.json \
         --region ${REGION} \
         --profile ${DEVOPS_PROFILE} \
         --tags file://$DIRNAME/CustomerManagementService/TenantProvisioningService/sdlf-tps-pipeline/tags.json
@@ -96,8 +96,8 @@ function deploy_wfm_pipeline()
         --template-body file://${DIRNAME}/DataLakeHydrationMicroservices/template_wfm_microservice_initialization.yml \
         --capabilities "CAPABILITY_NAMED_IAM" "CAPABILITY_AUTO_EXPAND" \
         --parameters \
-            ParameterKey=pRepoS3Path,ParameterValue=${REPO}/DataLakeHydrationMicroservices/WorkflowManagerService/sdlf-wfm-pipeline \
-            ParameterKey=pConfigFile,ParameterValue=${REPO}/DataLakeHydrationMicroservices/WorkflowManagerService/ats-wfm-customer-config/demoCustomer/wfm-config/parameters-dev.json \
+            ParameterKey=pRepoS3Path,ParameterValue=${REPO}DataLakeHydrationMicroservices/WorkflowManagerService/sdlf-wfm-pipeline \
+            ParameterKey=pConfigFile,ParameterValue=${REPO}DataLakeHydrationMicroservices/WorkflowManagerService/ats-wfm-customer-config/demoCustomer/wfm-config/parameters-dev.json \
         --region ${REGION} \
         --profile ${DEVOPS_PROFILE} \
         --tags file://$DIRNAME/DataLakeHydrationMicroservices/WorkflowManagerService/sdlf-wfm-pipeline/tags.json
@@ -113,7 +113,7 @@ function deploy_platform_notebooks()
         --template-body file://${DIRNAME}/PlatformManagementNotebooks/platform_manager_sagemaker_initialization.yaml \
         --capabilities "CAPABILITY_NAMED_IAM" "CAPABILITY_AUTO_EXPAND" \
         --parameters \
-            ParameterKey=pRepoS3Path,ParameterValue=${REPO}/PlatformManagementNotebooks \
+            ParameterKey=pRepoS3Path,ParameterValue=${REPO}PlatformManagementNotebooks \
         --region ${REGION} \
         --profile ${DEVOPS_PROFILE} \
         --tags file://$DIRNAME/PlatformManagementNotebooks/tags.json

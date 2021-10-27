@@ -342,3 +342,9 @@ Resources:
     Type: Custom::LambdaTrigger
     Properties:
       ServiceToken: !GetAtt LambdaTrigger.Arn
+Outputs:
+  pRepoS3Path:
+    Value: !Sub
+      - 's3://${S3Bucket}/${QSS3KeyPrefix}'
+      - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+        S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
