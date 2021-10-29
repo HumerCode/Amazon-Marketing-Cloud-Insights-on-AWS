@@ -17,7 +17,13 @@ For more information, see https://docs.aws.amazon.com/AWSCloudFormation/latest/U
 
 *A.* Launch the Quick Start templates from the links in this guide or from another S3 bucket. If you deploy the templates from a local copy on your computer or from a location other than an S3 bucket, you might encounter template-size limitations. For more information, see http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cloudformation-limits.html[AWS CloudFormation quotas^].
 
+'''
 
-== Troubleshooting
+*Q.* I encountered multiple AWS CodeBuild failiures.
 
-<Steps for troubleshooting the deployment.>
+*A.* As part of this Quick Start deployment, four AWS CodeBuilds are concurrently invoked. For a brand new AWS account, you might see a scenario where multiple AWS CodeBuilds are in queued status and eventually failing. Please reach out to AWS support to increase the concurrent AWS CodeBuild run service limits
+
+
+//== Troubleshooting
+
+//<Steps for troubleshooting the deployment.>
