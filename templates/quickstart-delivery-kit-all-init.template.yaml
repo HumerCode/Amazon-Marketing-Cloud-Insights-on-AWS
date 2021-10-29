@@ -246,6 +246,9 @@ Resources:
           - Name: USERNAME
             Type: PLAINTEXT
             Value: !Ref Username
+          - Name: SIGNAL_URL
+            Type: PLAINTEXT
+            Value: !Ref WaitHandle
       ServiceRole: !GetAtt CodeBuildServiceRole.Arn
       TimeoutInMinutes: 120
       Source:
@@ -272,6 +275,14 @@ Resources:
                 - git config --global user.name $USERNAME
                 - chmod +x ./scripts/initial_deployment.sh
                 - ./scripts/initial_deployment.sh -f -rp $REPO
+            post_build:
+              commands:
+                - echo $CODEBUILD_BUILD_SUCCEEDING
+                - |
+                  if [ "$CODEBUILD_BUILD_SUCCEEDING" != "0" ] ; then
+                    curl -X PUT $SIGNAL_URL -H 'Content-Type:' -d '{"Status":"SUCCESS","Reason":"Configuration Complete","UniqueId":"ID1236","Data":"Application has completed configuration."}'; else
+                    curl -X PUT $SIGNAL_URL -H 'Content-Type:' -d '{"Status":"FAILURE","Reason":"Configuration Complete","UniqueId":"ID1236","Data":"Application has completed configuration."}';
+                  fi
           artifacts:
             files:
               - "*"
@@ -342,6 +353,15 @@ Resources:
     Type: Custom::LambdaTrigger
     Properties:
       ServiceToken: !GetAtt LambdaTrigger.Arn
+  WaitHandle:
+    Type: AWS::CloudFormation::WaitConditionHandle
+  WaitCondition:
+    Type: AWS::CloudFormation::WaitCondition
+    DependsOn: CustomLambdaTrigger
+    Properties:
+      Handle: !Ref WaitHandle
+      Timeout: 10800
+
 Outputs:
   pRepoS3Path:
     Value: !Sub
