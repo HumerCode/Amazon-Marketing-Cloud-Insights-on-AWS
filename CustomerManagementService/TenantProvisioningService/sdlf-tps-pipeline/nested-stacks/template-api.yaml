@@ -1,0 +1,23 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: "AWS::Serverless-2016-10-31"
+Description: "API resources to manage a team"
+Parameters:
+  pMicroserviceName:
+    Type: String
+  pTeamName:
+    Type: String
+  pPipelineName:
+    Type: String
+  pEnvironment:
+    Type: String
+Resources:
+  ####### API Gateway #######
+  rApiGatewayApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Join ['-', [!Ref pMicroserviceName, !Ref pTeamName, !Ref pPipelineName, !Ref AWS::StackName, "CustomerConfig"]]
+      StageName: !Ref pEnvironment
+Outputs:
+  oApiGatewayApi:
+    Description: "Customer API Gateway API"
+    Value: !Ref rApiGatewayApi

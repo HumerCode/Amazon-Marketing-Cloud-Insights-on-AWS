@@ -1,0 +1,18 @@
+[
+  {
+    "Key": "appName",
+    "Value": "Serverless Data Lake Framework"
+  },
+  {
+    "Key": "environment",
+    "Value": "dev"
+  },
+  {
+    "Key": "module",
+    "Value": "amc delivery kit"
+  },
+  {
+    "Key": "provider",
+    "Value": "AdTech Solutions"
+  }
+]

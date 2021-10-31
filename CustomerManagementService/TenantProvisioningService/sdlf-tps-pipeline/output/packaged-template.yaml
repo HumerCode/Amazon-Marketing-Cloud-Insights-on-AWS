@@ -1,0 +1,207 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Contains all the resources necessary for a single pipeline
+Parameters:
+  pPipelineName:
+    Description: The name of the Pipeline (all lowercase, no symbols or spaces)
+    Type: String
+    AllowedPattern: '[a-z0-9]{2,10}'
+  pMicroserviceName:
+    Description: The name of the team owning the pipeline (all lowercase, no symbols
+      or spaces)
+    Type: String
+    AllowedPattern: '[a-z0-9]{2,12}'
+  pTeamName:
+    Description: Name of the team owning the pipeline (all lowercase, no symbols or
+      spaces)
+    Type: String
+    AllowedPattern: '[a-z0-9]*'
+  pEnvironment:
+    Description: Name of the environment (all lowercase, no symbols or spaces)
+    Type: String
+    AllowedPattern: '[a-z0-9]*'
+  pKMSKeyId:
+    Type: String
+    Default: /SDLF/KMS/KeyArn
+Resources:
+  rDynamoDBStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.amazonaws.com/sdlf-cfn-artifacts-us-east-1-777944859732/tps/pipeline/cmpl/f1b1870f461b785e63b39ed45f87d2da.template
+      Parameters:
+        pMicroserviceName:
+          Ref: pMicroserviceName
+        pTeamName:
+          Ref: pTeamName
+        pPipelineName:
+          Ref: pPipelineName
+        pEnvironment:
+          Ref: pEnvironment
+        pKMSKeyId:
+          Fn::Sub: '{{resolve:ssm:${pKMSKeyId}}}'
+      Tags:
+      - Key: tagging-policy
+        Value:
+          Fn::Join:
+          - '-'
+          - - Ref: pMicroserviceName
+            - Ref: pTeamName
+            - Ref: pEnvironment
+  rSNSTopicStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.amazonaws.com/sdlf-cfn-artifacts-us-east-1-777944859732/tps/pipeline/cmpl/9d52fbe4e965faa57c29de4ed7a5d50a.template
+      Parameters:
+        pMicroserviceName:
+          Ref: pMicroserviceName
+        pTeamName:
+          Ref: pTeamName
+        pPipelineName:
+          Ref: pPipelineName
+        pEnvironment:
+          Ref: pEnvironment
+        pSNSIntegrationKeyAlias:
+          Fn::Sub: '{{resolve:ssm:${pKMSKeyId}}}'
+      Tags:
+      - Key: tagging-policy
+        Value:
+          Fn::Join:
+          - '-'
+          - - Ref: pMicroserviceName
+            - Ref: pTeamName
+            - Ref: pEnvironment
+  rSQSStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.amazonaws.com/sdlf-cfn-artifacts-us-east-1-777944859732/tps/pipeline/cmpl/2b7bed3b18b4d5d64d228edbcffa4a58.template
+      Parameters:
+        pMicroserviceName:
+          Ref: pMicroserviceName
+        pTeamName:
+          Ref: pTeamName
+        pPipelineName:
+          Ref: pPipelineName
+        pEnvironment:
+          Ref: pEnvironment
+        pSQSIntegrationKeyAlias:
+          Fn::Sub: '{{resolve:ssm:${pKMSKeyId}}}'
+        pCustomerConfigSNSTopic:
+          Fn::GetAtt:
+          - rSNSTopicStack
+          - Outputs.oCustomerConfigSNSTopic
+      Tags:
+      - Key: tagging-policy
+        Value:
+          Fn::Join:
+          - '-'
+          - - Ref: pMicroserviceName
+            - Ref: pTeamName
+            - Ref: pEnvironment
+  rIAMStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.amazonaws.com/sdlf-cfn-artifacts-us-east-1-777944859732/tps/pipeline/cmpl/2c51cddd6a3d6de154d65540a7edf141.template
+      Parameters:
+        pMicroserviceName:
+          Ref: pMicroserviceName
+        pTeamName:
+          Ref: pTeamName
+        pPipelineName:
+          Ref: pPipelineName
+        pEnvironment:
+          Ref: pEnvironment
+        pCustomerConfigSNSTopic:
+          Fn::GetAtt:
+          - rSNSTopicStack
+          - Outputs.oCustomerConfigSNSTopic
+        pCustomerConfigTableName:
+          Fn::GetAtt:
+          - rDynamoDBStack
+          - Outputs.oCustomerConfigTableName
+        pKMSKeyId:
+          Fn::Sub: '{{resolve:ssm:${pKMSKeyId}}}'
+      Tags:
+      - Key: tagging-policy
+        Value:
+          Fn::Join:
+          - '-'
+          - - Ref: pMicroserviceName
+            - Ref: pTeamName
+            - Ref: pEnvironment
+  rLambdaStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.amazonaws.com/sdlf-cfn-artifacts-us-east-1-777944859732/tps/pipeline/cmpl/fb361fd2beb59d2090c62dfa72dc524d.template
+      Parameters:
+        pMicroserviceName:
+          Ref: pMicroserviceName
+        pTeamName:
+          Ref: pTeamName
+        pPipelineName:
+          Ref: pPipelineName
+        pEnvironment:
+          Ref: pEnvironment
+        pPowerToolsLibLayer:
+          Fn::Sub: '{{resolve:ssm:/SDLF/Lambda/${pTeamName}/PowerTools}}'
+        pCustomerConfigSNSTopic:
+          Fn::GetAtt:
+          - rSNSTopicStack
+          - Outputs.oCustomerConfigSNSTopic
+        pDynamoDBCustomerConfigStream:
+          Fn::GetAtt:
+          - rDynamoDBStack
+          - Outputs.oDynamoDBCustomerConfigStream
+        pRoleLambdaCustomerConfigDynamoDBTrigger:
+          Fn::GetAtt:
+          - rIAMStack
+          - Outputs.oRoleLambdaCustomerConfigDynamoDBTrigger
+        pStateMachineSsm:
+          Fn::GetAtt:
+          - rAmcOnboardingStack
+          - Outputs.oStateMachineSsm
+        pSQSQueue:
+          Fn::GetAtt:
+          - rSQSStack
+          - Outputs.oSQSQueue
+        pRoleLambdaAMCInstanceStateMachine:
+          Fn::GetAtt:
+          - rIAMStack
+          - Outputs.oRoleLambdaAMCInstanceStateMachine
+      Tags:
+      - Key: tagging-policy
+        Value:
+          Fn::Join:
+          - '-'
+          - - Ref: pMicroserviceName
+            - Ref: pTeamName
+            - Ref: pEnvironment
+  rAmcOnboardingStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.amazonaws.com/sdlf-cfn-artifacts-us-east-1-777944859732/tps/pipeline/cmpl/4aca1f5859f7f78bb036e5804a5eed2e.template
+      Parameters:
+        pMicroserviceName:
+          Ref: pMicroserviceName
+        pTeamName:
+          Ref: pTeamName
+        pPipeline:
+          Ref: pPipelineName
+        pEnvironment:
+          Ref: pEnvironment
+        pPowerToolsLibLayer:
+          Fn::Sub: '{{resolve:ssm:/SDLF/Lambda/${pTeamName}/PowerTools}}'
+        pKMSKeyId:
+          Fn::Sub: '{{resolve:ssm:${pKMSKeyId}}}'
+        pDatalakeLibLayer:
+          Fn::Sub: '{{resolve:ssm:/SDLF/Lambda/${pTeamName}/LatestDatalakeLibraryLayer}}'
+        pCustomerConfigSNSTopic:
+          Fn::GetAtt:
+          - rSNSTopicStack
+          - Outputs.oCustomerConfigSNSTopic
+      Tags:
+      - Key: tagging-policy
+        Value:
+          Fn::Join:
+          - '-'
+          - - Ref: pMicroserviceName
+            - Ref: pTeamName
+            - Ref: pEnvironment

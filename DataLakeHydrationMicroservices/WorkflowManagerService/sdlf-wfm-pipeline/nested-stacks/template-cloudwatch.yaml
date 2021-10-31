@@ -1,0 +1,144 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: "AWS::Serverless-2016-10-31"
+Description: "Contains all the resources necessary for the wofkflow management microservice"
+
+Parameters:
+  pTeamName:
+    Type: String
+    AllowedPattern: '[a-z0-9]{2,10}'
+  pMicroserviceName:
+    Type: String
+    AllowedPattern: '[a-z0-9]{2,12}'
+  pPipelineName:
+    Type: String
+    AllowedPattern: '[a-z0-9]{2,10}'
+  pLambdaWorkflowExecutionQueueConsumer:
+    Type: String
+  pLambdaAmcApiInterface:
+    Type: String
+  pLambdaCustomScheduler:
+    Type: String
+    
+Resources:
+
+######## CLOUD WATCH RULES ######
+  rRuleExecuteWorkflowExecutionQueueConsumer: 
+    Type: AWS::Events::Rule
+    Properties: 
+      Description: "Runs the process-glue-crawler-run-requests lambda function every 10 minutes"
+      ScheduleExpression: "rate(10 minutes)"
+      State: "ENABLED"
+      Targets: 
+        - 
+          Arn: !Ref pLambdaWorkflowExecutionQueueConsumer
+          Id: "ProcessGlueCrawlerRunRequests"
+          Input: '{ "method": "syncExecutionStatuses" }'
+
+  PermissionForRuleExecuteWorkflowExecutionQueueConsumer: 
+    Type: AWS::Lambda::Permission
+    Properties: 
+      FunctionName: !Ref pLambdaWorkflowExecutionQueueConsumer
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn: !GetAtt rRuleExecuteWorkflowExecutionQueueConsumer.Arn
+
+
+  rRuleGetAllGlueExecutionStatuses: 
+    Type: AWS::Events::Rule
+    Properties: 
+      Description: "Runs the amc api interface lambda function every 10 minutes to get all execution statuses"
+      ScheduleExpression: "rate(10 minutes)"
+      State: "ENABLED"
+      Targets: 
+        - 
+          Arn: !Ref pLambdaAmcApiInterface
+          Id: !Sub "syncExecutionStatuses"
+          Input: '{ "method": "syncExecutionStatuses" }'
+
+  PermissionForGetExecutionStatusesToInvokeLambda: 
+    Type: AWS::Lambda::Permission
+    Properties: 
+      FunctionName: !Ref pLambdaAmcApiInterface
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn: !GetAtt rRuleGetAllGlueExecutionStatuses.Arn
+
+  rRuleExecuteCustomSchedulerHour: 
+    Type: AWS::Events::Rule
+    Properties: 
+      Description: "Runs the CustomScheduler lambda function every hour"
+      ScheduleExpression: "rate(1 hour)"
+      State: "ENABLED"
+      Targets: 
+        - 
+          Arn: !Ref pLambdaCustomScheduler
+          Id: "CustomScheduler"
+          Input: '{"query": "custom(H * *)" }'
+
+  PermissionForRuleCustomSchedulerHour: 
+    Type: AWS::Lambda::Permission
+    Properties: 
+      FunctionName: !Ref pLambdaCustomScheduler
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn: !GetAtt rRuleExecuteCustomSchedulerHour.Arn
+      
+  rRuleExecuteCustomSchedulerDaily: 
+    Type: AWS::Events::Rule
+    Properties: 
+      Description: "Runs the CustomScheduler lambda function on Daily"
+      ScheduleExpression: "rate(1 hour)"
+      State: "ENABLED"
+      Targets: 
+        - 
+          Arn: !Ref pLambdaCustomScheduler
+          Id: "CustomScheduler"
+          Input: '{"query": "custom(D * {H})" }'
+
+  PermissionForRuleCustomSchedulerDaily: 
+    Type: AWS::Lambda::Permission
+    Properties: 
+      FunctionName: !Ref pLambdaCustomScheduler
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn: !GetAtt rRuleExecuteCustomSchedulerDaily.Arn
+      
+  rRuleExecuteCustomSchedulerWeekly: 
+    Type: AWS::Events::Rule
+    Properties: 
+      Description: "Runs the CustomScheduler lambda function On weekly"
+      ScheduleExpression: "rate(1 hour)"
+      State: "ENABLED"
+      Targets: 
+        - 
+          Arn: !Ref pLambdaCustomScheduler
+          Id: "CustomScheduler"
+          Input: '{"query": "custom(W {D} {H})" }'
+
+  PermissionForRuleCustomSchedulerWeekly: 
+    Type: AWS::Lambda::Permission
+    Properties: 
+      FunctionName: !Ref pLambdaCustomScheduler
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn: !GetAtt rRuleExecuteCustomSchedulerWeekly.Arn
+      
+  rRuleExecuteCustomSchedulerMonthly: 
+    Type: AWS::Events::Rule
+    Properties: 
+      Description: "Runs the CustomScheduler lambda function on Monthly"
+      ScheduleExpression: "rate(1 hour)"
+      State: "ENABLED"
+      Targets: 
+        - 
+          Arn: !Ref pLambdaCustomScheduler
+          Id: "CustomScheduler"
+          Input: '{"query": "custom(M {D} {H})" }'
+
+  PermissionForRuleCustomSchedulerMonthly: 
+    Type: AWS::Lambda::Permission
+    Properties: 
+      FunctionName: !Ref pLambdaCustomScheduler
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn: !GetAtt rRuleExecuteCustomSchedulerMonthly.Arn

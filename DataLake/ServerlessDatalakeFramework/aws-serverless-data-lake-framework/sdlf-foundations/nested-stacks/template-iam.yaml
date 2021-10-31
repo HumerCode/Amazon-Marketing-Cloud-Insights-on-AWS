@@ -1,0 +1,96 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: "AWS::Serverless-2016-10-31"
+Description: "IAM Resources to manage a team"
+
+Parameters:
+  pApplicationName:
+    Type: String
+  pEnvironment:
+    Type: String
+  pOrganizationName:
+    Type: String
+
+Resources:
+  rCICDCommonPolicy:
+    Type: 'AWS::IAM::ManagedPolicy'
+    Properties:
+      Description: Policy for common cicd code build updates
+      ManagedPolicyName: !Sub sdlf-cicd-codebuild-common-${AWS::Region}
+      Roles:
+        - !Sub sdlf-cicd-codebuild-${AWS::Region}
+      Path: /
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - dynamodb:Batch*
+              - dynamodb:BatchGetItem
+              - dynamodb:BatchWriteItem
+              - dynamodb:Delete*
+              - dynamodb:Describe*
+              - dynamodb:Get*
+              - dynamodb:Query
+              - dynamodb:Put*
+              - dynamodb:Scan
+              - dynamodb:Update*
+              - dynamodb:Create*
+            Resource:
+              - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/sdlf-*
+          - Effect: Allow
+            Action:
+              - athena:CreateWorkGroup
+              - athena:DeleteWorkGroup
+              - athena:TagResource
+            Resource:
+              - !Sub arn:aws:athena:${AWS::Region}:${AWS::AccountId}:workgroup/*
+          - Effect: Allow
+            Action:
+              - athena:CreateWorkGroup
+              - athena:DeleteWorkGroup
+              - athena:TagResource
+            Resource:
+              - !Sub arn:aws:athena:${AWS::Region}:${AWS::AccountId}:workgroup/*
+          - Effect: Allow
+            Action:
+              - iam:AttachRolePolicy
+              - iam:CreateRole
+              - iam:CreateServiceLinkedRole
+              - iam:DeleteRole
+              - iam:DeleteRolePolicy
+              - iam:DetachRolePolicy
+              - iam:PassRole
+              - iam:PutRolePolicy
+              - iam:TagRole
+              - iam:UntagRole
+              - iam:UpdateRole
+              - iam:UpdateRoleDescription
+              - iam:CreateGroup
+              - iam:DeleteGroup
+              - iam:GetGroup
+              - iam:AttachGroupPolicy
+              - iam:DetachGroupPolicy
+            Resource:
+              - !Sub arn:aws:iam::${AWS::AccountId}:role/*
+              - !Sub arn:aws:iam::${AWS::AccountId}:group/* #TO DO UPDATE TO LEAST PRIVILEGE
+          - Effect: Allow
+            Action:
+              - SNS:Subscribe
+              - SNS:Unsubscribe
+            Resource:
+              - !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:*
+          - Effect: Allow
+            Action:
+              - "ssm:AddTagsToResource"
+              - "ssm:DescribeParameters"
+              - "ssm:GetOpsSummary"
+              - "ssm:GetParameter"
+              - "ssm:GetParameterHistory"
+              - "ssm:GetParameters"
+              - "ssm:GetParametersByPath"
+              - "ssm:ListTagsForResource"
+              - "ssm:RemoveTagsFromResource"
+              - "ssm:GetParameters"
+              - "ssm:PutParameter"
+              - "ssm:DeleteParameter"
+            Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/SDLF/*

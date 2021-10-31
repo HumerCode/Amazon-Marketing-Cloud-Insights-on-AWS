@@ -1,0 +1,222 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Contains all the resources necessary for a single dataset
+Parameters:
+  pAnalyticsBucket:
+    Description: The analytics bucket for the solution
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /SDLF/S3/AnalyticsBucket
+  pApp:
+    Description: Name of the application
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /SDLF/Misc/pApp
+  pCentralBucket:
+    Description: The central bucket for the solution
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /SDLF/S3/CentralBucket
+  pDatasetName:
+    Description: The name of the dataset (all lowercase, no symbols or spaces)
+    Type: String
+    AllowedPattern: '[a-z0-9]{2,14}'
+  pEnvironment:
+    Description: Environment name
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /SDLF/Misc/pEnv
+  pOrg:
+    Description: Name of the organization owning the datalake
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /SDLF/Misc/pOrg
+  pPipelineBucket:
+    Description: The artifactory bucket used by CodeBuild and CodePipeline
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /SDLF/S3/ArtifactsBucket
+  pPipelineName:
+    Description: The name of the pipeline (all lowercase, no symbols or spaces)
+    Type: String
+    AllowedPattern: '[a-z0-9]*'
+  pStageBucket:
+    Description: The stage bucket for the solution
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /SDLF/S3/StageBucket
+  pTeamName:
+    Description: Name of the team owning the pipeline (all lowercase, no symbols or
+      spaces)
+    Type: String
+    AllowedPattern: '[a-z0-9]*'
+Resources:
+  rQueueRoutingPostStep:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName:
+        Fn::Join:
+        - '-'
+        - - sdlf
+          - Ref: pTeamName
+          - Ref: pDatasetName
+          - queue-b.fifo
+      FifoQueue: true
+      RedrivePolicy:
+        deadLetterTargetArn:
+          Fn::GetAtt:
+          - rDeadLetterQueueRoutingPostStep
+          - Arn
+        maxReceiveCount: 1
+      VisibilityTimeout: 60
+      KmsMasterKeyId:
+        Fn::Sub: '{{resolve:ssm:/SDLF/KMS/${pTeamName}/InfraKeyId:1}}'
+  rDeadLetterQueueRoutingPostStep:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName:
+        Fn::Join:
+        - '-'
+        - - sdlf
+          - Ref: pTeamName
+          - Ref: pDatasetName
+          - dlq-b.fifo
+      FifoQueue: true
+      MessageRetentionPeriod: 1209600
+      VisibilityTimeout: 60
+      KmsMasterKeyId:
+        Fn::Sub: '{{resolve:ssm:/SDLF/KMS/${pTeamName}/InfraKeyId:1}}'
+  rPostStateRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name:
+        Fn::Join:
+        - '-'
+        - - sdlf
+          - Ref: pTeamName
+          - Ref: pDatasetName
+          - rule-b
+      Description: Trigger StageB Routing Lambda every 5 minutes
+      State: ENABLED
+      ScheduleExpression: cron(*/5 * * * ? *)
+      Targets:
+      - Id:
+          Fn::Join:
+          - '-'
+          - - sdlf
+            - Ref: pTeamName
+            - Ref: pDatasetName
+            - rule-b
+        Arn:
+          Fn::Join:
+          - ':'
+          - - arn:aws:lambda
+            - Ref: AWS::Region
+            - Ref: AWS::AccountId
+            - function
+            - Fn::Join:
+              - '-'
+              - - sdlf
+                - Ref: pTeamName
+                - Ref: pPipelineName
+                - routing-b
+        Input:
+          Fn::Sub: "{\n  \"team\": \"${pTeamName}\",\n  \"pipeline\": \"${pPipelineName}\"\
+            ,\n  \"pipeline_stage\": \"StageB\",\n  \"dataset\": \"${pDatasetName}\"\
+            ,\n  \"org\": \"${pOrg}\",\n  \"app\": \"${pApp}\",\n  \"env\": \"${pEnvironment}\"\
+            \n}\n"
+  rPermissionEventsInvokeRoutingLambda:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName:
+        Fn::Join:
+        - '-'
+        - - sdlf
+          - Ref: pTeamName
+          - Ref: pPipelineName
+          - routing-b
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn:
+        Fn::GetAtt:
+        - rPostStateRule
+        - Arn
+  rGlueDataCatalog:
+    Type: AWS::Glue::Database
+    Properties:
+      CatalogId:
+        Ref: AWS::AccountId
+      DatabaseInput:
+        Description:
+          Fn::Sub: ${pTeamName} team ${pDatasetName} metadata catalog
+        Name:
+          Fn::Join:
+          - _
+          - - Ref: pOrg
+            - Ref: pApp
+            - Ref: pEnvironment
+            - Ref: pTeamName
+            - Ref: pDatasetName
+            - db
+  rGlueCrawler:
+    Type: AWS::Glue::Crawler
+    Properties:
+      Role:
+        Fn::Sub: '{{resolve:ssm:/SDLF/IAM/${pTeamName}/CrawlerRoleArn:1}}'
+      DatabaseName:
+        Ref: rGlueDataCatalog
+      Name:
+        Fn::Sub: sdlf-${pTeamName}-${pDatasetName}-post-stage-crawler
+      Targets:
+        S3Targets:
+        - Path:
+            Fn::Sub: s3://${pStageBucket}/post-stage/${pTeamName}/${pDatasetName}
+  rGlueCrawlerLakeFormationPermissions:
+    Type: AWS::LakeFormation::Permissions
+    Properties:
+      DataLakePrincipal:
+        DataLakePrincipalIdentifier:
+          Fn::Sub: '{{resolve:ssm:/SDLF/IAM/${pTeamName}/CrawlerRoleArn:1}}'
+      Permissions:
+      - CREATE_TABLE
+      - ALTER
+      - DROP
+      Resource:
+        DatabaseResource:
+          Name:
+            Ref: rGlueDataCatalog
+  rQueueRoutingPostStepSsm:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name:
+        Fn::Sub: /SDLF/SQS/${pTeamName}/${pDatasetName}StageBQueue
+      Type: String
+      Value:
+        Fn::Select:
+        - '5'
+        - Fn::Split:
+          - ':'
+          - Fn::GetAtt:
+            - rQueueRoutingPostStep
+            - Arn
+      Description:
+        Fn::Sub: Name of the StageB ${pTeamName} ${pDatasetName} Queue
+  rDeadLetterQueueRoutingPostStepSsm:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name:
+        Fn::Sub: /SDLF/SQS/${pTeamName}/${pDatasetName}StageBDLQ
+      Type: String
+      Value:
+        Fn::Select:
+        - '5'
+        - Fn::Split:
+          - ':'
+          - Fn::GetAtt:
+            - rDeadLetterQueueRoutingPostStep
+            - Arn
+      Description:
+        Fn::Sub: Name of the StageB ${pTeamName} ${pDatasetName} DLQ
+  rGlueDataCatalogSsm:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name:
+        Fn::Sub: /SDLF/Glue/${pTeamName}/${pDatasetName}/DataCatalog
+      Type: String
+      Value:
+        Ref: rGlueDataCatalog
+      Description:
+        Fn::Sub: ${pTeamName} team ${pDatasetName} metadata catalog

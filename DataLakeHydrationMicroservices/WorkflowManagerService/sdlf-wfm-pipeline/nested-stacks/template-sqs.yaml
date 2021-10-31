@@ -1,0 +1,93 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: "AWS::Serverless-2016-10-31"
+Description: "Contains all the resources necessary for the workflow management microservice"
+
+Parameters:
+  pTeamName:
+    Type: String
+    AllowedPattern: '[a-z0-9]{2,10}'
+  pMicroserviceName:
+    Type: String
+    AllowedPattern: '[a-z0-9]{2,12}'
+  pPipelineName:
+    Type: String
+    AllowedPattern: '[a-z0-9]{2,10}'
+  pEnvironment:
+    Type: String
+  pSNSSQSKeyAlias:
+    Type: String
+    
+Resources:
+
+######## SQS Queues ######
+
+###### SQS Customer Config Dead-letter Queue######
+  rQueueCustomerConfigDeadLettterQueue:
+    Type: 'AWS::SQS::Queue'
+    Properties:
+      QueueName: !Sub "${pMicroserviceName}-${pTeamName}-${pPipelineName}-${pEnvironment}-customerConfig-DLQ.fifo"
+      FifoQueue: true
+      KmsMasterKeyId: !Ref pSNSSQSKeyAlias
+      ContentBasedDeduplication: true
+      VisibilityTimeout: 90
+      DelaySeconds: 10
+      Tags:
+        -
+          Key: 'tagging-policy'
+          Value: !Sub "${pMicroserviceName}-${pTeamName}-${pPipelineName}-${pEnvironment}-customerConfig-common"
+
+###### SQS Customer Config Queue######
+  rQueueCustomerConfig:
+    Type: 'AWS::SQS::Queue'
+    Properties:
+      QueueName: !Sub "${pMicroserviceName}-${pTeamName}-${pPipelineName}-${pEnvironment}-customerConfig.fifo"
+      FifoQueue: true
+      KmsMasterKeyId: !Ref pSNSSQSKeyAlias
+      ContentBasedDeduplication: true
+      RedrivePolicy : !Sub '{ "deadLetterTargetArn" : "${rQueueCustomerConfigDeadLettterQueue.Arn}", "maxReceiveCount" : 10 }'
+      VisibilityTimeout: 90
+      DelaySeconds: 10
+      Tags:
+        -
+          Key: 'tagging-policy'
+          Value: !Sub "${pMicroserviceName}-${pTeamName}-${pPipelineName}-${pEnvironment}-customerConfig-common"
+
+###### SQS Workflow Library Dead-letter Queue ######
+  rQueueWorkflowLibraryDeadLetterQueue:
+    Type: 'AWS::SQS::Queue'
+    Properties:
+      QueueName: !Sub "${pMicroserviceName}-${pTeamName}-${pPipelineName}-${pEnvironment}-workflowLibrary-DLQ.fifo"
+      FifoQueue: true
+      KmsMasterKeyId: !Ref pSNSSQSKeyAlias
+      ContentBasedDeduplication: true
+      VisibilityTimeout: 90
+      DelaySeconds: 10
+      Tags:
+        -
+          Key: 'tagging-policy'
+          Value: !Sub "${pMicroserviceName}-${pTeamName}-${pPipelineName}-${pEnvironment}-workflowLibrary-common"
+
+###### SQS Workflow Library Queue ######
+  rQueueWorkflowLibrary:
+    Type: 'AWS::SQS::Queue'
+    Properties:
+      QueueName: !Sub "${pMicroserviceName}-${pTeamName}-${pPipelineName}-${pEnvironment}-workflowLibrary.fifo"
+      FifoQueue: true
+      KmsMasterKeyId: !Ref pSNSSQSKeyAlias
+      ContentBasedDeduplication: true
+      RedrivePolicy : !Sub '{ "deadLetterTargetArn" : "${rQueueWorkflowLibraryDeadLetterQueue.Arn}", "maxReceiveCount" : 10 }'
+      VisibilityTimeout: 90
+      DelaySeconds: 10
+      Tags:
+        -
+          Key: 'tagging-policy'
+          Value: !Sub "${pMicroserviceName}-${pTeamName}-${pPipelineName}-${pEnvironment}-workflowLibrary-common"
+
+Outputs:
+  oCustomerConfigQueue:
+    Description: "ARN of the SQS Queue for AMC Customer Config Changes"
+    Value: !GetAtt rQueueCustomerConfig.Arn
+  
+  oWorkflowLibraryQueue:
+    Description: "ARN of the SQS Queue for AMC Workflow Library Changes"
+    Value: !GetAtt rQueueWorkflowLibrary.Arn

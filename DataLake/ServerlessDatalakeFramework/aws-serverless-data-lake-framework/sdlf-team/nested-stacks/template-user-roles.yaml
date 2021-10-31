@@ -1,0 +1,994 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: "AWS::Serverless-2016-10-31"
+Description: "IAM Resources to manage a team"
+
+Parameters:
+  pAnalyticsBucket:
+    Type: String
+  pApplicationName:
+    Type: String
+  pCentralBucket:
+    Type: String
+  pEnvironment:
+    Type: String
+  pKMSInfraKeyId:
+    Type: String
+  pKMSDataKeyId:
+    Type: String
+  pOrganizationName:
+    Type: String
+  pStageBucket:
+    Type: String
+  pTeamName:
+    Type: String
+
+Conditions:
+  CreateDeveloperResources: !Or [!Equals [!Ref pEnvironment, dev], !Equals [!Ref pEnvironment, test]]
+
+Resources:
+  rDataLakeMgrRole:
+    Condition: CreateDeveloperResources
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "@${pTeamName}-saw-datalake-mgr-${AWS::Region}"
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action:
+              - "sts:AssumeRole"
+      ManagedPolicyArns:
+        - !Ref rAthenaPolicy
+        - !Ref rS3Policy
+        - !Ref rLambdaPolicy
+        - !Ref rCloudWatchPolicy
+        - !Ref rCostExplorerPolicy
+        - !Ref rCFNPolicy
+
+  rDataLakeUsersRole:
+    Condition: CreateDeveloperResources
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "@${pTeamName}-saw-datalake-users-${AWS::Region}"
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action:
+              - "sts:AssumeRole"
+      ManagedPolicyArns:
+        - !Ref rAthenaPolicy
+        - !Ref rS3Policy
+        - !Ref rLambdaPolicy
+        - !Ref rCloudWatchPolicy
+        - !Ref rQuickSightPolicy
+        - !Ref rCFNPolicy
+      Policies:
+        - PolicyName: !Sub "saw-${pTeamName}-datalake-users"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - "kms:DescribeKey"
+                  - "kms:Encrypt"
+                  - "kms:Decrypt"
+                  - "kms:ReEncrypt*"
+                  - "kms:GenerateDataKey*"
+                  - "kms:CreateGrant"
+                Resource:
+                  - !Sub "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/*"
+              - Effect: Allow
+                Action:
+                  - "glue:TagResource"
+                  - "glue:UntagResource"
+                  - "glue:GetTags"
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - "glue:GetCrawler"
+                  - "glue:GetCrawlers"
+                  - "glue:StartCrawler"
+                Resource: !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:crawler/sdlf-${pTeamName}-*
+              - Effect: Allow
+                Action:
+                  - "glue:CreateJob"
+                  - "glue:GetJob"
+                  - "glue:GetJobs"
+                  - "glue:ListJobs"
+                  - "glue:UpdateJob"
+                Resource: !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:job/sdlf-${pTeamName}-*
+              - Effect: Allow
+                Action:
+                  - "glue:CreateDatabase"
+                  - "glue:GetDatabase"
+                  - "glue:GetDatabases"
+                  - "glue:UpdateDatabase"
+                  - "glue:Get*"
+                  - "glue:SearchTables"
+                Resource:
+                  - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:catalog
+                  - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:database/${pOrganizationName}_${pApplicationName}_${pEnvironment}_${pTeamName}_*
+                  - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:database/${pTeamName}_*
+              - Effect: Allow
+                Action:
+                  - "glue:GetTables"
+                Resource: !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:database/*
+              - Effect: Allow
+                Action:
+                  - "states:DescribeStateMachineForExecution"
+                  - "states:DescribeStateMachine"
+                  - "states:StartExecution"
+                Resource:
+                  - !Sub "arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:*"
+                  - !Sub "arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:*"
+              - Effect: Allow
+                Action:
+                  - s3:ListObjectsV2
+                  - s3:GetObject
+                  - s3:GetObjectVersion
+                  - s3:GetBucketVersioning
+                  - s3:GetBucketAcl
+                  - s3:GetBucketLocation
+                  - s3:PutObject
+                  - s3:PutObjectVersion
+                Resource:
+                  - !Sub "arn:aws:s3:::${pCentralBucket}/${pTeamName}/*"
+                  - !Sub "arn:aws:s3:::${pCentralBucket}/raw/${pTeamName}/*"
+                  - !Sub "arn:aws:s3:::${pStageBucket}/${pTeamName}/*"
+                  - !Sub "arn:aws:s3:::${pStageBucket}/stage/${pTeamName}/*"
+                  - !Sub "arn:aws:s3:::${pStageBucket}/pre-stage/${pTeamName}/*"
+                  - !Sub "arn:aws:s3:::${pStageBucket}/post-stage/${pTeamName}/*"
+                  - !Sub "arn:aws:s3:::${pAnalyticsBucket}/${pTeamName}/*"
+                  - !Sub "arn:aws:s3:::${pAnalyticsBucket}/analytics/${pTeamName}/*"
+                  - "arn:aws:s3:::amc-atckdpus-x0nxmqhh/*"
+                  - "arn:aws:s3:::amc-atctomofunus-oxnqexw8/*"
+              - Effect: Allow
+                Action:
+                  - athena:ListWorkGroups
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - s3:GetBucketLocation
+                  - s3:ListBucket
+                  - s3:ListAllMyBuckets
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - 'athena:GetNamedQuery'
+                  - 'athena:CancelQueryExecution'
+                  - 'athena:CreateNamedQuery'
+                  - 'athena:DeleteNamedQuery'
+                  - 'athena:StartQueryExecution'
+                  - 'athena:StopQueryExecution'
+                  - 'athena:GetWorkGroup'
+                  - 'athena:GetNamedQuery'
+                  - 'athena:GetQueryResults'
+                  - 'athena:GetQueryExecution'
+                  - 'athena:BatchGetQueryExecution'
+                  - 'athena:BatchGetNamedQuery'
+                  - 'athena:ListNamedQueries'
+                  - 'athena:ListQueryExecutions'
+                  - 'athena:GetQueryResultsStream'
+                Resource:
+                  - !Join
+                    - '/'
+                    - - !Sub arn:aws:athena:${AWS::Region}:${AWS::AccountId}:workgroup
+                      - !Ref rAthenaWorkGroup
+              - Effect: Allow
+                Action:
+                  - 'quicksight:*'
+                Resource:
+                  - "*"
+              - Effect: Allow
+                Action:
+                  - 'lakeformation:GetDataAccess'
+                Resource:
+                  - "*"
+
+  rAthenaWorkGroup:
+    Condition: CreateDeveloperResources
+    Type: AWS::Athena::WorkGroup
+    Properties:
+      State: ENABLED
+      Tags:
+        - Value: !Join ['-', [!Ref pOrganizationName, !Ref pApplicationName, !Ref pEnvironment, !Ref pTeamName]]
+          Key: tagging-policy
+      WorkGroupConfiguration:
+        PublishCloudWatchMetricsEnabled: false
+        ResultConfiguration:
+          OutputLocation: !Sub 's3://${pStageBucket}/${pTeamName}/athena_query_results/${pTeamName}_${pApplicationName}_${pEnvironment}_workgroup'
+        EnforceWorkGroupConfiguration: false
+        RequesterPaysEnabled: true
+      Description: Athena Workgroup for accessing Dev and Test Data
+      Name: !Join
+        - '-'
+        - - !Ref pTeamName
+          - !Ref pApplicationName
+          - !Ref pEnvironment
+          - workgroup
+
+  rApiATSAdminGroup:
+    Type: AWS::IAM::Group
+    Properties:
+      GroupName: !Join ['-', ["sdlf", !Ref pOrganizationName, !Ref pApplicationName, !Ref pEnvironment, !Ref pTeamName, "AMC-API-Users", !Sub "${AWS::Region}"]]
+      ManagedPolicyArns:
+        - !Ref rAPIGatewayInvokeAMCApiPolicy
+
+  rAPIGatewayInvokeAMCApiPolicy:
+    Type: 'AWS::IAM::ManagedPolicy'
+    Properties:
+      ManagedPolicyName: !Join
+        - '-'
+        - - "sdlf"
+          - !Ref pOrganizationName
+          - !Ref pApplicationName
+          - !Ref pEnvironment
+          - ApiGateway
+          - AMCAPIInvoke
+          - !Sub "${AWS::Region}"
+      Description: Allows API Invoke on the AMC API Endpoints
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Action:
+              - 'execute-api:Invoke'
+            Resource:
+              - !Sub "arn:aws:execute-api:${AWS::Region}:*"
+            Effect: Allow
+          - Action:
+              - 'sts:GetSessionToken'
+            Resource:
+              - "*"
+            Effect: Allow
+
+#### MANAGED POLICIES ###
+  rAthenaPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: Policy to manage SAWS Data Lake athena
+      ManagedPolicyName: !Sub sdlf-saw-${pTeamName}-athena-policy-${AWS::Region}
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: Allow
+            Action:
+              - "athena:CreateNamedQuery"
+              - "athena:DeleteNamedQuery"
+              - "athena:GetNamedQuery"
+              - "athena:GetQueryResultsStream"
+              - "athena:GetQueryExecution"
+              - "athena:GetQueryResults"
+              - "athena:GetTable"
+              - "athena:GetTables"
+              - "athena:GetWorkGroup"
+              - "athena:ListQueryExecutions"
+              - "athena:ListNamedQueries"
+              - "athena:ListWorkGroups"
+              - "athena:StartQueryExecution"
+              - "athena:StopQueryExecution"
+            Resource: !Sub "arn:aws:athena:${AWS::Region}:${AWS::AccountId}:workgroup/*"
+          -
+            Effect: Allow
+            Action:
+              - "athena:ListWorkGroups"
+            Resource: '*'
+          -
+            Effect: Allow
+            Action:
+              - "glue:GetDatabase"
+              - "glue:GetDatabases"
+              - "glue:GetTable"
+              - "glue:GetTables"
+              - "glue:GetPartition"
+              - "glue:GetPartitions"
+            Resource:
+              - !Sub "arn:aws:glue:${AWS::Region}:${AWS::AccountId}:catalog"
+              - !Sub "arn:aws:glue:${AWS::Region}:${AWS::AccountId}:database/*"
+              - !Sub "arn:aws:glue:${AWS::Region}:${AWS::AccountId}:table/*"
+          -
+            Effect: Allow
+            Action:
+              - "athena:ListWorkGroups"
+            Resource: '*'
+          -
+            Effect: Allow
+            Action:
+              - "glue:GetCrawler"
+              - "glue:BatchGetDevEndpoints"
+              - "glue:GetMLTransform"
+              - "glue:GetPartitions"
+              - "glue:GetTableVersions"
+              - "glue:UpdateCrawler"
+              - "glue:GetDevEndpoint"
+              - "glue:GetTrigger"
+              - "glue:UpdateTrigger"
+              - "glue:GetJobRun"
+              - "glue:GetJobs"
+              - "glue:DeleteCrawler"
+              - "glue:GetTriggers"
+              - "glue:GetWorkflowRun"
+              - "glue:GetMapping"
+              - "glue:DeleteConnection"
+              - "glue:GetPartition"
+              - "glue:UseMLTransforms"
+              - "glue:BatchDeleteConnection"
+              - "glue:StartCrawlerSchedule"
+              - "glue:UpdateMLTransform"
+              - "glue:CreateMLTransform"
+              - "glue:GetClassifiers"
+              - "glue:StartMLEvaluationTaskRun"
+              - "glue:BatchDeletePartition"
+              - "glue:CreateTrigger"
+              - "glue:DeleteTableVersion"
+              - "glue:CreateUserDefinedFunction"
+              - "glue:StopCrawler"
+              - "glue:StopTrigger"
+              - "glue:DeleteJob"
+              - "glue:DeleteDevEndpoint"
+              - "glue:GetCatalogImportStatus"
+              - "glue:CreateJob"
+              - "glue:DeleteMLTransform"
+              - "glue:GetTableVersion"
+              - "glue:GetConnection"
+              - "glue:ResetJobBookmark"
+              - "glue:CreatePartition"
+              - "glue:UpdatePartition"
+              - "glue:BatchGetPartition"
+              - "glue:ListJobs"
+              - "glue:StartMLLabelingSetGenerationTaskRun"
+              - "glue:GetTable"
+              - "glue:GetDatabase"
+              - "glue:BatchGetCrawlers"
+              - "glue:GetDataflowGraph"
+              - "glue:CreateDatabase"
+              - "glue:BatchDeleteTableVersion"
+              - "glue:GetPlan"
+              - "glue:ListCrawlers"
+              - "glue:GetJobRuns"
+              - "glue:BatchCreatePartition"
+              - "glue:SearchTables"
+              - "glue:GetDataCatalogEncryptionSettings"
+              - "glue:CreateClassifier"
+              - "glue:GetWorkflowRunProperties"
+              - "glue:UpdateTable"
+              - "glue:DeleteTable"
+              - "glue:DeleteWorkflow"
+              - "glue:GetSecurityConfiguration"
+              - "glue:CreateScript"
+              - "glue:UpdateWorkflow"
+              - "glue:GetUserDefinedFunction"
+              - "glue:StartWorkflowRun"
+              - "glue:GetUserDefinedFunctions"
+              - "glue:StopCrawlerSchedule"
+              - "glue:GetClassifier"
+              - "glue:ListWorkflows"
+              - "glue:UpdateDatabase"
+              - "glue:CreateTable"
+              - "glue:GetTables"
+              - "glue:BatchStopJobRun"
+              - "glue:DeleteUserDefinedFunction"
+              - "glue:CreateConnection"
+              - "glue:CreateCrawler"
+              - "glue:DeleteSecurityConfiguration"
+              - "glue:GetDevEndpoints"
+              - "glue:BatchGetWorkflows"
+              - "glue:ListDevEndpoints"
+              - "glue:BatchGetJobs"
+              - "glue:StartJobRun"
+              - "glue:BatchDeleteTable"
+              - "glue:UpdateClassifier"
+              - "glue:CreateWorkflow"
+              - "glue:DeletePartition"
+              - "glue:GetJob"
+              - "glue:GetWorkflow"
+              - "glue:GetConnections"
+              - "glue:CreateSecurityConfiguration"
+              - "glue:GetCrawlers"
+              - "glue:DeleteDatabase"
+              - "glue:PutWorkflowRunProperties"
+              - "glue:StartTrigger"
+              - "glue:ImportCatalogToGlue"
+              - "glue:PutDataCatalogEncryptionSettings"
+              - "glue:StartCrawler"
+              - "glue:UpdateJob"
+              - "glue:GetJobBookmark"
+              - "glue:GetMLTransforms"
+              - "glue:StartImportLabelsTaskRun"
+              - "glue:DeleteClassifier"
+              - "glue:StartExportLabelsTaskRun"
+              - "glue:UpdateUserDefinedFunction"
+              - "glue:CancelMLTaskRun"
+              - "glue:GetMLTaskRuns"
+              - "glue:GetSecurityConfigurations"
+              - "glue:ListTriggers"
+              - "glue:GetDatabases"
+              - "glue:GetMLTaskRun"
+              - "glue:UpdateCrawlerSchedule"
+              - "glue:UpdateConnection"
+              - "glue:BatchGetTriggers"
+              - "glue:CreateDevEndpoint"
+              - "glue:UpdateDevEndpoint"
+              - "glue:GetWorkflowRuns"
+              - "glue:DeleteTrigger"
+              - "glue:GetCrawlerMetrics"
+            Resource: '*'
+          -
+            Effect: Allow
+            Action:
+              - "glue:GetResourcePolicy"
+            Resource:
+              - !Sub "arn:aws:glue:${AWS::Region}:${AWS::AccountId}:catalog/*"
+
+  rLambdaPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: Policy to manage SAW datalake lambda
+      ManagedPolicyName: !Sub sdlf-saw-${pTeamName}-lambda-policy-${AWS::Region}
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: Allow
+            Action:
+              - "lambda:EnableReplication"
+              - "lambda:GetLayerVersion"
+              - "lambda:GetFunction"
+              - "lambda:GetAccountSettings"
+              - "lambda:GetFunctionConfiguration"
+              - "lambda:GetLayerVersionPolicy"
+              - "lambda:GetAlias"
+              - "lambda:GetPolicy"
+              - "lambda:InvokeFunction"
+              - "lambda:InvokeAsync"
+              - "lambda:ListFunctions"
+              - "lambda:ListVersionsByFunction"
+              - "lambda:ListAliases"
+              - "lambda:ListTags"
+              - "lambda:TagResource"
+              - "lambda:CreateFunction"
+              - "lambda:RemoveLayerVersionPermission"
+              - "lambda:UntagResource"
+              - "lambda:DeleteLayerVersion"
+              - "lambda:DeleteFunction"
+              - "lambda:UpdateFunctionConfiguration"
+              - "lambda:AddLayerVersionPermission"
+              - "lambda:RemoveLayerVersionPermission"
+              - "lambda:UpdateFunctionCode"
+              - "lambda:PutFunctionConcurrency"
+              - "lambda:DeleteFunctionConcurrency"
+              - "lambda:AddPermission"
+              - "lambda:RemovePermission"
+              - "lambda:CreateAlias"
+              - "lambda:ListAliases"
+              - "lambda:GetAlias"
+              - "lambda:PublishLayerVersion"
+            Resource:
+              - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function/*"
+              - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:layer/*"
+              - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:event-source-mapping/*"
+          -
+            Effect: Allow
+            Action:
+              - "lambda:GetAccountSettings"
+              - "lambda:GetEventSourceMapping"
+              - "lambda:ListLayers"
+              - "lambda:ListLayerVersions"
+              - "lambda:ListFunctions"
+            Resource: "*"
+
+  rCloudWatchPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: Policy to manage SAW datalake cloudwatch
+      ManagedPolicyName: !Sub sdlf-saw-${pTeamName}-cloudwatch-policy-${AWS::Region}
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: Allow
+            Action:
+              - "cloudwatch:DescribeAlarmHistory"
+              - "cloudwatch:DescribeAlarms"
+              - "cloudwatch:EnableAlarmActions"
+              - "cloudwatch:GetDashboard"
+              - "cloudwatch:ListTagsForResource"
+              - "cloudwatch:SetAlarmState"
+              - "cloudwatch:TagResource"
+            Resource:
+              - !Sub "arn:aws:cloudwatch:${AWS::Region}:${AWS::AccountId}:dashboard/*"
+              - !Sub "arn:aws:cloudwatch:${AWS::Region}:${AWS::AccountId}:alarm/*"
+          -
+            Effect: Allow
+            Action:
+              - "cloudwatch:DescribeAlarmsForMetric"
+              - "cloudwatch:GetMetricData"
+              - "cloudwatch:GetMetricStatistics"
+              - "cloudwatch:GetMetricWidgetImage"
+              - "cloudwatch:ListDashboards"
+              - "cloudwatch:ListMetrics"
+            Resource:
+              - !Sub "arn:aws:cloudwatch:${AWS::Region}:${AWS::AccountId}:alarm/*"
+          -
+            Effect: Allow
+            Action:
+              - "logs:CancelExportTask"
+              - "logs:DescribeResourcePolicies"
+              - "logs:DescribeLogGroups"
+              - "logs:DescribeLogStreams"
+              - "logs:DescribeSubscriptionFilters"
+              - "logs:DescribeMetricFilters"
+              - "logs:DescribeQueries"
+              - "logs:DescribeExportTasks"
+              - "logs:DescribeDestinations"
+              - "logs:FilterLogEvents"
+              - "logs:GetLogGroupFields"
+              - "logs:GetLogEvents"
+              - "logs:GetLogRecord"
+              - "logs:GetQueryResults"
+              - "logs:GetLogDelivery"
+              - "logs:ListLogDeliveries"
+              - "logs:ListTagsLogGroup"
+              - "logs:StartQuery"
+              - "logs:StopQuery"
+              - "logs:TestMetricFilter"
+              - "logs:TagLogGroup"
+            Resource:
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group*"
+          -
+            Effect: Allow
+            Action:
+              - "resource-groups:GetGroupQuery"
+              - "resource-groups:GetGroup"
+              - "resource-groups:GetTags"
+              - "resource-groups:ListGroupResources"
+              - "resource-groups:ListGroups"
+              - "resource-groups:SearchResources"
+            Resource:
+              - !Sub "arn:aws:resource-groups:${AWS::Region}:${AWS::AccountId}:group/*"
+          -
+            Effect: Allow
+            Action:
+              - "resource-groups:GetGroupQuery"
+              - "resource-groups:GetGroup"
+              - "resource-groups:GetTags"
+              - "resource-groups:ListGroupResources"
+              - "resource-groups:ListGroups"
+              - "resource-groups:SearchResources"
+            Resource:
+              - !Sub "arn:aws:resource-groups:${AWS::Region}:${AWS::AccountId}:*"
+
+  rQuickSightPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: Policy to manage SAW Datalake quicksight
+      ManagedPolicyName: !Sub sdlf-saw-${pTeamName}-quicksight-policy-${AWS::Region}
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: Allow
+            Action:
+              - "quicksight:DescribeGroup"
+              - "quicksight:DescribeUser"
+              - "quicksight:GetDashboardEmbedUrl"
+              - "quicksight:ListGroups"
+              - "quicksight:ListUserGroups"
+              - "quicksight:ListUsers"
+              - "quicksight:ListGroupMemberships"
+            Resource:
+              - !Sub "arn:aws:quicksight:${AWS::Region}:${AWS::AccountId}:user/*"
+              - !Sub "arn:aws:quicksight:${AWS::Region}:${AWS::AccountId}:dashboard/*"
+              - !Sub "arn:aws:quicksight:${AWS::Region}:${AWS::AccountId}:group/*"
+          -
+            Effect: Allow
+            Action:
+              - "quicksight:GetGroupMapping"
+              - "quicksight:Unsubscribe"
+              - "quicksight:SearchDirectoryGroups"
+              - "quicksight:Subscribe"
+            Resource:
+              - !Sub "arn:aws:quicksight:${AWS::Region}:${AWS::AccountId}:*"
+
+  rCostExplorerPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: Policy to manage SAW datalake cost explorer
+      ManagedPolicyName: !Sub sdlf-saw-${pTeamName}-costexplorer-policy-${AWS::Region}
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: Allow
+            Action:
+              - "aws-portal:ViewAccount"
+              - "aws-portal:ViewBilling"
+              - "aws-portal:ViewUsage"
+              - "ce:GetRightsizingRecommendation"
+              - "ce:GetReservationUtilization"
+              - "ce:GetDimensionValues"
+              - "ce:GetCostAndUsage"
+              - "ce:GetReservationCoverage"
+              - "ce:GetReservationPurchaseRecommendation"
+              - "ce:GetCostForecast"
+              - "ce:GetTags"
+              - "ce:GetUsageForecast"
+            Resource: "*"
+          -
+            Effect: Allow
+            Action:
+              - "cur:DescribeReportDefinitions"
+            Resource: "*"
+
+  rCFNPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: Policy to manage SAW datalake cloud formation
+      ManagedPolicyName: !Sub sdlf-saw-${pTeamName}-cfn-policy-${AWS::Region}
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: Allow
+            Action:
+              - "cloudformation:DeleteStackInstances"
+              - "cloudformation:DescribeStackSet"
+              - "cloudformation:DescribeStackDriftDetectionStatus"
+              - "cloudformation:DetectStackDrift"
+              - "cloudformation:DescribeStackResource"
+              - "cloudformation:DetectStackResourceDrift"
+              - "cloudformation:DescribeStackEvents"
+              - "cloudformation:DescribeStackSetOperation"
+              - "cloudformation:DescribeAccountLimits"
+              - "cloudformation:DescribeChangeSet"
+              - "cloudformation:DescribeStackInstance"
+              - "cloudformation:DescribeStackResources"
+              - "cloudformation:DeleteStackSet"
+              - "cloudformation:DescribeStacks"
+              - "cloudformation:DescribeStackResourceDrifts"
+              - "cloudformation:DeleteStack"
+              - "cloudformation:EstimateTemplateCost"
+              - "cloudformation:GetTemplateSummary"
+              - "cloudformation:GetStackPolicy"
+              - "cloudformation:GetTemplate"
+              - "cloudformation:ListStackSetOperations"
+              - "cloudformation:ListStackInstances"
+              - "cloudformation:ListExports"
+              - "cloudformation:ListStackSetOperationResults"
+              - "cloudformation:ListStackResources"
+              - "cloudformation:ListStacks"
+              - "cloudformation:ListImports"
+              - "cloudformation:ListStackSets"
+              - "cloudformation:ListChangeSets"
+              - "cloudformation:ValidateTemplate"
+            Resource:
+              - !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/*"
+              - !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stackset/*"
+
+  rLakeFormationPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: Policy to manage SAW datalake LakeFormation
+      ManagedPolicyName: !Sub sdlf-saw-${pTeamName}-lakeformation-policy-${AWS::Region}
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: Allow
+            Action:
+              - "lakeformation:UpdateResource"
+              - "lakeformation:GetEffectivePermissionsForPath"
+              - "lakeformation:BatchGrantPermissions"
+              - "lakeformation:GetDataAccess"
+              - "lakeformation:RegisterResource"
+              - "lakeformation:ListPermissions"
+              - "lakeformation:BatchRevokePermissions"
+              - "lakeformation:ListResources"
+              - "lakeformation:DescribeResource"
+              - "lakeformation:GrantPermissions"
+              - "lakeformation:GetDataLakeSettings"
+              - "lakeformation:DeregisterResource"
+              - "lakeformation:PutDataLakeSettings"
+              - "lakeformation:RevokePermissions"
+            Resource: "*"
+          -
+            Effect: Allow
+            Action:
+              - "iam:CreateServiceLinkedRole"
+            Resource: "*"
+            Condition:
+              StringEquals:
+                "iam:AWSServiceName": "lakeformation.amazonaws.com"
+          - Effect: Allow
+            Action:
+              - "iam:PutRolePolicy"
+            Resource:
+              - !Sub "arn:aws:iam::${AWS::AccountId}:role/aws-service-role/lakeformation.amazonaws.com/AWSServiceRoleForLakeFormationDataAccess"
+
+  rS3Policy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: Policy to manage SAW datalake s3
+      ManagedPolicyName: !Sub sdlf-saw-${pTeamName}-S3-policy-${AWS::Region}
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: Allow
+            Action:
+              - "s3:GetBucketLocation"
+              - "s3:ListAllMyBuckets"
+            Resource: '*'
+          -
+            Effect: Allow
+            Action:
+              - "s3:AbortMultipartUpload"
+              - "s3:CreateBucket"
+              - "s3:GetBucketLocation"
+              - "s3:GetObject"
+              - "s3:ListBucket"
+              - "s3:ListBucketMultipartUploads"
+              - "s3:ListMultipartUploadParts"
+              - "s3:PutObject"
+              - "s3:DeleteObject"
+              - "s3:DeleteObjectVersion"
+            Resource:
+              - !Sub "arn:aws:s3:::${pCentralBucket}/${pTeamName}/*"
+              - !Sub "arn:aws:s3:::${pCentralBucket}/raw/${pTeamName}/*"
+              - !Sub "arn:aws:s3:::${pStageBucket}/${pTeamName}/*"
+              - !Sub "arn:aws:s3:::${pStageBucket}/stage/${pTeamName}/*"
+              - !Sub "arn:aws:s3:::${pStageBucket}/pre-stage/${pTeamName}/*"
+              - !Sub "arn:aws:s3:::${pStageBucket}/post-stage/${pTeamName}/*"
+              - !Sub "arn:aws:s3:::${pAnalyticsBucket}/${pTeamName}/*"
+              - !Sub "arn:aws:s3:::${pAnalyticsBucket}/analytics/${pTeamName}/*"
+
+  rIAMPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: Policy to manage SAW datalake IAM permissions
+      ManagedPolicyName: !Sub sdlf-saw-${pTeamName}-IAM-policy-${AWS::Region}
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Action:
+              - "iam:ListRoles"
+            Resource:
+              - !Sub "arn:aws:iam::${AWS::AccountId}:role/*"
+          -
+            Effect: "Allow"
+            Action:
+              - "iam:GetRole"
+              - "iam:UntagRole"
+              - "iam:TagRole"
+              - "iam:CreateRole"
+              - "iam:DeleteRole"
+              - "iam:UpdateRoleDescription"
+              - "iam:UpdateRole"
+              - "iam:ListRolePolicies"
+              - "iam:GetRolePolicy"
+              - "iam:PutRolePolicy"
+              - "iam:DeleteRolePolicy"
+              - "iam:AttachRolePolicy"
+              - "iam:DetachRolePolicy"
+              - "iam:CreateInstanceProfile"
+              - "iam:DeleteInstanceProfile"
+              - "iam:AddRoleToInstanceProfile"
+              - "iam:RemoveRoleFromInstanceProfile"
+              - "iam:CreateServiceLinkedRole"
+            Resource:
+              - !Sub "arn:aws:iam::${AWS::AccountId}:role/*"
+              - !Sub "arn:aws:iam::${AWS::AccountId}:instance-profile/*"
+          -
+            Effect: "Allow"
+            Action:
+              - "iam:GetAccountSummary"
+              - "iam:ListAccountAliases"
+              - "iam:ListUserPolicies"
+              - "iam:ListAttachedUserPolicies"
+              - "iam:ListGroupPolicies"
+              - "iam:GetUser"
+              - "iam:ListAccessKeys"
+              - "iam:ListServiceSpecificCredentials"
+              - "iam:ListSSHPublicKeys"
+              - "iam:ListUserTags"
+              - "iam:ListGroupsForUser"
+              - "iam:GenerateServiceLastAccessedDetails"
+              - "iam:GetGroup"
+              - "iam:ListGroupPolicies"
+            Resource:
+              - !Sub "arn:aws:iam::${AWS::AccountId}:user/*"
+          -
+            Effect: "Allow"
+            Action:
+              - "iam:ListPolicies"
+              - "iam:ListPolicyVersions"
+            Resource:
+              - !Sub "arn:aws:iam::${AWS::AccountId}:policy/*"
+          -
+            Effect: "Allow"
+            Action:
+              - "iam:GetPolicy"
+              - "iam:GetPolicyVersion"
+              - "iam:CreatePolicy"
+              - "iam:CreatePolicyVersion"
+              - "iam:DeletePolicy"
+              - "iam:DeletePolicyVersion"
+            Resource:
+              - !Sub "arn:aws:iam::${AWS::AccountId}:policy/sdlf-${pTeamName}-*"
+              - !Sub "arn:aws:iam::${AWS::AccountId}:policy/state-machine/sdlf-${pTeamName}-*"
+
+  rDataLakeMgrSsm:
+    Condition: CreateDeveloperResources
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: !Sub "/SDLF/IAM/${pTeamName}/DataLakeMgrArn"
+      Type: "String"
+      Value: !GetAtt rDataLakeMgrRole.Arn
+      Description: "ARN of the Data Lake Manager Role"
+
+  rDataLakeUsersSsm:
+    Condition: CreateDeveloperResources
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: !Sub "/SDLF/IAM/${pTeamName}/DataLakeUsersArn"
+      Type: "String"
+      Value: !GetAtt rDataLakeUsersRole.Arn
+      Description: "ARN of the Data Lake Users Role"
+
+
+
+
+  rDataAnalystRole:
+    Condition: CreateDeveloperResources
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "@${pTeamName}-saw-dataanalyst-${AWS::Region}"
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action:
+              - "sts:AssumeRole"
+      ManagedPolicyArns:
+        - !Ref rAthenaPolicy
+        - !Ref rS3Policy
+        - !Ref rLambdaPolicy
+        - !Ref rCloudWatchPolicy
+        - arn:aws:iam::aws:policy/AmazonSageMakerFullAccess
+      Policies:
+        - PolicyName: !Sub "sdlf-${pTeamName}-dataanalyst"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              -
+                Effect: "Allow"
+                Action:
+                  - "kms:DescribeKey"
+                  - "kms:Encrypt"
+                  - "kms:Decrypt"
+                  - "kms:ReEncrypt*"
+                  - "kms:GenerateDataKey*"
+                  - "kms:CreateGrant"
+                Resource:
+                  - !Sub "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/*"
+              -
+                Effect: Allow
+                Action:
+                  - "glue:TagResource"
+                  - "glue:UntagResource"
+                  - "glue:GetTags"
+                Resource: "*"
+              -
+                Effect: Allow
+                Action:
+                  - "glue:GetCrawler"
+                  - "glue:GetCrawlers"
+                  - "glue:StartCrawler"
+                Resource: !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:crawler/sdlf-${pTeamName}-*
+              -
+                Effect: Allow
+                Action:
+                  - "glue:CreateJob"
+                  - "glue:GetJob"
+                  - "glue:GetJobs"
+                  - "glue:ListJobs"
+                  - "glue:UpdateJob"
+                Resource: !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:job/sdlf-${pTeamName}-*
+              -
+                Effect: Allow
+                Action:
+                  - "glue:CreateDatabase"
+                  - "glue:GetDatabase"
+                  - "glue:GetDatabases"
+                  - "glue:UpdateDatabase"
+                  - "glue:Get*"
+                  - "glue:SearchTables"
+                Resource:
+                  - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:catalog
+                  - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:database/${pOrganizationName}_${pApplicationName}_${pEnvironment}_${pTeamName}_*
+                  - !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:database/${pTeamName}_*
+              - Effect: Allow
+                Action:
+                  - "glue:GetTables"
+                Resource: !Sub arn:aws:glue:${AWS::Region}:${AWS::AccountId}:database/*
+              - Effect: Allow
+                Action:
+                    - "states:DescribeStateMachineForExecution"
+                    - "states:DescribeStateMachine"
+                    - "states:StartExecution"
+                Resource:
+                  - !Sub "arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:*"
+                  - !Sub "arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:*"
+              - Effect: Allow
+                Action:
+                  - s3:ListObjectsV2
+                  - s3:GetObject
+                  - s3:GetObjectVersion
+                  - s3:GetBucketVersioning
+                  - s3:GetBucketAcl
+                  - s3:GetBucketLocation
+                  - s3:PutObject
+                  - s3:PutObjectVersion
+                Resource:
+                  - !Sub "arn:aws:s3:::${pCentralBucket}/${pTeamName}/*"
+                  - !Sub "arn:aws:s3:::${pCentralBucket}/raw/${pTeamName}/*"
+                  - !Sub "arn:aws:s3:::${pStageBucket}/${pTeamName}/*"
+                  - !Sub "arn:aws:s3:::${pStageBucket}/stage/${pTeamName}/*"
+                  - !Sub "arn:aws:s3:::${pStageBucket}/pre-stage/${pTeamName}/*"
+                  - !Sub "arn:aws:s3:::${pStageBucket}/post-stage/${pTeamName}/*"
+                  - !Sub "arn:aws:s3:::${pAnalyticsBucket}/${pTeamName}/*"
+                  - !Sub "arn:aws:s3:::${pAnalyticsBucket}/analytics/${pTeamName}/*"
+                  - "arn:aws:s3:::amc-atckdpus-x0nxmqhh/*"
+                  - "arn:aws:s3:::amc-atctomofunus-oxnqexw8/*"
+              - Effect: Allow
+                Action:
+                  - athena:ListWorkGroups
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - s3:GetBucketLocation
+                  - s3:ListBucket
+                  - s3:ListAllMyBuckets
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - 'athena:GetNamedQuery'
+                  - 'athena:CancelQueryExecution'
+                  - 'athena:CreateNamedQuery'
+                  - 'athena:DeleteNamedQuery'
+                  - 'athena:StartQueryExecution'
+                  - 'athena:StopQueryExecution'
+                  - 'athena:GetWorkGroup'
+                  - 'athena:GetNamedQuery'
+                  - 'athena:GetQueryResults'
+                  - 'athena:GetQueryExecution'
+                  - 'athena:BatchGetQueryExecution'
+                  - 'athena:BatchGetNamedQuery'
+                  - 'athena:ListNamedQueries'
+                  - 'athena:ListQueryExecutions'
+                  - 'athena:GetQueryResultsStream'
+                Resource:
+                  - !Join
+                    - '/'
+                    - - !Sub arn:aws:athena:${AWS::Region}:${AWS::AccountId}:workgroup
+                      - !Ref rAthenaWorkGroup
+              - Effect: Allow
+                Action:
+                  - 'quicksight:*'
+                Resource:
+                  - "*"
+              - Effect: Allow
+                Action:
+                  - 'lakeformation:GetDataAccess'
+                Resource:
+                  - "*"
+

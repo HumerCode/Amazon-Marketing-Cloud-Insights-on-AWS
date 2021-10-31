@@ -1,0 +1,19 @@
+[
+    {
+        "ParameterKey": "pMicroserviceName",
+        "ParameterValue": "tps"
+    },
+    {
+        "ParameterKey": "pPipelineName",
+        "ParameterValue": "cmpl"
+    },
+    {
+        "ParameterKey": "pTeamName",
+        "ParameterValue": "demoteam"
+    },
+    {
+        "ParameterKey": "pEnvironment",
+        "ParameterValue": "dev"
+    }
+
+]

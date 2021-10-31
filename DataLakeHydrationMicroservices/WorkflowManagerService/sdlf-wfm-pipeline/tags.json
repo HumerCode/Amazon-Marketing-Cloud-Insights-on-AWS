@@ -1,0 +1,18 @@
+[
+  {
+    "Key": "appName",
+    "Value": "Workflow Manager Service"
+  },
+  {
+    "Key": "environment",
+    "Value": "dev"
+  },
+  {
+    "Key": "module",
+    "Value": "amc delivery kit"
+  },
+  {
+    "Key": "provider",
+    "Value": "AdTech Solutions"
+  }
+]

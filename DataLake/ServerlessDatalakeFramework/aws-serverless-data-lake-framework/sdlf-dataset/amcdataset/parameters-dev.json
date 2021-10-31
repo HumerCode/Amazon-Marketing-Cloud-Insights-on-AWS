@@ -1,0 +1,14 @@
+[
+    {
+        "ParameterKey": "pTeamName",
+        "ParameterValue": "ats"
+    },
+    {
+        "ParameterKey": "pPipelineName",
+        "ParameterValue": "amc"
+    },
+    {
+        "ParameterKey": "pDatasetName",
+        "ParameterValue": "amcdataset"        
+    }
+]

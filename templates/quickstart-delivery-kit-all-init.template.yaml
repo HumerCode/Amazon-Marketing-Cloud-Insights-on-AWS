@@ -1,0 +1,370 @@
+##TODO: restrict Role Actions & Resources
+
+AWSTemplateFormatVersion: 2010-09-09
+Description: Automated deployment infrastructure
+
+Parameters:
+  EmailAddress:
+    Description: 'Email address used for Amazon DevOps Guru SNS subscription.'
+    Type: String
+    Default: robot@example.com
+  Username:
+    AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
+    ConstraintDescription: 'Must begin with a letter and contain only alphanumeric characters.'
+    Default: robot
+    Description: 'The user name.'
+    MaxLength: '16'
+    MinLength: '1'
+    Type: String
+  QSS3BucketName:
+    AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
+    ConstraintDescription: The Quick Start bucket name can include numbers, lowercase
+      letters, uppercase letters, and hyphens (-). It cannot start or end with a
+      hyphen (-).
+    Default: aws-quickstart
+    Description: Name of the S3 bucket for your copy of the Quick Start assets.
+      Keep the default name unless you are customizing the template.
+      Changing the name updates code references to point to a new Quick
+      Start location. This name can include numbers, lowercase letters,
+      uppercase letters, and hyphens, but do not start or end with a hyphen (-).
+      See https://aws-quickstart.github.io/option1.html.
+    Type: String
+  QSS3KeyPrefix:
+    AllowedPattern: ^([0-9a-zA-Z-.]+/)*$
+    ConstraintDescription: The Quick Start S3 key prefix can include numbers, lowercase letters,
+      uppercase letters, hyphens (-), and forward slashes (/).
+    Default: quickstart-amazon-marketing-cloud/
+    Description: S3 key prefix that is used to simulate a directory for your copy of the
+      Quick Start assets. Keep the default prefix unless you are customizing
+      the template. Changing this prefix updates code references to point to
+      a new Quick Start location. This prefix can include numbers, lowercase
+      letters, uppercase letters, hyphens (-), and forward slashes (/). End with a forward slash.
+      See https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingMetadata.html
+      and https://aws-quickstart.github.io/option1.html.
+    Type: String
+  QSS3BucketRegion:
+    Default: 'us-east-1'
+    Description: 'AWS Region where the Quick Start S3 bucket (QSS3BucketName) is
+      hosted. Keep the default Region unless you are customizing the template.
+      Changing this Region updates code references to point to a new Quick Start location.
+      When using your own bucket, specify the Region.
+      See https://aws-quickstart.github.io/option1.html.'
+    Type: String
+Conditions:
+  UsingDefaultBucket: !Equals [ !Ref QSS3BucketName, 'aws-quickstart' ]
+Resources:
+  CodeBuildServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: codebuild.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: root
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Resource: "*"
+                Effect: Allow
+                Action:
+                  - cloudformation:CreateChangeSet
+                  - cloudformation:CreateStack
+                  - cloudformation:CreateStackSet
+                  - cloudformation:DescribeChangeSet
+                  - cloudformation:DescribeStackEvents
+                  - cloudformation:DescribeStackResource
+                  - cloudformation:DescribeStackResources
+                  - cloudformation:DescribeStacks
+                  - cloudformation:DescribeStacks
+                  - cloudformation:DescribeStackSet
+                  - cloudformation:DescribeStackSetOperation
+                  - cloudformation:ExecuteChangeSet
+                  - cloudformation:GetTemplate
+                  - cloudformation:GetTemplateSummary
+                  - cloudformation:TagResource
+                  - cloudformation:UpdateStack
+                  - cloudformation:UpdateStackSet
+                  - cloudformation:ValidateTemplate
+              - Resource: "*"
+                Effect: Allow
+                Action:
+                  - codebuild:BatchGetProjects
+                  - codebuild:CreateProject
+                  - codebuild:DeleteProject
+                  - codebuild:ListBuildsForProject
+                  - codebuild:BatchGetBuilds
+              - Resource: "*"
+                Effect: Allow
+                Action:
+                  - codecommit:CreateBranch
+                  - codecommit:CreateRepository
+                  - codecommit:GitPush
+                  - codecommit:TagResource
+                  - codecommit:UpdateDefaultBranch
+              - Resource: "*"
+                Effect: Allow
+                Action:
+                  - codepipeline:CreatePipeline
+                  - codepipeline:GetPipeline
+                  - codepipeline:GetPipelineState
+                  - codepipeline:TagResource
+              - Resource: "*"
+                Effect: Allow
+                Action:
+                  - events:DescribeRule
+                  - events:PutRule
+                  - events:PutTargets
+                  - events:TagResource
+              - Resource: "*"
+                Effect: Allow
+                Action:
+                  - iam:AttachRolePolicy
+                  - iam:CreateRole
+                  - iam:GetRole
+                  - iam:GetRolePolicy
+                  - iam:PassRole
+                  - iam:PutRolePolicy
+                  - iam:TagRole
+              - Resource: "*"
+                Effect: Allow
+                Action:
+                  - lakeformation:GetDataLakeSettings
+                  - lakeformation:PutDataLakeSettings
+              - Resource: "*"
+                Effect: Allow
+                Action:
+                  - kms:CreateAlias
+                  - kms:CreateGrant
+                  - kms:CreateKey
+                  - kms:Decrypt
+                  - kms:DescribeKey
+                  - kms:EnableKeyRotation
+                  - kms:Encrypt
+                  - kms:GenerateDataKey
+                  - kms:ListAliases
+                  - kms:ListResourceTags
+                  - kms:PutKeyPolicy
+                  - kms:TagResource
+                  - kms:DeleteAlias
+              - Resource: "*"
+                Effect: Allow
+                Action:
+                  - lambda:AddPermission
+                  - lambda:CreateFunction
+                  - lambda:GetFunction
+                  - lambda:GetFunctionConfiguration
+                  - lambda:TagResource
+                  - lambda:InvokeFunction
+              - Resource: "*"
+                Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+              - Resource: "*"
+                Effect: Allow
+                Action:
+                  - s3:CreateBucket
+                  - s3:GetBucketPolicy
+                  - s3:PutBucketPolicy
+                  - s3:PutBucketTagging
+                  - s3:PutEncryptionConfiguration
+                  - s3:PutBucketPublicAccessBlock
+                  - s3:Put*
+                  - s3:Get*
+                  - s3:List*
+              - Resource: "*"
+                Effect: Allow
+                Action:
+                  - ssm:AddTagsToResource
+                  - ssm:GetParameter
+                  - ssm:GetParameters
+                  - ssm:PutParameter
+                  - ssm:UpdateServiceSetting
+              - Resource: "*"
+                Effect: Allow
+                Action:
+                  - sts:GetCallerIdentity
+              - Resource: "*"
+                Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:Get*
+                  - dynamodb:List*
+  LambdaTriggerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Sub arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: root
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - codebuild:BatchGetBuilds
+                  - codebuild:StartBuild
+                Resource:
+                  - !GetAtt CodeBuildProject.Arn
+  CodeBuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Artifacts:
+        Type: NO_ARTIFACTS
+      Environment:
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/standard:4.0
+        Type: LINUX_CONTAINER
+        EnvironmentVariables:
+          - Name: REPO
+            Type: PLAINTEXT
+            Value: !Sub
+              - 's3://${S3Bucket}/${QSS3KeyPrefix}'
+              - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+                S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+          #- Name: S3BUCKET
+          #  Type: PLAINTEXT
+          #  Value: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+          - Name: PREFIX
+            Type: PLAINTEXT
+            Value: !Ref QSS3KeyPrefix
+          - Name: EMAILADDRESS
+            Type: PLAINTEXT
+            Value: !Ref EmailAddress
+          - Name: USERNAME
+            Type: PLAINTEXT
+            Value: !Ref Username
+          - Name: SIGNAL_URL
+            Type: PLAINTEXT
+            Value: !Ref WaitHandle
+      ServiceRole: !GetAtt CodeBuildServiceRole.Arn
+      TimeoutInMinutes: 120
+      Source:
+        Type: NO_SOURCE
+        BuildSpec: |
+          version: 0.2
+          phases:
+            install:
+              runtime-versions:
+                  python: 3.7
+            build:
+              commands:
+                - echo Configuring AWS credentials
+                - echo $REPO
+                - echo AWS_CONTAINER_CREDENTIALS_RELATIVE_URI $AWS_CONTAINER_CREDENTIALS_RELATIVE_URI
+                - curl -qL -o aws_credentials.json http://169.254.170.2/$AWS_CONTAINER_CREDENTIALS_RELATIVE_URI > aws_credentials.json
+                - aws configure set aws_access_key_id `jq -r '.AccessKeyId' aws_credentials.json`
+                - aws configure set aws_secret_access_key `jq -r '.SecretAccessKey' aws_credentials.json`
+                - aws configure set aws_session_token `jq -r '.Token' aws_credentials.json`
+                - aws configure set default.region $AWS_REGION
+                - aws s3 sync $REPO ./amc-analytics-delivery-kit/
+                - cd ./amc-analytics-delivery-kit/
+                - git config --global user.email $EMAILADDRESS
+                - git config --global user.name $USERNAME
+                - chmod +x ./scripts/initial_deployment.sh
+                - ./scripts/initial_deployment.sh -f -rp $REPO
+            post_build:
+              commands:
+                - echo $CODEBUILD_BUILD_SUCCEEDING
+                - |
+                  if [ "$CODEBUILD_BUILD_SUCCEEDING" != "0" ] ; then
+                    curl -X PUT $SIGNAL_URL -H 'Content-Type:' -d '{"Status":"SUCCESS","Reason":"Configuration Complete","UniqueId":"ID1236","Data":"Application has completed configuration."}'; else
+                    curl -X PUT $SIGNAL_URL -H 'Content-Type:' -d '{"Status":"FAILURE","Reason":"Configuration Complete","UniqueId":"ID1236","Data":"Application has completed configuration."}';
+                  fi
+          artifacts:
+            files:
+              - "*"
+              - "**/*"
+  LambdaTrigger:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: python3.7
+      Timeout: 120
+      MemorySize: 128
+      Handler: index.lambda_handler
+      Role: !GetAtt LambdaTriggerRole.Arn
+      Environment:
+        Variables:
+          CODE_BUILD_PROJECT: !Ref CodeBuildProject
+      Code:
+        ZipFile: |
+          import os
+          import json
+
+          import boto3
+          from botocore.exceptions import ClientError
+          from urllib.request import Request, urlopen
+
+          CODE_BUILD_PROJECT = os.getenv('CODE_BUILD_PROJECT')
+          cb = boto3.client('codebuild')
+
+          def send_response(e, c, rs, rd):
+              r = json.dumps({
+                  "Status": rs,
+                  "Reason": "CloudWatch Log Stream: " + c.log_stream_name,
+                  "PhysicalResourceId": e['LogicalResourceId'],
+                  "StackId": e['StackId'],
+                  "RequestId": e['RequestId'],
+                  "LogicalResourceId": e['LogicalResourceId'],
+                  "Data": rd
+              })
+              d = str.encode(r)
+              h = {
+                  'content-type': '',
+                  'content-length': str(len(d))
+              }
+              req = Request(e['ResponseURL'], data=d, method='PUT', headers=h)
+              r = urlopen(req)
+
+          def lambda_handler(event, context):
+              request_type = event['RequestType']
+              try:
+                  if request_type == 'Create':
+                      cb.start_build(projectName=CODE_BUILD_PROJECT)
+                      send_response(event, context, "SUCCESS", {
+                                    "Message": "Created"})
+
+                  else:
+                      send_response(event, context, "SUCCESS", {
+                                    "Message": "Function Not Applicable"})
+              except Exception as e:
+                  send_response(
+                      event,
+                      context,
+                      "FAILED",
+                      {
+                          "Message": "Exception"
+                      }
+                  )
+                  raise e
+  CustomLambdaTrigger:
+    Type: Custom::LambdaTrigger
+    Properties:
+      ServiceToken: !GetAtt LambdaTrigger.Arn
+  WaitHandle:
+    Type: AWS::CloudFormation::WaitConditionHandle
+  WaitCondition:
+    Type: AWS::CloudFormation::WaitCondition
+    DependsOn: CustomLambdaTrigger
+    Properties:
+      Handle: !Ref WaitHandle
+      Timeout: 10800
+
+Outputs:
+  pRepoS3Path:
+    Value: !Sub
+      - 's3://${S3Bucket}/${QSS3KeyPrefix}'
+      - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+        S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
