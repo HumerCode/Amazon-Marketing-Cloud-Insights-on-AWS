@@ -4,4 +4,5 @@
 
 This guide provides instructions for deploying the {partner-product-short-name} Quick Start reference architecture on the AWS Cloud.
 
-This Quick Start is for users who <target audience and usage scenario>
+This Quick Start helps advertising customers to start working the Amazon Marketing Cloud (AMC) and to enable more self-service analytics and execute custom, value-driven use cases for measuring their media campaigns with Amazon.
+It also provides the foundation necessary with AWS technologies to enable more self-service analytics for AMC customers.
