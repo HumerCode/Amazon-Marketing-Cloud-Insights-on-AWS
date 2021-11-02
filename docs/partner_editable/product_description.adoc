@@ -2,7 +2,7 @@
 // Briefly describe the software. Use consistent and clear branding. 
 // Include the benefits of using the software on AWS, and provide details on usage scenarios.
 
-This Quick Start deploys the AMC Analytics Delivery Kit, which adds functionality to Amazon Marketing Cloud. The kit contains the following four modules:
+This Quick Start deploys the AMC Analytics Delivery Kit, which contains the following four modules:
 
 * **Serverless Datalake Framework.** This module is based on the open-source https://github.com/awslabs/aws-serverless-data-lake-framework[Serverless Data Lake Framework (SDLF)] of AWS Professional Services and configured to process advertising-related datasets in AMC. For more information, see https://github.com/aws-quickstart/quickstart-amazon-marketing-cloud/tree/doc-edits/DataLake/ServerlessDatalakeFramework/aws-serverless-data-lake-framework#readme[Serverless Datalake Framework (SDF)].
 

@@ -2,4 +2,4 @@
 // Identify your target audience and explain how/why they would use this Quick Start.
 //Avoid borrowing text from third-party websites (copying text from AWS service documentation is fine). Also, avoid marketing-speak, focusing instead on the technical aspect.
 
-This guide provides instructions for deploying the {partner-product-short-name} Quick Start reference architecture on the AWS Cloud. It provision infrastructure for Amazon Marketing Cloud (AMC) users to build custom use cases to evaluate their Amazon media campaigns.
+This guide provides instructions for deploying the {partner-product-short-name} Quick Start reference architecture on the AWS Cloud. It is for Amazon Marketing Cloud (AMC) users that want to build custom analytics with data lake, tenant provisioning, and workflow management features.
