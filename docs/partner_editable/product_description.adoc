@@ -2,39 +2,14 @@
 // Briefly describe the software. Use consistent and clear branding. 
 // Include the benefits of using the software on AWS, and provide details on usage scenarios.
 
-Amazon Marketing Cloud is a secure, privacy-safe, and dedicated cloud-based environment in which advertisers can easily perform analytics across multiple, pseudonymized data sets to generate aggregated reports. Inputs can include an advertiser’s own data sets, as well as their Amazon Ads campaign events, such as impressions, clicks, and conversions. AMC reports can help with campaign measurement, audience refinement, supply optimization, and more, enabling advertisers to make more informed decisions about their cross-channel marketing investments.
-Advertisers can access hundreds of fields about their Amazon media campaigns via Amazon Marketing Cloud including ad-attributed impressions, clicks, and conversions. Advertisers can also choose to upload their own pseudonymous data sets into a dedicated Amazon Marketing Cloud data clean room environment and join the data sets with Amazon Ads campaign events for analysis.  +
- +
+This Quick Start deploys the AMC Analytics Delivery Kit, which adds functionality to Amazon Marketing Cloud. The kit contains the following four modules:
 
+* **Serverless Datalake Framework.** This module is based on the open-source https://github.com/awslabs/aws-serverless-data-lake-framework[Serverless Data Lake Framework (SDLF)] of AWS Professional Services and configured to process advertising-related datasets in AMC. For more information, see https://github.com/aws-quickstart/quickstart-amazon-marketing-cloud/tree/doc-edits/DataLake/ServerlessDatalakeFramework/aws-serverless-data-lake-framework#readme[Serverless Datalake Framework (SDF)].
 
-AMC Analytics Delivery Kit deploys 4 modules to provide a foundational infrastructure for building custom usecases for measuring the media campaigns with Amazon. Please click on the link to learn more about each of these modules +
+* **Tenant Provisioning Service.** Part of the Client Manager MicroServices package, this module is an Amazon Ad Tech solution for managing multiple Amazon Marketing Cloud clients. For more information, see https://github.com/aws-quickstart/quickstart-amazon-marketing-cloud/blob/doc-edits/CustomerManagementService/TenantProvisioningService/sdlf-tps-pipeline/README.md[Tenant Provisioning Service (Client Manager MicroService)].
 
-* link:../DataLake/ServerlessDatalakeFramework/aws-serverless-data-lake-framework/README.md[Serverless Datalake Framework]
-* link:../CustomerManagementService/TenantProvisioningService/sdlf-tps-pipeline/README.md[Tenant Provisioning Service]
-* link:../DataLakeHydrationMicroservices/WorkflowManagerService/sdlf-wfm-pipeline/README.md[Workflow Management Service]
-* link:../PlatformManagementNotebooks/README.md[Platform Management Notebooks] +
+* **Workflow Management Service.** The Workflow Management Service is an Amazon Ad Tech solution for managing Amazon Marketing Cloud workflows. For more information, see https://github.com/aws-quickstart/quickstart-amazon-marketing-cloud/blob/doc-edits/DataLakeHydrationMicroservices/WorkflowManagerService/sdlf-wfm-pipeline/README.md[Workflow Management Service].
 
+* **Platform Notebook Manager.** This module contains sample Jupyter notebooks to get started with the Tenant Provisioning Service and Workflow Manager Service. For more information, see https://github.com/aws-quickstart/quickstart-amazon-marketing-cloud/blob/doc-edits/PlatformManagementNotebooks/README.md[Platform Notebook Manager].
 
-*Serverless Datalake Framework*  +
-This is built leveraging an AWS Professional Service open source initiative, link:https://github.com/awslabs/aws-serverless-data-lake-framework[aws-serverless-data-lake-framework]. The framework in the AMC Analytics Delivery Kit is pre-configured to process Advertising related datasets (AMC).
-The Serverless Data Lake Framework (SDLF) is a collection of reusable artifacts aimed at accelerating the delivery of enterprise data lakes on AWS, shortening the deployment time to production from several months to a few weeks. It can be used by AWS teams, partners and customers to implement the foundational structure of a data lake following best practices.
-
-*Tenant Provisioning Service*  +
-
-The Tenant Provisioning Service is part of the Client Manager MicroServices package, it is an Amazon Ad Tech solution that adds functionality for managing multiple Amazon Marketing Cloud clients.
-The Purpose of the Tenant Provisioning Service is to allow AMC/Sponsored Ads/DSP users to automate the onboarding of multiple clients on the Amazon Ad Tech platform without having to develop custom solutions. Below is a list of the features of the service.
-
-
-
-*Workflow Management Service* +
-
-The Workflow Management Service is an Amazon Ad Tech solution that adds functionality for managing Amazon Marketing Cloud workflows.
-The Purpose of the Workflow Management Service is to allow AMC users to automate the creation, scheduling, and execution of AMC workflows without having to develop a custom solution. Below is a list of the features of the service.
-
-
-
-*Platform Management Notebooks*
-
-
-The package contains sample jupyter notebooks which will help to interact and get started with using the Tenant Provisioning Service and Workflow Manager Service. The package deploys a Jupyter Notebook instance with pre-loaded Getting started notebooks for Tenant Provisioning Service and Workflow Manager Service.
-
+For more information about AMC, see https://advertising.amazon.com/solutions/products/amazon-marketing-cloud[Amazon Marketing Cloud].

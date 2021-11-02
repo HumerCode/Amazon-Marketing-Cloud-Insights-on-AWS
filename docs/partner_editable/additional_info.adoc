@@ -27,7 +27,7 @@ NOTE: For more information on switching roles, see https://docs.aws.amazon.com/I
 
 // If post-deployment steps are required, add them here. If not, remove the heading
 
-Below are some examples of QuickSight dashboards and the queries you can run to build them. In the queries, substitute your information for `<demoteam>`.
+Below are examples of Amazon QuickSight dashboards and the queries you can run to build them. In the queries, substitute your information for `<demoteam>`.
 
 * **Audience Analysis.** Analysis of audience segments for purchases of customer products on Amazon.
 +
