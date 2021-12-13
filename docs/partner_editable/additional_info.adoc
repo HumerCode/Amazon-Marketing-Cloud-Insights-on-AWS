@@ -1,44 +1,51 @@
+// Add steps as necessary for accessing the software, post-configuration, and testing. Don’t include full usage instructions for your software, but add links to your product documentation for that information.
+//Should any sections not be applicable, remove them
+
 == Test the deployment
+// If steps are required to test the deployment, add them here. If not, remove the heading
+* Monitor the link:https://console.aws.amazon.com/cloudformation/home?region=us-east-1[AWS CloudFormation], link:https://console.aws.amazon.com/codesuite/codebuild/projects?region=us-east-1[AWS CodeBuild] and link:https://console.aws.amazon.com/codesuite/codepipeline/pipelines?region=us-east-1[AWS CodePipeline] in us-east-1 region and should not have any errors or failures. It will take approximate 90 minutes.
 
-The deployment takes about {deployment_time} to complete. While the stack is in progress, monitor the link:https://console.aws.amazon.com/cloudformation/home?region=us-east-1[AWS CloudFormation^], link:https://console.aws.amazon.com/codesuite/codebuild/projects?region=us-east-1[AWS CodeBuild^] and link:https://console.aws.amazon.com/codesuite/codepipeline/pipelines?region=us-east-1[AWS CodePipeline^] consoles for errors or failures. 
 
-NOTE: After signing in to the console, confirm that the *US East (N. Virginia) us-east-1* Region is selected in the top toolbar.
+* Once finished go to link:https://console.aws.amazon.com/athena/home?region=us-east-1[Amazon Athena] link:https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-console.html[switch the role] on the top right to @-saw-datalake-users-, Ex. - @demoteam-saw-datalake-users-us-east-1. If using the default settings of the module, put the Account Id the same as the AWS Account Id being used. The Role name should be @demoteam-saw-datalake-users-us-east-1. Switch Amazon Athena workgroup to ---workgroup, EX - demoteam-demodl-dev-workgroup.
 
-After the stack is deployed, follow these steps:
 
-. Open the link:https://console.aws.amazon.com/athena/home?region=us-east-1[Amazon Athena console^]. 
-. Choose your user name in the top toolbar in the upper right (for example, `username@account_ID_number_or_alias`). 
-. Choose *Switch Role*. If this is your first time choosing this option, a page appears with more information. After reading it, choose *Switch Role*. 
-. On the *Switch Role* page, for *Account*, enter the AWS account ID.
-. For *Role*, substitute your information for `<demoteam>`:
-+
-`@<demoteam>-saw-datalake-users-us-east-1`. 
+* Run the below queries to explore the sample AMC datasets
 
-. Choose *Switch Role*.
-. On the *Query editor* page, for *Workgroup*, choose your workgroup (for example, `demoteam-demodl-dev-workgroup`).
+** SELECT * FROM "demoteam_amcdataset_dev_stage"."testdemocustomer_audience_analysis_adhoc" limit 10;
+** SELECT * FROM "demoteam_amcdataset_dev_stage"."testdemocustomer_device_exposure_adhoc" limit 10;
+** SELECT * FROM "demoteam_amcdataset_dev_stage"."testdemocustomer_frequency_distribution_adhoc" limit 10;
+** SELECT * FROM "demoteam_amcdataset_dev_stage"."testdemocustomer_geo_analysis_adhoc" limit 10;
+** SELECT * FROM "demoteam_amcdataset_dev_stage"."testdemocustomer_product_mix_adhoc" limit 10;
 
-NOTE: For more information about switching roles, see https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-console.html[Switching to a role (console)^].
+== Post-deployment steps
+// If post-deployment steps are required, add them here. If not, remove the heading
 
-== QuickSight dashboards
+.Below are some sample QuickSight Dashboards built using the sample AMC datasets:
+For more detailed configuration steps of the QuickSight dahboards, review the document located link:../docs/AMC_Analytics_Delivery_Kit-Quicksight_Instructions.pdf[here]
 
-The following are examples of Amazon QuickSight dashboards and the queries you can run to build them. In the queries, substitute your information for `<demoteam>`.
+* Audience Analysis
+** This dashboard provides analysis on audience segments targeted by the customer and also details of audience segments that user was a part of but not targeted for purchases of customer products on Amazon.
+* Frequency Distribution
+** This dashboard provides analysis on performance and delivery by different frequencies/impression exposures to help optimize campaign frequency caps to maximize conversion likelihood for purchases of assigned customer products on Amazon.
+* Device Exposure
+** This dashboard helps to determine performance metrics (i.e., ROAS, Impressions, Conversions, Clicks) across device types (e.g., TV, Mobile, PC, Tablet) for purchases of assigned customer products on Amazon.
+* Geo Analysis
+** This dashboard provides analysis on performance data by geographic location (e.g.DMA) for purchases of assigned customer products on Amazon.
+* Product Mix Analysis
+** This dashboard provides performance data of users exposed to both sponsored products (SP) and display campaigns (DSP) and KPIs surrounding them.
 
-* *Audience Analysis*: Analysis of audience segments for purchases of customer products on Amazon.
-+
-`SELECT * FROM "<demoteam>_amcdataset_dev_stage"."testdemocustomer_audience_analysis_adhoc" limit 10;`
 
-* *Frequency Distribution*: Analysis of performance and delivery by different frequencies and impression exposures. This helps optimize campaign frequency caps to maximize the conversion likelihood for purchases of assigned customer products on Amazon.
-+
-`SELECT * FROM "<demoteam>_amcdataset_dev_stage"."testdemocustomer_device_exposure_adhoc" limit 10;`
+//== Best practices for using {partner-product-short-name} on AWS
+// Provide post-deployment best practices for using the technology on AWS, including considerations such as migrating data, backups, ensuring high performance, high availability, etc. Link to software documentation for detailed information.
 
-* *Device Exposure*: Performance metrics, such as return on ad spend (ROAS), impressions, conversions, and clicks, across device types for purchases of assigned customer products on Amazon.
-+
-`SELECT * FROM "<demoteam>_amcdataset_dev_stage"."testdemocustomer_frequency_distribution_adhoc" limit 10;`
+//_Add any best practices for using the software._
 
-* *Geo Analysis*: Analysis of performance data by geographic location, such as designated marketing area (DMA), for purchases of assigned customer products on Amazon.
-+
-`SELECT * FROM "<demoteam>_amcdataset_dev_stage"."testdemocustomer_geo_analysis_adhoc" limit 10;`
+//== Security
+// Provide post-deployment best practices for using the technology on AWS, including considerations such as migrating data, backups, ensuring high performance, high availability, etc. Link to software documentation for detailed information.
 
-* *Product Mix Analysis*: Performance data of users exposed to both sponsored products (SP) and display campaigns (DSP) and their key performance indicators (KPIs).
-+
-`SELECT * FROM "<demoteam>_amcdataset_dev_stage"."testdemocustomer_product_mix_adhoc" limit 10;`
+//_Add any security-related information._
+
+//== Other useful information
+//Provide any other information of interest to users, especially focusing on areas where AWS or cloud usage differs from on-premises usage.
+
+//_Add any other details that will help the customer use the software on AWS._
