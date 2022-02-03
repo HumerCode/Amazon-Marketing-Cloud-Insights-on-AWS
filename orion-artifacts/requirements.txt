@@ -1,0 +1,4 @@
+orion-commons==0.0.1
+aws_cdk.aws_glue==1.108.0
+aws_cdk.aws_s3_deployment==1.108.0
+aws_cdk.aws_lakeformation==1.108.0

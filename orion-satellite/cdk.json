@@ -1,0 +1,71 @@
+{
+  "app": "python3 app.py",
+  "context": {
+    "cdk_version": "1.108.0",
+    "environments": {
+      "cicd": {
+        "account": "554934668058",
+        "region": "us-east-1",
+        "codeartifact": {
+          "repository": "orion-commons",
+          "domain": "orion",
+          "domain_owner": "554934668058"
+        },
+        "execute_security_lint": false,
+        "execute_tests": false
+      },
+      "dev": {
+        "account": "554934668058",
+        "region": "us-east-1",
+        "name": "Development",
+        "manual_approvals": false,
+        "execute_tests": false,
+        "data_pipeline_parameters": {
+          "team": "demoteam",
+          "pipeline": "adtech",
+          "dataset": "amcdataset",
+          "org": "aws",
+          "app": "datalake"
+        },
+        "tps_parameters": { "team": "demoteam", "pipeline": "cmpl" },
+        "wfm_parameters": {
+          "team": "demoteam",
+          "pipeline": "dlhs",
+          "dataset": "amcdataset"
+        },
+        "platform_manager_parameters": { "team": "demoteam" },
+        "raw-bucket": { "versioned": false, "removal_policy": "destroy" },
+        "stage-bucket": { "versioned": false, "removal_policy": "destroy" },
+        "analytics-bucket": { "versioned": false, "removal_policy": "destroy" },
+        "raw-bucket-key": {
+          "enable_key_rotation": true,
+          "removal_policy": "destroy"
+        },
+        "stage-bucket-key": {
+          "enable_key_rotation": true,
+          "removal_policy": "destroy"
+        },
+        "analytics-bucket-key": {
+          "enable_key_rotation": true,
+          "removal_policy": "destroy"
+        },
+        "datasets-table": { "removal_policy": "destroy" },
+        "pipelines-table": { "removal_policy": "destroy" },
+        "stages-table": { "removal_policy": "destroy" }
+      }
+    },
+    "@aws-cdk/aws-apigateway:usagePlanKeyOrderInsensitiveId": true,
+    "@aws-cdk/core:enableStackNameDuplicates": "true",
+    "aws-cdk:enableDiffNoFail": "true",
+    "@aws-cdk/core:stackRelativeExports": "true",
+    "@aws-cdk/aws-ecr-assets:dockerIgnoreSupport": true,
+    "@aws-cdk/aws-secretsmanager:parseOwnedSecretName": true,
+    "@aws-cdk/aws-kms:defaultKeyPolicies": true,
+    "@aws-cdk/aws-s3:grantWriteWithoutAcl": true,
+    "@aws-cdk/aws-ecs-patterns:removeDefaultDesiredCount": true,
+    "@aws-cdk/aws-rds:lowercaseDbIdentifier": true,
+    "@aws-cdk/aws-efs:defaultEncryptionAtRest": true,
+    "@aws-cdk/aws-lambda:recognizeVersionProps": true,
+    "@aws-cdk/core:newStyleStackSynthesis": "true"
+  }
+}
