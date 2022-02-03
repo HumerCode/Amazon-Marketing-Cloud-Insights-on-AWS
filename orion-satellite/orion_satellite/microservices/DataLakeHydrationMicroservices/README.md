@@ -37,7 +37,7 @@ The Workflow Management Service is an Amazon Ad Tech solution that adds function
 
 ## Reference Architecture
 
-![Alt](./docs/static/images/wfm_pipeline.png)
+![Alt](/docs/static/images/wfm_pipeline.png)
 
 ## Prerequisites
 
