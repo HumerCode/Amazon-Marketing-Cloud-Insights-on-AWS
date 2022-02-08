@@ -112,7 +112,7 @@ Congratulations! Orion is now being deployed in your AWS Account. The deployment
 
 The Makefile goes through a series of 5 steps to deploy this Quickstart in your AWS account: [Create Repositories](#create-repositories), [Bootstrap Accounts](#bootstrap-accounts), [CA Login & Install Libraries](#CA-login-and-install-libraries), [Deploy All](#deploy-all), and [Insert TPS Config & AMC Workflows](#insert-TPS-records-and-AMC-workflows).
 
-![Alt](./docs/static/images/Orion-AMC-Quickstart-Make-All.png)
+![Alt](./docs/images/Orion-AMC-Quickstart-Make-All.png)
 
 A more detailed explanation of each step is below:
 
@@ -140,7 +140,7 @@ The deploy all step deploys two AWS CodePipelines, **orion-artifacts** and **ori
 
 The last stage of each pipeline delivers the artifacts and satellite infrastructure respectively in the child (dev) environment through CloudFormation.
 
-![Alt](./docs/static/images/Orion-AMC-Quickstart-Deploy-All.png)
+![Alt](./docs/images/Orion-AMC-Quickstart-Deploy-All.png)
 
 _Orion-Artifacts:_ This application creates shared resources between teams. These resources include Lambda Layers, Glue Jobs, and a S3 Bucket to host the Artifacts.
 
@@ -178,7 +178,7 @@ The Code Pipeline Steps (as shown to the right) are:
 - Orion Microservices → Prepares and Deploys the Microservice Resource in CloudFormation Stacks (TPS, WFM, and PMN)
 - Orion Satellite Event Rule → Prepares and Deploys a CloudFormation Stack to trigger CodePipeline to run whenever Orion Artifacts CodePipeline Completes
 
-![Alt](./docs/static/images/Orion-AMC-Quickstart-CodePipeline-Steps.png)
+![Alt](./docs/images/Orion-AMC-Quickstart-CodePipeline-Steps.png)
 
 #
 
