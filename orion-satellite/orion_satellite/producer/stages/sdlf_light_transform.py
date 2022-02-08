@@ -13,11 +13,11 @@ from aws_cdk.aws_kms import IKey, Key
 from aws_cdk.aws_events import EventPattern, IRuleTarget, RuleTargetInput
 from aws_cdk.aws_events_targets import SfnStateMachine, LambdaFunction, SqsQueue
 from aws_cdk.aws_iam import Effect, PolicyStatement
-from aws_cdk.aws_lambda import Code, Function, IFunction, LayerVersion
+from aws_cdk.aws_lambda import Code, Function, IFunction, LayerVersion, Runtime
 from aws_cdk.aws_stepfunctions import IntegrationPattern, JsonPath, StateMachine, TaskInput
 from aws_cdk.aws_stepfunctions_tasks import GlueStartJobRun, LambdaInvoke
-from aws_cdk.core import Construct, Duration
-from orion_commons import LambdaFactory, KMSFactory, StageConstruct, get_ssm_value
+from aws_cdk.core import Construct, Duration, RemovalPolicy
+from orion_commons import StageConstruct
 from aws_cdk import aws_stepfunctions as sfn
 from aws_cdk.aws_iam import Effect, ManagedPolicy, PolicyDocument, PolicyStatement, Role, ServicePrincipal
 from aws_cdk import (core)
@@ -27,7 +27,16 @@ from aws_cdk.aws_ssm import StringParameter
 from aws_cdk.aws_sqs import Queue, DeadLetterQueue, IQueue, QueueEncryption
 from aws_cdk.aws_lambda import EventSourceMapping
 
+from ..utils import (
+    RegisterConstruct
+)
 
+def get_ssm_value(scope: Construct, id: str, parameter_name: str) -> str:
+    return StringParameter.from_string_parameter_name(
+        scope,
+        id=id,
+        string_parameter_name=parameter_name,
+    ).string_value
 
 @dataclass
 class SDLFLightTransformConfig:
@@ -43,12 +52,17 @@ class SDLFLightTransform(StageConstruct):
         id: str,
         environment_id: str,
         config: SDLFLightTransformConfig,
+        props: Dict[str, Any],
         **kwargs: Any,
     ) -> None:
         super().__init__(scope, pipeline_id, id, **kwargs)
 
         self._config: SDLFLightTransformConfig = config
         self._environment_id: str = environment_id
+
+        self._props: Dict[str, Any] = props
+
+        RegisterConstruct(self, self._props["id"], props=self._props)
 
         self._raw_bucket_key: IKey = Key.from_key_arn(
             self,
@@ -80,23 +94,11 @@ class SDLFLightTransform(StageConstruct):
             bucket_arn=get_ssm_value(self, "stage-bucket-arn-ssm", parameter_name="/Orion/S3/StageBucketArn"),
         )
 
-        # self._foundation_routing_queue: IQueue = Queue.from_queue_arn(
-        #     self,
-        #     "foundation-routing",
-        #     queue_arn=get_ssm_value(self, "foundation-routing-ssm", parameter_name="/Orion/SQS/QueueRoutingArn"),
-        # )
-
         self._foundation_routing_lambda: IFunction = Function.from_function_arn(
             self,
             "foundation-routing-function",
             function_arn=get_ssm_value(self, "foundation-routing-function-ssm", parameter_name="/Orion/Lambda/Routing"),
         )
-
-        # self._didc_table_arn = get_ssm_value(
-        #         self,
-        #         "didc-table-arn-ssm",
-        #         parameter_name="/Orion/DynamoDB/DidcTableArn",
-        #     )
 
         self._orion_library_layer_arn = get_ssm_value(
                 self,
@@ -116,12 +118,14 @@ class SDLFLightTransform(StageConstruct):
     def _create_queue(self, team, pipeline) -> None:
         #SQS and DLQ
         #sqs kms key resource
-        sqs_key: Key = KMSFactory.key(
+        sqs_key: Key = Key(
             self,
-            environment_id=self._environment_id,
-            id=f"orion-{team}-{pipeline}-sqs-key-a",
+            f"orion-{team}-{pipeline}-sqs-key-a",
             description="Orion SQS Key Stage A",
             alias=f"orion-{team}-{pipeline}-sqs-stage-a-key",
+            enable_key_rotation=True,
+            pending_window=Duration.days(30),
+            removal_policy=RemovalPolicy.DESTROY,
         )
 
         sqs_key_policy = PolicyDocument(
@@ -197,10 +201,9 @@ class SDLFLightTransform(StageConstruct):
 
     def _create_lambdas(self, team, pipeline) -> None:
 
-        self._routing_lambda: Function = LambdaFactory.function(
+        self._routing_lambda: Function = Function(
             self,
-            environment_id=self._environment_id,
-            id=f"orion-routing",
+            "orion-routing",
             function_name=f"orion-{team}-{pipeline}-routing-a",
             code=Code.from_asset(os.path.join(f"{Path(__file__).parents[1]}", "lambdas/sdlf_light_transform/routing")),
             handler="handler.lambda_handler",
@@ -209,12 +212,13 @@ class SDLFLightTransform(StageConstruct):
             },
             description="Triggers Step Function",
             timeout=Duration.minutes(1),
+            memory_size=256,
+            runtime = Runtime.PYTHON_3_8,
         )
 
-        self._redrive_lambda: Function = LambdaFactory.function(
+        self._redrive_lambda: Function = Function(
             self,
-            environment_id=self._environment_id,
-            id=f"orion-{team}-{pipeline}-redrive-a",
+            f"orion-{team}-{pipeline}-redrive-a",
             function_name=f"orion-{team}-{pipeline}-redrive-a",
             code=Code.from_asset(os.path.join(f"{Path(__file__).parents[1]}", "lambdas/sdlf_light_transform/redrive")),
             handler="handler.lambda_handler",
@@ -225,12 +229,13 @@ class SDLFLightTransform(StageConstruct):
             },
             description="Redrive Step Function stageA",
             timeout=Duration.minutes(10),
+            memory_size=256,
+            runtime = Runtime.PYTHON_3_8,
         )
         
-        self._postupdate_lambda: Function = LambdaFactory.function(
+        self._postupdate_lambda: Function = Function(
             self,
-            environment_id=self._environment_id,
-            id=f"orion-post-update",
+            "orion-post-update",
             function_name=f"orion-{team}-{pipeline}-postupdate-a",
             code=Code.from_asset(os.path.join(f"{Path(__file__).parents[1]}", "lambdas/sdlf_light_transform/postupdate-metadata")),
             handler="handler.lambda_handler",
@@ -239,39 +244,44 @@ class SDLFLightTransform(StageConstruct):
             },
             description="post update metadata",
             timeout=Duration.minutes(10),
+            memory_size=256,
+            runtime = Runtime.PYTHON_3_8,
         )
 
-        self._preupdate_lambda: Function = LambdaFactory.function(
+        self._preupdate_lambda: Function = Function(
             self,
-            environment_id=self._environment_id,
-            id=f"orion-preupdate",
+            "orion-preupdate",
             function_name=f"orion-{team}-{pipeline}-preupdate-a",
             code=Code.from_asset(os.path.join(f"{Path(__file__).parents[1]}", "lambdas/sdlf_light_transform/preupdate-metadata")),
             handler="handler.lambda_handler",
             description="preupdate metadata",
             timeout=Duration.minutes(10),
+            memory_size=256,
+            runtime = Runtime.PYTHON_3_8,
         )
 
-        self._error_lambda: Function = LambdaFactory.function(
+        self._error_lambda: Function = Function(
             self,
-            environment_id=self._environment_id,
-            id=f"orion-error-a",
+            "orion-error-a",
             function_name=f"orion-{team}-{pipeline}-error-a",
             code=Code.from_asset(os.path.join(f"{Path(__file__).parents[1]}", "lambdas/sdlf_light_transform/error")),
             handler="handler.lambda_handler",
             description="send errors to DLQ",
             timeout=Duration.minutes(10),
+            memory_size=256,
+            runtime = Runtime.PYTHON_3_8,
         )
 
-        self._process_lambda: Function = LambdaFactory.function(
+        self._process_lambda: Function = Function(
             self,
-            environment_id=self._environment_id,
-            id=f"orion-process",
+            "orion-process",
             function_name=f"orion-{team}-{pipeline}-process-a",
             code=Code.from_asset(os.path.join(f"{Path(__file__).parents[1]}", "lambdas/sdlf_light_transform/process-object")),
             handler="handler.lambda_handler",
             description="executes lights transform",
             timeout=Duration.minutes(15),
+            memory_size=256,
+            runtime = Runtime.PYTHON_3_8,
         )
 
         self._raw_bucket_key.grant_decrypt(self._process_lambda)
@@ -489,3 +499,4 @@ class SDLFLightTransform(StageConstruct):
 
     def get_targets(self) -> Optional[List[IRuleTarget]]:
         return [LambdaFunction(self._foundation_routing_lambda), ]
+

@@ -4,8 +4,6 @@ from typing import Any, Dict, List, Optional
 from aws_cdk.aws_events import EventPattern, IRuleTarget
 from aws_cdk.core import Construct
 
-from .register import RegisterConstruct
-
 
 class StageConstruct(Construct):
     def __init__(
@@ -38,7 +36,6 @@ class StageConstruct(Construct):
         props["name"] = self.name
         props["description"] = self.description
         props["type"] = self.type
-        RegisterConstruct(self, self.id, props=props)
 
     @abstractmethod
     def get_targets(self) -> Optional[List[IRuleTarget]]:

@@ -7,7 +7,7 @@
 import pytest
 from aws_cdk.core import RemovalPolicy, Stack
 from orion_commons import RemovalPolicyNotFound
-from orion_commons.utils import get_removal_policy, get_ssm_value
+from orion_commons.utils import get_removal_policy
 
 
 def test_get_removal_policy(test_stack: Stack) -> None:
@@ -17,7 +17,3 @@ def test_get_removal_policy(test_stack: Stack) -> None:
     with pytest.raises(RemovalPolicyNotFound):
         get_removal_policy("dummy")
 
-
-def test_get_ssm_value(test_stack: Stack) -> None:
-    value = get_ssm_value(test_stack, "test-get-ssm-value", parameter_name="test")
-    assert isinstance(value, str)

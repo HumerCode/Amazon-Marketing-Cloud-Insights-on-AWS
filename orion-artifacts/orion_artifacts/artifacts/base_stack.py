@@ -7,10 +7,9 @@
 from typing import Any
 
 from aws_cdk.aws_kms import Key
-from aws_cdk.aws_s3 import Bucket, BucketEncryption
+from aws_cdk.aws_s3 import Bucket, BucketEncryption, BucketAccessControl, BlockPublicAccess
 from aws_cdk.aws_ssm import StringParameter
-from aws_cdk.core import Construct, Stack
-from orion_commons import KMSFactory, S3Factory
+from aws_cdk.core import Construct, Stack, RemovalPolicy, Duration
 
 
 class BaseStack(Stack):
@@ -22,27 +21,33 @@ class BaseStack(Stack):
         self._create_bucket(name="athena")
 
     def _create_bucket(self, name: str) -> None:
-        bucket_key: Key = KMSFactory.key(
+        bucket_key: Key = Key(
             self,
-            environment_id=self._environment_id,
             id=f"{name}-bucket-key",
             description=f"Orion {name.title()} Key",
             alias=f"orion-{name}-bucket-key",
+            enable_key_rotation=True,
+            pending_window=Duration.days(30),
+            removal_policy=RemovalPolicy.DESTROY,
         )
+
         StringParameter(
             self,
             f"{name}-bucket-key-arn-ssm",
             parameter_name=f"/Orion/KMS/{name.title()}BucketKeyArn",
             string_value=bucket_key.key_arn,
         )
-        bucket: Bucket = S3Factory.bucket(
+        bucket: Bucket = Bucket(
             self,
-            environment_id=self._environment_id,
             id=f"{name}-bucket",
             bucket_name=f"orion-{self._environment_id}-{self.region}-{self.account}-{name}",
             encryption=BucketEncryption.KMS,
             encryption_key=bucket_key,
+            access_control=BucketAccessControl.BUCKET_OWNER_FULL_CONTROL,
+            block_public_access=BlockPublicAccess.BLOCK_ALL,
+            removal_policy=RemovalPolicy.RETAIN
         )
+
         StringParameter(
             self,
             f"{name}-bucket-arn-ssm",

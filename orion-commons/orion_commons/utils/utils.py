@@ -20,10 +20,3 @@ def get_removal_policy(value: str) -> RemovalPolicy:
     else:
         raise exceptions.RemovalPolicyNotFound
 
-
-def get_ssm_value(scope: Construct, id: str, parameter_name: str) -> str:
-    return StringParameter.from_string_parameter_name(
-        scope,
-        id=id,
-        string_parameter_name=parameter_name,
-    ).string_value

@@ -3,13 +3,11 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 import json
 from aws_cdk.aws_kms import Key
-from aws_cdk.aws_lambda import Code, LayerVersion, StartingPosition, EventSourceMapping, Runtime
-from aws_cdk.core import Construct, Duration
-from orion_commons import LambdaFactory, get_ssm_value, DynamoFactory, KMSFactory
+from aws_cdk.aws_lambda import Code, LayerVersion, StartingPosition, EventSourceMapping, Runtime, Function
+from aws_cdk.core import Construct, Duration, Stack, RemovalPolicy
 from aws_cdk import aws_stepfunctions as sfn
 from aws_cdk.aws_iam import Effect, ManagedPolicy, PolicyDocument, PolicyStatement, Role, ServicePrincipal
 from aws_cdk import (core)
-from aws_cdk.core import Construct, Stack
 from aws_cdk.aws_ssm import StringParameter
 from aws_cdk.aws_sns import Topic, Subscription, SubscriptionProtocol
 import aws_cdk.aws_dynamodb as DDB
@@ -18,7 +16,12 @@ from aws_cdk.aws_athena import CfnWorkGroup
 from aws_cdk.aws_s3 import Bucket, IBucket
 from aws_cdk.aws_events import CfnRule, Schedule, RuleTargetConfig,RuleTargetInput
 
-
+def get_ssm_value(scope: Construct, id: str, parameter_name: str) -> str:
+    return StringParameter.from_string_parameter_name(
+        scope,
+        id=id,
+        string_parameter_name=parameter_name,
+    ).string_value
 
 class WorkFlowManagerService(Stack):
     def __init__(
@@ -63,12 +66,14 @@ class WorkFlowManagerService(Stack):
             bucket_arn=get_ssm_value(self, "athena-bucket-arn-ssm", parameter_name="/Orion/S3/AthenaBucketArn"),
         )
 
-        self._wfm_masker_key: Key = KMSFactory.key(
+        self._wfm_masker_key: Key = Key(
             self,
-            environment_id=self._environment_id,
             id=f"{self._microservice_name}-{self._team}-{self._pipeline}-master-key",
             description=f"Orion WFM Service Master Key",
             alias=f"orion-{self._microservice_name}-{self._team}-{self._pipeline}-master-key",
+            enable_key_rotation=True,
+            pending_window=Duration.days(30),
+            removal_policy=RemovalPolicy.DESTROY,
         )
         StringParameter(
             self,
@@ -258,15 +263,16 @@ class WorkFlowManagerService(Stack):
     def _create_ddb_table(self, name: str, ddb_props: Dict[str, Any]) -> DDB.Table:
 
         if name.split("-")[3] == "AMCWorkflowSchedules":
-            table: DDB.Table = DynamoFactory.table(
+            table: DDB.Table = DDB.Table(
                 self,
-                environment_id=self._environment_id,
-                id=f"{name}-table",
+                f"{name}-table",
                 table_name=name,
                 encryption=DDB.TableEncryption.CUSTOMER_MANAGED,
                 encryption_key=self._wfm_masker_key,
                 stream=DDB.StreamViewType.NEW_AND_OLD_IMAGES,
-                **ddb_props,
+                billing_mode=DDB.BillingMode.PAY_PER_REQUEST,
+                removal_policy= RemovalPolicy.DESTROY,
+                **ddb_props
             )
             table.add_global_secondary_index(
                 index_name="custom-schdl-index",
@@ -275,16 +281,18 @@ class WorkFlowManagerService(Stack):
             )
 
         elif name.split("-")[3] == "AMCExecutionStatus":
-            table: DDB.Table = DynamoFactory.table(
+            table: DDB.Table = DDB.Table(
                 self,
-                environment_id=self._environment_id,
-                id=f"{name}-table",
+                f"{name}-table",
                 table_name=name,
                 encryption=DDB.TableEncryption.CUSTOMER_MANAGED,
                 encryption_key=self._wfm_masker_key,
                 stream=DDB.StreamViewType.NEW_AND_OLD_IMAGES,
-                **ddb_props,
+                billing_mode=DDB.BillingMode.PAY_PER_REQUEST,
+                removal_policy= RemovalPolicy.DESTROY,
+                **ddb_props
             )
+              
             table.add_global_secondary_index(
                 index_name="executionStatus-workflowId-index",
                 partition_key=DDB.Attribute(name="customerId", type=DDB.AttributeType.STRING),
@@ -307,14 +315,15 @@ class WorkFlowManagerService(Stack):
                 projection_type=DDB.ProjectionType.INCLUDE
             )
         else:
-            table: DDB.Table = DynamoFactory.table(
+            table: DDB.Table = DDB.Table(
                 self,
-                environment_id=self._environment_id,
-                id=f"{name}-table",
+                f"{name}-table",
                 table_name=name,
                 encryption=DDB.TableEncryption.CUSTOMER_MANAGED,
                 encryption_key=self._wfm_masker_key,
                 stream=DDB.StreamViewType.NEW_AND_OLD_IMAGES,
+                billing_mode=DDB.BillingMode.PAY_PER_REQUEST,
+                removal_policy= RemovalPolicy.DESTROY,
                 **ddb_props,
             )
 
@@ -356,18 +365,18 @@ class WorkFlowManagerService(Stack):
 
     # Create Lambda Functions
     def _create_lambdas(self, function_name_prefix):
-
+        
         # SyncWorkflowStatuses
-        lambda_sync_workflow_status = LambdaFactory.function(
+        lambda_sync_workflow_status = Function(
             self,
-            environment_id=self._environment_id,
-            id=f"{function_name_prefix}-SyncWorkflowStatuses",
+            f"{function_name_prefix}-SyncWorkflowStatuses",
             function_name=f"{function_name_prefix}-SyncWorkflowStatuses",
             code=Code.from_asset(os.path.join(f"{Path(__file__).parents[1]}", "DataLakeHydrationMicroservices/lambdas/sync_workflow_status")),
             handler="handler.lambda_handler",
             description="Synchronizes workflow execution statues from AMC to a dynamoDB Table",
             memory_size=2048,
             timeout=Duration.minutes(15),
+            runtime = Runtime.PYTHON_3_8,
             layers = [self._wfm_helper_layer, self._powertools_layer],
             environment={
                 "CUSTOMERS_DYNAMODB_TABLE": self._customer_config_table.table_name,
@@ -378,30 +387,30 @@ class WorkFlowManagerService(Stack):
         )
 
         # GenerateDateRangeValues
-        LambdaFactory.function(
+        Function(
             self,
-            environment_id=self._environment_id,
-            id=f"{function_name_prefix}-GenerateDateRangeValues",
+            f"{function_name_prefix}-GenerateDateRangeValues",
             function_name=f"{function_name_prefix}-GenerateDateRangeValues",
             code=Code.from_asset(os.path.join(f"{Path(__file__).parents[1]}", "DataLakeHydrationMicroservices/lambdas/generate_data_range")),
             handler="handler.lambda_handler",
             description="Generates date range values which can be used in submitting multiple workflow executions",
             memory_size=2048,
             timeout=Duration.minutes(15),
+            runtime = Runtime.PYTHON_3_8,
             layers = [self._wfm_helper_layer, self._powertools_layer],
         )
 
         # GenerateExecutionResubmissions
-        LambdaFactory.function(
+        Function(
             self,
-            environment_id=self._environment_id,
-            id=f"{function_name_prefix}-GenerateExecutionResubmissions",
+            f"{function_name_prefix}-GenerateExecutionResubmissions",
             function_name=f"{function_name_prefix}-GenerateExecutionResubmissions",
             code=Code.from_asset(os.path.join(f"{Path(__file__).parents[1]}", "DataLakeHydrationMicroservices/lambdas/generate_execution_resubmission")),
             handler="handler.lambda_handler",
             description="Generates execution resubmissions",
             memory_size=2048,
             timeout=Duration.minutes(15),
+            runtime = Runtime.PYTHON_3_8,
             layers = [self._wfm_helper_layer, self._powertools_layer],
             environment={
                 "CUSTOMERS_DYNAMODB_TABLE": self._customer_config_table.table_name,
@@ -411,16 +420,16 @@ class WorkFlowManagerService(Stack):
         )
 
         # WorkflowStatusTableTrigger
-        workflow_status_trigger = LambdaFactory.function(
+        workflow_status_trigger = Function(
             self,
-            environment_id=self._environment_id,
-            id=f"{function_name_prefix}-WorkflowStatusTrigger",
+            f"{function_name_prefix}-WorkflowStatusTrigger",
             function_name=f"{function_name_prefix}-WorkflowStatusTrigger",
             code=Code.from_asset(os.path.join(f"{Path(__file__).parents[1]}", "DataLakeHydrationMicroservices/lambdas/workflow_status_trigger")),
             handler="handler.lambda_handler",
             description="A lambda function that process a DynamoDB Stream of workflow statuses to generate alerts",
             memory_size=2048,
             timeout=Duration.minutes(15),
+            runtime = Runtime.PYTHON_3_8,
             layers = [self._wfm_helper_layer, self._powertools_layer],
             environment={
                 "CUSTOMERS_DYNAMODB_TABLE": self._customer_config_table.table_name,
@@ -438,16 +447,16 @@ class WorkFlowManagerService(Stack):
         )
 
         # AMC API Interface
-        self._lambda_amc_api_interface = LambdaFactory.function(
+        self._lambda_amc_api_interface = Function(
             self,
-            environment_id=self._environment_id,
-            id=f"{function_name_prefix}-AmcApiInterface",
+            f"{function_name_prefix}-AmcApiInterface",
             function_name=f"{function_name_prefix}-AmcApiInterface",
             code=Code.from_asset(os.path.join(f"{Path(__file__).parents[1]}", "DataLakeHydrationMicroservices/lambdas/amc_api_interface")),
             handler="handler.lambda_handler",
             description="A lambda interface that acts as a wrapper for the AMC REST API",
             memory_size=2048,
             timeout=Duration.minutes(15),
+            runtime = Runtime.PYTHON_3_8,
             layers = [self._wfm_helper_layer, self._powertools_layer],
             environment={
                 "CUSTOMERS_DYNAMODB_TABLE": self._customer_config_table.table_name,
@@ -457,16 +466,16 @@ class WorkFlowManagerService(Stack):
         )
 
         # WorkflowTableTrigger
-        workflow_table_trigger = LambdaFactory.function(
+        workflow_table_trigger = Function(
             self,
-            environment_id=self._environment_id,
-            id=f"{function_name_prefix}-WorkflowTableTrigger",
+            f"{function_name_prefix}-WorkflowTableTrigger",
             function_name=f"{function_name_prefix}-WorkflowTableTrigger",
             code=Code.from_asset(os.path.join(f"{Path(__file__).parents[1]}", "DataLakeHydrationMicroservices/lambdas/workflow_table_trigger")),
             handler="handler.lambda_handler",
             description="Synchronizes workflow table records from the workflow DyanmoDB table to AMC",
             memory_size=128,
             timeout=Duration.minutes(5),
+            runtime = Runtime.PYTHON_3_8,
             layers = [self._wfm_helper_layer, self._powertools_layer],
             environment={
                 "AMC_API_INTERFACE_FUNCTION_NAME": self._lambda_amc_api_interface.function_name,
@@ -483,16 +492,16 @@ class WorkFlowManagerService(Stack):
         )
 
         # WorkflowExecutionQueueConsumer
-        self._execution_queue_consumer = LambdaFactory.function(
+        self._execution_queue_consumer = Function(
             self,
-            environment_id=self._environment_id,
-            id=f"{function_name_prefix}-WorkflowExecutionQueueConsumer",
+            f"{function_name_prefix}-WorkflowExecutionQueueConsumer",
             function_name=f"{function_name_prefix}-WorkflowExecutionQueueConsumer",
             code=Code.from_asset(os.path.join(f"{Path(__file__).parents[1]}", "DataLakeHydrationMicroservices/lambdas/workflow_queue_consumer")),
             handler="handler.lambda_handler",
             description="Consumes from the Workflow Execution SQS queue and submits them to the AMC API Endpoint as a new exeuction",
             memory_size=2048,
             timeout=Duration.minutes(15),
+            runtime = Runtime.PYTHON_3_8,
             layers = [self._wfm_helper_layer, self._powertools_layer],
             environment={
                 "CUSTOMERS_DYNAMODB_TABLE": self._customer_config_table.table_name
@@ -501,16 +510,16 @@ class WorkFlowManagerService(Stack):
         )
 
         # Lambda Workflow Execution Queue Producer
-        lambda_events_queue_producer = LambdaFactory.function(
+        lambda_events_queue_producer = Function(
             self,
-            environment_id=self._environment_id,
-            id=f"{function_name_prefix}-ExecutionQueueProducer",
+            f"{function_name_prefix}-ExecutionQueueProducer",
             function_name=f"{function_name_prefix}-ExecutionQueueProducer",
             code=Code.from_asset(os.path.join(f"{Path(__file__).parents[1]}", "DataLakeHydrationMicroservices/lambdas/execution_queue_producer")),
             handler="handler.lambda_handler",
             description="Queues a workflow exeuction in SQS to be submitted to the AMC API Interface",
             memory_size=2048,
             timeout=Duration.minutes(15),
+            runtime = Runtime.PYTHON_3_8,
             layers = [self._wfm_helper_layer, self._powertools_layer],
             environment={
                 "CUSTOMERS_DYNAMODB_TABLE": self._customer_config_table.table_name
@@ -525,16 +534,16 @@ class WorkFlowManagerService(Stack):
         )
 
         # RunWorkflowByCampaign
-        lambda_run_by_campaign = LambdaFactory.function(
+        lambda_run_by_campaign = Function(
             self,
-            environment_id=self._environment_id,
-            id=f"{function_name_prefix}-ExecuteWorkflowByCampaign",
+            f"{function_name_prefix}-ExecuteWorkflowByCampaign",
             function_name=f"{function_name_prefix}-ExecuteWorkflowByCampaign",
             code=Code.from_asset(os.path.join(f"{Path(__file__).parents[1]}", "DataLakeHydrationMicroservices/lambdas/execute_workflow_by_campaign")),
             handler="handler.lambda_handler",
             description="execute the specified workflow and pass campaignID as a parameter from a specified Athena Table",
             memory_size=2048,
             timeout=Duration.minutes(15),
+            runtime = Runtime.PYTHON_3_8,
             layers = [self._wfm_helper_layer, self._powertools_layer],
             environment={
                 "CUSTOMERS_DYNAMODB_TABLE": self._customer_config_table.table_name,
@@ -551,16 +560,16 @@ class WorkFlowManagerService(Stack):
         )
 
         # WorkflowScheduleTrigger
-        workflow_schedule_trigger = LambdaFactory.function(
+        workflow_schedule_trigger = Function(
             self,
-            environment_id=self._environment_id,
-            id=f"{function_name_prefix}-WorkflowScheduleTrigger",
+            f"{function_name_prefix}-WorkflowScheduleTrigger",
             function_name=f"{function_name_prefix}-WorkflowScheduleTrigger",
             code=Code.from_asset(os.path.join(f"{Path(__file__).parents[1]}", "DataLakeHydrationMicroservices/lambdas/workflow_schedule_trigger")),
             handler="handler.lambda_handler",
             description="A Trigger creating Cloudwatch Rules to submit workflow executions to the workflow exeuction queue producer based on records inserted into the WorkflowSchedule DynamoDB Table",
             memory_size=2048,
             timeout=Duration.minutes(15),
+            runtime = Runtime.PYTHON_3_8,
             layers = [self._wfm_helper_layer, self._powertools_layer],
             environment={
                 "EXECUTION_QUEUE_PRODUCER_LAMBA_ARN": lambda_events_queue_producer.function_arn,
@@ -578,16 +587,16 @@ class WorkFlowManagerService(Stack):
         )
 
         # Lambda Workflow Library Trigger
-        workflow_library_trigger = LambdaFactory.function(
+        workflow_library_trigger = Function(
             self,
-            environment_id=self._environment_id,
-            id=f"{function_name_prefix}-WorkflowLibraryTrigger",
+            f"{function_name_prefix}-WorkflowLibraryTrigger",
             function_name=f"{function_name_prefix}-WorkflowLibraryTrigger",
             code=Code.from_asset(os.path.join(f"{Path(__file__).parents[1]}", "DataLakeHydrationMicroservices/lambdas/workflow_library_trigger")),
             handler="handler.lambda_handler",
             description="A Trigger that is invoked when records are modified in the Workflow Library table, this will create workflows and schedule them to run based on their default schedule configuration",
             memory_size=2048,
             timeout=Duration.minutes(15),
+            runtime = Runtime.PYTHON_3_8,
             layers = [self._wfm_helper_layer, self._powertools_layer],
             environment={
                 "CUSTOMERS_DYNAMODB_TABLE":self._customer_config_table.table_name,
@@ -607,16 +616,16 @@ class WorkFlowManagerService(Stack):
         )
 
         # Lambda Workflow Customer Config Trigger
-        customer_config_trigger = LambdaFactory.function(
+        customer_config_trigger = Function(
             self,
-            environment_id=self._environment_id,
-            id=f"{function_name_prefix}-CustomerConfigTrigger",
+            f"{function_name_prefix}-CustomerConfigTrigger",
             function_name=f"{function_name_prefix}-CustomerConfigTrigger",
             code=Code.from_asset(os.path.join(f"{Path(__file__).parents[1]}", "DataLakeHydrationMicroservices/lambdas/customer_config_trigger")),
             handler="handler.lambda_handler",
             description="A Trigger that is invoked when records are modified in the customer config table, this will create an AMC Executions SQS Queue and update the AMC API Invoke policy to include the customer's AMC instance",
             memory_size=2048,
             timeout=Duration.minutes(15),
+            runtime = Runtime.PYTHON_3_8,
             layers = [self._wfm_helper_layer, self._powertools_layer],
             environment={
                 "EXECUTION_QUEUE_PRODUCER_LAMBA_ARN": lambda_events_queue_producer.function_arn,
@@ -640,16 +649,16 @@ class WorkFlowManagerService(Stack):
         )
 
         # Custom Scheduler
-        self._lambda_custom_scheduler = LambdaFactory.function(
+        self._lambda_custom_scheduler = Function(
             self,
-            environment_id=self._environment_id,
-            id=f"{function_name_prefix}-CustomScheduler",
+            f"{function_name_prefix}-CustomScheduler",
             function_name=f"{function_name_prefix}-CustomScheduler",
             code=Code.from_asset(os.path.join(f"{Path(__file__).parents[1]}", "DataLakeHydrationMicroservices/lambdas/custom_scheduler")),
             handler="handler.lambda_handler",
             description="This function will query workflows based on their frequency from AMCWorkflowSchedules table and pass payload to WorkflowExecutionQueueProducer Lambda",
             memory_size=2048,
             timeout=Duration.minutes(15),
+            runtime = Runtime.PYTHON_3_8,
             layers = [self._wfm_helper_layer, self._powertools_layer],
             environment={
                 "EXECUTION_QUEUE_PRODUCER_LAMBA_ARN": lambda_events_queue_producer.function_arn,
@@ -694,7 +703,6 @@ class WorkFlowManagerService(Stack):
         )
 
         # Glue Policies - Allow AMC Glue Catalog Access
-        # glue_db_name = f"aws_datalake_{self._environment_id}_{self._team}_{self._dataset}_db"
         glue_catalog_access_policy = ManagedPolicy(
             self,
             f"{name_prefix}-WFM-Glue-CatalogAccess-1",

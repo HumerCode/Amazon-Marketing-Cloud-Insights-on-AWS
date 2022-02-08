@@ -5,7 +5,6 @@
 
 from os import pipe
 from typing import Any, Optional
-
 import json
 from aws_cdk.aws_sqs import Queue, DeadLetterQueue, QueueEncryption
 from aws_cdk.aws_glue import CfnCrawler, Database
@@ -13,14 +12,22 @@ from aws_cdk.aws_iam import ManagedPolicy, Role, ServicePrincipal, PolicyDocumen
 from aws_cdk.aws_kms import IKey, Key
 from aws_cdk.aws_lakeformation import CfnPermissions
 from aws_cdk.aws_s3 import Bucket, IBucket
-from aws_cdk.core import Construct, Stack
-from orion_commons import DatasetConstruct, get_ssm_value
+from aws_cdk.core import Construct, Stack, Duration, RemovalPolicy
 from aws_cdk.aws_events import EventPattern, Rule, Schedule, CfnRule
 from aws_cdk import (core)
 from aws_cdk.aws_lambda import CfnPermission
 from aws_cdk.aws_ssm import StringParameter
-from orion_commons import KMSFactory
 
+from ..utils import (
+    RegisterConstruct
+)
+
+def get_ssm_value(scope: Construct, id: str, parameter_name: str) -> str:
+    return StringParameter.from_string_parameter_name(
+        scope,
+        id=id,
+        string_parameter_name=parameter_name,
+    ).string_value
 
 class SDLFDatasetStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, environment_id: str, params: dict, **kwargs: Any) -> None:
@@ -33,6 +40,7 @@ class SDLFDatasetStack(Stack):
         self._team = self._params.get("team", "demoteam")
         self._pipeline = self._params.get("pipeline", "adv")
         self._dataset = self._params.get("dataset", "amcdataset")
+
         # Get analytics bucket props
         self._stage_bucket_key: IKey = Key.from_key_arn(
             self,
@@ -64,23 +72,18 @@ class SDLFDatasetStack(Stack):
                             name=self._dataset,
                             stage_a_transform="amc_light_transform",
                             stage_b_transform="amc_heavy_transform")
-
+        
+  
     def _create_dataset(self, team: str, pipeline: str, name: str, stage_a_transform: Optional[str] = None, stage_b_transform: Optional[str] = None) -> None:
         
         self.stage_a_transform: str = stage_a_transform if stage_a_transform else "light_transform_blueprint"
         self.stage_b_transform: str = stage_b_transform if stage_b_transform else "heavy_transform_blueprint"
 
-        self._orion_sdlf_dataset: DatasetConstruct = DatasetConstruct(
-            self,
-            id=f"orion-{team}-{name}",
-            name=f"{team}-{name}",
-            description=f"{name.title()} dataset",
-            dataset_type= "octagon_dataset",
-            transforms={
-                "stage_a_transform": self.stage_a_transform,
-                "stage_b_transform": self.stage_b_transform,
-            },
-            props={
+        self._props={
+                "id":f"orion-{team}-{name}",
+                "description":f"{name.title()} dataset",
+                "name": f"orion-{team}-{name}",
+                "type": "octagon_dataset",
                 "pipeline": pipeline,
                 "max_items_process": {
                     "stage_b": 100,
@@ -90,9 +93,16 @@ class SDLFDatasetStack(Stack):
                     "stage_b": 1,
                     "stage_c": 1
                 },
-                "version": 1
+                "version": 1,
+                "transforms":{
+                "stage_a_transform": self.stage_a_transform,
+                "stage_b_transform": self.stage_b_transform,
             }
-        )
+            }
+
+
+        RegisterConstruct(self, self._props["id"], props=self._props)
+
         #Glue DB, crawler etc
         database: Database = Database(
             self,
@@ -119,47 +129,18 @@ class SDLFDatasetStack(Stack):
             parameter_name=f"/Orion/Glue/{team}/{name}/StageDataCatalog",
             string_value=f"aws_datalake_{self._environment_id}_{team}_{name}_db",
         )
-        # crawler_role: Role = Role(
-        #     self,
-        #     f"orion-{name}-glue-crawler-role",
-        #     assumed_by=ServicePrincipal("glue.amazonaws.com"),
-        #     managed_policies=[ManagedPolicy.from_aws_managed_policy_name("service-role/AWSGlueServiceRole")],
-        # )
-        # self._stage_bucket_key.grant_decrypt(crawler_role)
-        # self._stage_bucket.grant_read_write(crawler_role)
-
-        # CfnPermissions(
-        #     self,
-        #     f"orion-{name}-glue-crawler-database-lakeformation-permissions",
-        #     data_lake_principal=CfnPermissions.DataLakePrincipalProperty(
-        #         data_lake_principal_identifier=crawler_role.role_arn
-        #     ),
-        #     resource=CfnPermissions.ResourceProperty(
-        #         database_resource=CfnPermissions.DatabaseResourceProperty(name=database.database_name)
-        #     ),
-        #     permissions=["CREATE_TABLE", "ALTER", "DROP"],
-        # )
-
-        # CfnCrawler(
-        #     self,
-        #     f"orion-{name}-crawler",
-        #     name=f"orion-{team}-{name}-post-stage-crawler",
-        #     database_name=database.database_name,
-        #     targets=CfnCrawler.TargetsProperty(
-        #         s3_targets=[CfnCrawler.S3TargetProperty(path=f"s3://{self._stage_bucket.bucket_name}/post-stage/{team}/{name}")] 
-        #     ),
-        #     role=crawler_role.role_arn,
-        # )
 
         #SQS and DLQ
 
         #sqs kms key resource
-        sqs_key: Key = KMSFactory.key(
+        sqs_key: Key = Key(
             self,
-            environment_id=self._environment_id,
             id=f"orion-{team}-{name}-sqs-key-b",
             description="Orion SQS Key Stage B",
             alias=f"orion-{team}-{name}-sqs-stage-b-key",
+            enable_key_rotation=True,
+            pending_window=Duration.days(30),
+            removal_policy=RemovalPolicy.DESTROY,
         )
 
         sqs_key_policy = PolicyDocument(
@@ -248,6 +229,5 @@ class SDLFDatasetStack(Stack):
                         principal="events.amazonaws.com",
                         source_arn=post_state_rule.attr_arn
                     )
-                        
-
-   
+ 
+        

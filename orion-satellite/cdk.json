@@ -27,13 +27,14 @@
           "org": "aws",
           "app": "datalake"
         },
-        "tps_parameters": { "team": "demoteam", "pipeline": "cmpl" },
+        "tps_parameters": { "deploy": true, "team": "demoteam", "pipeline": "cmpl" },
         "wfm_parameters": {
+          "deploy": true, 
           "team": "demoteam",
           "pipeline": "dlhs",
           "dataset": "amcdataset"
         },
-        "platform_manager_parameters": { "team": "demoteam" },
+        "platform_manager_parameters": { "deploy": true, "team": "demoteam" },
         "raw-bucket": { "versioned": false, "removal_policy": "destroy" },
         "stage-bucket": { "versioned": false, "removal_policy": "destroy" },
         "analytics-bucket": { "versioned": false, "removal_policy": "destroy" },

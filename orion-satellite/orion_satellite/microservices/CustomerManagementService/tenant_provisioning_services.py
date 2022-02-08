@@ -3,19 +3,24 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 import json
 from aws_cdk.aws_kms import Key
-from aws_cdk.aws_lambda import Code, LayerVersion, StartingPosition, EventSourceMapping
-from aws_cdk.core import Construct, Duration
-from orion_commons import LambdaFactory, get_ssm_value, DynamoFactory, KMSFactory
+from aws_cdk.aws_lambda import Code, LayerVersion, StartingPosition, EventSourceMapping, Runtime, Function
+from aws_cdk.core import Construct, Duration, Stack, RemovalPolicy
 from aws_cdk import aws_stepfunctions as sfn
 from aws_cdk.aws_iam import Effect, ManagedPolicy, PolicyDocument, PolicyStatement, Role, ServicePrincipal
 from aws_cdk import (core)
-from aws_cdk.core import Construct, Stack
 from aws_cdk.aws_ssm import StringParameter
 from aws_cdk.aws_sns import Topic, Subscription, SubscriptionProtocol
 import aws_cdk.aws_dynamodb as DDB
 from aws_cdk.aws_sqs import Queue, DeadLetterQueue, QueueEncryption
 from aws_cdk.aws_s3 import Bucket, IBucket
 from aws_cdk.aws_s3_deployment import BucketDeployment, ServerSideEncryption, Source
+
+def get_ssm_value(scope: Construct, id: str, parameter_name: str) -> str:
+    return StringParameter.from_string_parameter_name(
+        scope,
+        id=id,
+        string_parameter_name=parameter_name,
+    ).string_value
 
 
 class TenantProvisiongService(Stack):
@@ -109,14 +114,16 @@ class TenantProvisiongService(Stack):
     # Create SNS SQS KMS Integration Key
     def _create_sns_sqs_key(self):
         # KMS Key Creation
-        self._sns_sqs_key: Key = KMSFactory.key(
+        self._sns_sqs_key: Key = Key(
             self,
-            environment_id=self._environment_id,
-            id=f"{self._team}-{self._microservice_name}-sns-sqs-amc-key",
+            f"{self._team}-{self._microservice_name}-sns-sqs-amc-key",
             description="KMS Key for AMC Onboarding bucket SNS topic & SQS queue",
             alias=f"orion-{self._microservice_name}-sqs-sns-ingegration-key",
+            enable_key_rotation=True,
+            pending_window=Duration.days(30),
+            removal_policy=RemovalPolicy.DESTROY,
         )
-
+        
         # KMS Key Policy
         self._sns_sqs_key.add_to_resource_policy(
             PolicyStatement(
@@ -155,14 +162,15 @@ class TenantProvisiongService(Stack):
             "sort_key": DDB.Attribute(name="customerName", type=DDB.AttributeType.STRING)
         }
 
-        self._table: DDB.Table = DynamoFactory.table(
+        self._table: DDB.Table = DDB.Table(
             self,
-            environment_id=self._environment_id,
-            id=f"{ddb_name}-table",
+            f"{ddb_name}-table",
             table_name = ddb_name,
             encryption=DDB.TableEncryption.CUSTOMER_MANAGED,
             encryption_key=self._sns_sqs_key,
             stream=DDB.StreamViewType.NEW_AND_OLD_IMAGES,
+            billing_mode=DDB.BillingMode.PAY_PER_REQUEST,
+            removal_policy= RemovalPolicy.DESTROY,
             point_in_time_recovery=True,
             **ddb_props,
         )
@@ -259,16 +267,16 @@ class TenantProvisiongService(Stack):
 
     def _create_lambdas(self,microservice, team, environment_id):
 
-        self._customer_config_ddb_trigger = LambdaFactory.function(
+        self._customer_config_ddb_trigger = Function(
             self,
-            environment_id=self._environment_id,
-            id=f"orion-{microservice}-{team}-CustomerConfigDynamoDBTrigger-{environment_id}",
+            f"orion-{microservice}-{team}-CustomerConfigDynamoDBTrigger-{environment_id}",
             function_name=f"orion-{microservice}-{team}-CustomerConfigDynamoDBTrigger-{environment_id}",
             code=Code.from_asset(os.path.join(f"{Path(__file__).parents[1]}", "CustomerManagementService/lambdas/tps/customer_config_ddb")),
             handler="handler.lambda_handler",
             description="An Amazon DynamoDB trigger that pushes the updates made to the customer config table to an SNS topic",
             memory_size=2048,
             timeout=Duration.minutes(15),
+            runtime = Runtime.PYTHON_3_8,
             environment={
                 "SNS_TOPIC_ARN":self._sns_topic.topic_arn
             }
@@ -325,16 +333,16 @@ class TenantProvisiongService(Stack):
             starting_position=StartingPosition.TRIM_HORIZON
         )
 
-        self._lambda_amc_instance_setup = LambdaFactory.function(
+        self._lambda_amc_instance_setup = Function(
             self,
-            environment_id=self._environment_id,
-            id=f"{microservice}-{team}-TriggerAMCSetupStepFunction-{environment_id}",
+            f"{microservice}-{team}-TriggerAMCSetupStepFunction-{environment_id}",
             function_name=f"{microservice}-{team}-TriggerAMCSetupStepFunction-{environment_id}",
             code=Code.from_asset(os.path.join(f"{Path(__file__).parents[1]}", "CustomerManagementService/lambdas/tps/amc_instance_setup")),
             handler="handler.lambda_handler",
             description="Trigger AMC Instance setup state machine",
             timeout=Duration.seconds(30),
             memory_size=128,
+            runtime = Runtime.PYTHON_3_8,
             environment={
                 "STATE_MACHINE_ARN":self._sm.attr_arn
             },
@@ -537,15 +545,16 @@ class TenantProvisiongService(Stack):
             managed_policies=[ManagedPolicy.from_aws_managed_policy_name("service-role/AWSLambdaBasicExecutionRole")]
         )
 
-        self._add_amc_instance = LambdaFactory.function(
+        self._add_amc_instance = Function(
             self,
-            environment_id=self._environment_id,
-            id=f"{microservice}-{team}-AddAmcInstance-{environment_id}",
+            f"{microservice}-{team}-AddAmcInstance-{environment_id}",
             function_name=f"{microservice}-{team}-AddAmcInstance-{environment_id}",
             code=Code.from_asset(os.path.join(f"{Path(__file__).parents[1]}", "CustomerManagementService/lambdas/tps/add_amc_instance")),
             handler="handler.lambda_handler",
             description="Onboard AMC into environment",
             timeout=Duration.minutes(10),
+            memory_size=256,
+            runtime = Runtime.PYTHON_3_8,
             role = add_amc_instance_role,
             environment={
                 "templateUrl": f"https://{self._artifacts_bucket.bucket_name}.s3.amazonaws.com/{self._microservice_name}/scripts/{self._team}/{self._pipeline}/amc-initialize.yaml",
@@ -554,28 +563,29 @@ class TenantProvisiongService(Stack):
         )
         self._artifacts_bucket_key.grant_decrypt(self._add_amc_instance)
 
-        self._add_amc_instance_check = LambdaFactory.function(
+        self._add_amc_instance_check = Function(
             self,
-            environment_id=self._environment_id,
-            id=f"{microservice}-{team}-AddAmcInstanceStatusCheck-{environment_id}",
+            f"{microservice}-{team}-AddAmcInstanceStatusCheck-{environment_id}",
             function_name=f"{microservice}-{team}-AddAmcInstanceStatusCheck-{environment_id}",
             code=Code.from_asset(os.path.join(f"{Path(__file__).parents[1]}", "CustomerManagementService/lambdas/tps/add_amc_instance_check")),
             handler="handler.lambda_handler",
             description="Checks if stack has finished (success/failure)",
             timeout=Duration.minutes(15),
+            memory_size=256,
+            runtime = Runtime.PYTHON_3_8,
             role = add_amc_instance_role
         )
 
-        self._amc_instance_post_deploy_metadata = LambdaFactory.function(
+        self._amc_instance_post_deploy_metadata = Function(
             self,
-            environment_id=self._environment_id,
-            id=f"{microservice}-{team}-postDeployMetadataInstanceConfig-{environment_id}",
+            f"{microservice}-{team}-postDeployMetadataInstanceConfig-{environment_id}",
             function_name=f"{microservice}-{team}-postDeployMetadataInstanceConfig-{environment_id}",
             code=Code.from_asset(os.path.join(f"{Path(__file__).parents[1]}", "CustomerManagementService/lambdas/tps/amc_instance_post_deploy_metadata")),
             handler="handler.lambda_handler",
             description="Onboard AMC into environment",
             timeout=Duration.minutes(10),
             memory_size=512,
+            runtime = Runtime.PYTHON_3_8,
             environment={
                 "AccountId": core.Aws.ACCOUNT_ID,
                 "Region": core.Aws.REGION

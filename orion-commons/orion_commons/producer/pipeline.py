@@ -3,7 +3,6 @@ from typing import Any, Dict, List, Optional
 from aws_cdk.aws_events import EventPattern, IRuleTarget, Rule
 from aws_cdk.core import Construct
 
-from .register import RegisterConstruct
 from .stage import StageConstruct
 
 
@@ -35,7 +34,6 @@ class PipelineConstruct(Construct):
         props["name"] = self.name
         props["description"] = self.description
         props["type"] = pipeline_type if pipeline_type else "pipeline"
-        RegisterConstruct(self, self.id, props=props)
         self._prev_stage: Optional[StageConstruct] = None
         self._rules: List[Rule] = []
 

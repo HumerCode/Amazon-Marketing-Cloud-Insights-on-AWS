@@ -2,15 +2,20 @@ from typing import Any, Dict, List, Optional
 import json
 from aws_cdk.aws_kms import Key, IKey
 from aws_cdk.core import Construct
-from orion_commons import get_ssm_value, KMSFactory
 from aws_cdk.aws_iam import Effect, ManagedPolicy, PolicyDocument, PolicyStatement, Role, ServicePrincipal, AccountRootPrincipal, AnyPrincipal
 from aws_cdk import (core)
-from aws_cdk.core import Construct, Stack, Fn
+from aws_cdk.core import Construct, Stack, Fn, Duration, RemovalPolicy
 import aws_cdk.aws_sagemaker as sagemaker
 from aws_cdk.aws_s3 import Bucket, IBucket
 from aws_cdk.aws_s3_deployment import BucketDeployment, ServerSideEncryption, Source
+from aws_cdk.aws_ssm import StringParameter
 
-
+def get_ssm_value(scope: Construct, id: str, parameter_name: str) -> str:
+    return StringParameter.from_string_parameter_name(
+        scope,
+        id=id,
+        string_parameter_name=parameter_name,
+    ).string_value
 class PlatformManagerSageMaker(Stack):
     def __init__(
         self,
@@ -31,7 +36,6 @@ class PlatformManagerSageMaker(Stack):
         self._sync_zip_s3_bucket()
         self._create_sagemaker_kms_key()
         self._create_sagemaker_componenets()
-
 
     def _get_artifacts(self) -> None:
         self._artifacts_key: IKey = Key.from_key_arn(
@@ -109,12 +113,14 @@ class PlatformManagerSageMaker(Stack):
             )]
         )
 
-        self._sagemaker_kms_key: Key = KMSFactory.key(
+        self._sagemaker_kms_key: Key = Key(
             self,
-            environment_id=self._environment_id,
             id=f"{self._microservice_name}-table-key",
             description=f"{self._microservice_name.title()} Table Key",
             alias=f"sagemaker-demo-cm",
+            enable_key_rotation=True,
+            pending_window=Duration.days(30),
+            removal_policy=RemovalPolicy.DESTROY,
             policy=self._kms_key_policy
         )
 
@@ -123,7 +129,6 @@ class PlatformManagerSageMaker(Stack):
         """Sagemaker role, lifecycle config and notebook instance"""
         
         
-        #To do: review the cfn stack and add permissions
         sagemaker_role: Role = Role(
             self,
             f"{self._microservice_name}-role",
@@ -198,7 +203,6 @@ class PlatformManagerSageMaker(Stack):
 
         self._artifacts_key.grant_encrypt_decrypt(sagemaker_role)
 
-        #To do: review the cfn stack and add missing components
         sagemaker_lifecycle_config = sagemaker.CfnNotebookInstanceLifecycleConfig(
             self, 
             f"{self._microservice_name}-lc",
@@ -215,7 +219,6 @@ class PlatformManagerSageMaker(Stack):
             )]
         )
       
-        #To do: review the cfn stack and add missing components
         sagemaker.CfnNotebookInstance(
             self, 
             f"{self._microservice_name}-nb",

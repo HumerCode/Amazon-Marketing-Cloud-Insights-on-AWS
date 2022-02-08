@@ -14,9 +14,14 @@ from aws_cdk.aws_s3_deployment import BucketDeployment, ServerSideEncryption, So
 from aws_cdk.aws_ssm import StringParameter
 from aws_cdk.core import Construct, Stack
 import aws_cdk.aws_lakeformation as lakeformation
-from orion_commons import get_ssm_value
 
 
+def get_ssm_value(scope: Construct, id: str, parameter_name: str) -> str:
+    return StringParameter.from_string_parameter_name(
+        scope,
+        id=id,
+        string_parameter_name=parameter_name,
+    ).string_value
 
 class GlueStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, environment_id: str, **kwargs: Any) -> None:

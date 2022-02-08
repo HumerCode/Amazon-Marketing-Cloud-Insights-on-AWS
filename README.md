@@ -4,15 +4,6 @@
 
 There are two options for how to deploy this QuickStart: [Using AWS Cloud9](#using-aws-cloud9) or [Deploying Locally using AWS CLI](#deploying-locally-using-aws-cli).
 
-### Using AWS Cloud9
-
-1. Log in to the AWS account console using the Admin role and select an AWS region. We recommend choosing a mature region where most services are available (e.g. eu-west-1, us-east-1…)
-2. Navigate to AWS Lake Formation. If this is the first time you visit the page, you might be asked to add yourself as a Data Lake administrator which you can accept. Then, click on `Settings` on the left-hand side menu and make sure both boxes are unchecked before clicking save.
-3. Navigate to `Cloud9` in the AWS console. Set up a [Cloud9 Environment](https://docs.aws.amazon.com/cloud9/latest/user-guide/create-environment-main.html) in the same AWS region (t3.small or higher, Amazon Linux 2) and open the IDE
-4. Download the package, upload it to your Cloud9 instance, and unzip it
-
-Continue to the [How to Deploy](#how-to-deploy) Section in order to deploy this QuickStart.
-
 ### Deploying Locally using AWS CLI
 
 1. Log in to the AWS account console using the Admin role and select an AWS region. We recommend choosing a mature region where most services are available (e.g. eu-west-1, us-east-1…)
@@ -35,6 +26,15 @@ AWS Secret Access Key [None]: Type your IAM user AWS secret access key here, and
 Default region name [None]: Type a supported region for CodeCommit here, and then press Enter
 Default output format [None]: Type json here, and then press Enter
 ```
+
+Continue to the [How to Deploy](#how-to-deploy) Section in order to deploy this QuickStart.
+
+### Using AWS Cloud9
+
+1. Log in to the AWS account console using the Admin role and select an AWS region. We recommend choosing a mature region where most services are available (e.g. eu-west-1, us-east-1…)
+2. Navigate to AWS Lake Formation. If this is the first time you visit the page, you might be asked to add yourself as a Data Lake administrator which you can accept. Then, click on `Settings` on the left-hand side menu and make sure both boxes are unchecked before clicking save.
+3. Navigate to `Cloud9` in the AWS console. Set up a [Cloud9 Environment](https://docs.aws.amazon.com/cloud9/latest/user-guide/create-environment-main.html) in the same AWS region (t3.small or higher, Amazon Linux 2) and open the IDE
+4. Download the package, upload it to your Cloud9 instance, and unzip it
 
 Continue to the [How to Deploy](#how-to-deploy) Section in order to deploy this QuickStart.
 
