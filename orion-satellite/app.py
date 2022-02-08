@@ -41,14 +41,6 @@ class GetApplicationParameters():
 
     def get_platform_manager_params(self) -> Dict[str, Any]:
         return self._config.get("platform_manager_parameters", {})
-    
-    def get_params(self, key) -> Dict[str, Any]:
-        return self._config.get(key, {})
-
-    def get_deploy_flag(self, key) -> Any:
-        microservice_param = self._config.get(key, {})
-        deploy_flag = microservice_param.get("deploy", False)
-        return deploy_flag
 
 class DataPipelineStage(Stage):
     def __init__(
@@ -94,37 +86,35 @@ class EventStage(Stage):
         # Gets deployed in cicd account to trigger satellite pipeline after artifacts pipeline
         CICDEventRuleStack(self, "orion-cicd-event-rule", environment_id=environment_id, pipeline_name=pipeline_name)
 
-
 class MicroserviceStage(Stage):
     def __init__(
         self,
         scope: Construct,
         environment_id: str,
-        params: GetApplicationParameters,
+        tps_params: Dict[str, Any],
+        wfm_params: Dict[str, Any],
+        pmn_params: Dict[str, Any],
         **kwargs: Any,
     ) -> None:
         super().__init__(scope, f"orion-{environment_id}-microservices", **kwargs)
-
-        if(params.get_deploy_flag("wfm_parameters")==True):
-            # WFM
-            self._wfm_params = params.get_wfm_params()
-            self._wfm_team = self._wfm_params.get("team", "demoteam")
-            self._wfm_pipeline = self._wfm_params.get("pipeline", "dlhs")
-            self._wfm_dataset = self._wfm_params.get("dataset", "amcdataset")
-            WorkFlowManagerService(self, "orion-wfm", environment_id=environment_id, team=self._wfm_team, microservice="wfm", pipeline=self._wfm_pipeline, dataset=self._wfm_dataset)
         
-        if(params.get_deploy_flag("tps_parameters")==True):
-            # TPS
-            self._tps_params = params.get_tps_params()
-            self._tps_team = self._tps_params.get("team", "demoteam")
-            self._tps_pipeline = self._tps_params.get("pipeline", "cmpl")
-            TenantProvisiongService(self, "orion-tps", environment_id=environment_id, team=self._tps_team, microservice="tps", pipeline=self._tps_pipeline)
+        # WFM
+        self._wfm_params = wfm_params
+        self._wfm_team = self._wfm_params.get("team", "demoteam")
+        self._wfm_pipeline = self._wfm_params.get("pipeline", "dlhs")
+        self._wfm_dataset = self._wfm_params.get("dataset", "amcdataset")
+        WorkFlowManagerService(self, "orion-wfm", environment_id=environment_id, team=self._wfm_team, microservice="wfm", pipeline=self._wfm_pipeline, dataset=self._wfm_dataset)
+        
+        # TPS
+        self._tps_params = tps_params
+        self._tps_team = self._tps_params.get("team", "demoteam")
+        self._tps_pipeline = self._tps_params.get("pipeline", "cmpl")
+        TenantProvisiongService(self, "orion-tps", environment_id=environment_id, team=self._tps_team, microservice="tps", pipeline=self._tps_pipeline)
 
-        if(params.get_deploy_flag("platform_manager_parameters")==True):
-            # PMN
-            self._pmn_params = params.get_platform_manager_params()
-            self._pmn_team = self._pmn_params.get("team", "demoteam")
-            PlatformManagerSageMaker(self, "orion-platform-manager", environment_id=environment_id, team=self._pmn_team, microservice="platform-manager")
+        # PMN
+        self._pmn_params = pmn_params
+        self._pmn_team = self._pmn_params.get("team", "demoteam")
+        PlatformManagerSageMaker(self, "orion-platform-manager", environment_id=environment_id, team=self._pmn_team, microservice="platform-manager")
 
 
 satellite_app = App()
@@ -139,8 +129,8 @@ pipeline_name = "orion-satellite-pipeline"
     .add_source_action(repository_name="orion-satellite")
     .add_synth_action()
     .build()
-    .add_stage("dev", DataPipelineStage(satellite_app, environment_id="dev", env=config.get_env("dev"), params=params.get_data_pipeline_params()), execute_tests=False)
-    .add_stage("dev", MicroserviceStage(satellite_app, environment_id="dev", env=config.get_env("dev"), params = params), execute_tests=False)
+    .add_stage("dev", DataPipelineStage(satellite_app, environment_id="dev", env=config.get_env("dev"), params=params.get_data_pipeline_params()))
+    .add_stage("dev", MicroserviceStage(satellite_app, environment_id="dev", env=config.get_env("dev"), tps_params=params.get_tps_params(), wfm_params=params.get_wfm_params(), pmn_params=params.get_platform_manager_params()), execute_tests=False)
     .add_stage("cicd", EventStage(satellite_app, environment_id="cicd", pipeline_name=pipeline_name, env=config.get_env("cicd")), execute_tests=False)
 )   
 satellite_app.synth()
