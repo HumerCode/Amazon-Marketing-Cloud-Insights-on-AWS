@@ -25,7 +25,7 @@ The Purpose of the Orion SDLF Data Lake Framework is to shorten the deployment t
 
 ## Reference Architecture
 
-![Alt](/docs/static/images/Orion-SDLF-Arch.png)
+![Alt](/docs/images/Orion-SDLF-Arch.png)
 
 ## Prerequisites
 
