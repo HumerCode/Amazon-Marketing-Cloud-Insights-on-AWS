@@ -50,7 +50,7 @@ Continue to the [How to Deploy](#how-to-deploy) Section in order to deploy this 
 
 ## How To Deploy
 
-1. Locate three separate **cdk.json** files located under the **orion-commons/**, **orion-artifacts/**, and **orion-satellite/** repositories and customize it to your environment:
+1. Locate two separate **cdk.json** files located under the **orion-commons/** and **orion-satellite/** repositories and customize it to your environment:
    - NOTE: You **must** change the account and domain_owner parameters in cicd and account parameters in dev (the child account) to match your own AWS Account IDs. The AWS Account IDs in cicd and dev can be the same value to deploy the Quickstart in a single account or different from one another if you wish to deploy the resources in a separate child account. An example of the cdk.json structure is below:
 
 ```
@@ -126,7 +126,7 @@ A more detailed explanation of each step is below:
 
 ### Create Repositories
 
-The deployment starts by provisioning and populating three AWS CodeCommit repositories in the account. As Orion relies on a CI/CD approach, you have initialized code repositories hosting the infrastructure as code. These three repositories are **orion-commons**, **orion-artifacts**, and **orion-satellite**.
+The deployment starts by provisioning and populating three AWS CodeCommit repositories in the account. As Orion relies on a CI/CD approach, you have initialized code repositories hosting the infrastructure as code. These two repositories are **orion-commons** and **orion-satellite**.
 
 ### Bootstrap Accounts
 
@@ -144,15 +144,15 @@ _Install Libraries:_ The second command installs a number of Python libraries lo
 
 ### Deploy All
 
-The deploy all step deploys two AWS CodePipelines, **orion-artifacts** and **orion-satellite**, along with their respective AWS. The pipelines will self-mutate based on any added child environments or stages and deliver the same infrastructure in the new child environment. A number of stages are added by default to the CodePipeline(e.g. security checks with [Bandit](https://github.com/PyCQA/bandit) and [CFNNag](https://github.com/stelligent/cfn_nag), and a testing phase). If you recall from the previous phase, these were defined in the Orion Commons library and are now used within the Orion Artifacts and Orion Satellite applications to comply with best practices specified centrally.
+The deploy all step deploys **orion-satellite** AWS CodePipeline along with its respective AWS CloudFormation Stacks. The pipelines will self-mutate based on any added child environments or stages and deliver the same infrastructure in the new child environment. A number of stages are added by default to the CodePipeline(e.g. security checks with [Bandit](https://github.com/PyCQA/bandit) and [CFNNag](https://github.com/stelligent/cfn_nag), and a testing phase). If you recall from the previous phase, these were defined in the Orion Commons library and are now used within the Orion Artifacts and Orion Satellite applications to comply with best practices specified centrally.
 
-The last stage of each pipeline delivers the artifacts and satellite infrastructure respectively in the child (dev) environment through CloudFormation.
+The last stage of each pipeline delivers the satellite infrastructure respectively in the child (dev) environment through CloudFormation.
 
 ![Alt](./docs/images/Orion-AMC-Quickstart-Deploy-All.png)
 
-_Orion-Artifacts:_ This application creates shared resources between teams. These resources include Lambda Layers, Glue Jobs, and a S3 Bucket to host the Artifacts.
+_Artifacts:_ This application creates shared resources between teams. These resources include Lambda Layers, Glue Jobs, and a S3 Bucket to host the Artifacts.
 
-_Orion-Satellite:_ This application creates the resources for the Data Lake and supporting Microservices. All the resources needed for orchestration between services, data processing code, and data and metadata storage are provisioned here. For a walkthrough of the steps the AWS CodePipeline goes through to deploy these resources please refer to [here](#orion-satellite-codepipeline-steps).
+_AMCDeliveryKit:_ This application creates the resources for the Data Lake and supporting Microservices. All the resources needed for orchestration between services, data processing code, and data and metadata storage are provisioned here. For a walkthrough of the steps the AWS CodePipeline goes through to deploy these resources please refer to [here](#orion-satellite-codepipeline-steps).
 
 ### Insert TPS Records and AMC Workflows
 
