@@ -1,0 +1,538 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Orion child CDK bootstrap
+
+Parameters:
+  TrustedAccount:
+    Description: Shared Orion AWS account that is trusted to publish assets and deploy stacks to this environment
+    Type: String
+    AllowedPattern: (\d{12}|^$)
+    ConstraintDescription: Must be an AWS account ID
+  Qualifier:
+    Description: An identifier to distinguish multiple bootstrap stacks in the same environment
+    Type: String
+    Default: hnb659fds
+    # cdk-(qualifier)-image-publishing-role-(account)-(region) needs to be <= 64 chars
+    # account = 12, region <= 14, 10 chars for qualifier and 28 for rest of role name
+    AllowedPattern: "[A-Za-z0-9_-]{1,10}"
+    ConstraintDescription: Qualifier must be an alphanumeric identifier of at most 10 characters
+
+Conditions:
+  CrossAccount:
+    Fn::Not:
+      - Fn::Equals:
+          - Ref: AWS::AccountId
+          - Ref: TrustedAccount
+
+Resources:
+  AssetsEncryptionKey:
+    Type: AWS::KMS::Key
+    Properties:
+      EnableKeyRotation: true
+      KeyPolicy:
+        Statement:
+          - Action:
+              - kms:CancelKeyDeletion
+              - kms:Create*
+              - kms:Delete*
+              - kms:Describe*
+              - kms:Disable*
+              - kms:Enable*
+              - kms:GenerateDataKey
+              - kms:Get*
+              - kms:List*
+              - kms:Put*
+              - kms:Revoke*
+              - kms:ScheduleKeyDeletion
+              - kms:Update*
+            Effect: Allow
+            Principal:
+              AWS:
+                Ref: AWS::AccountId
+            Resource: "*"
+          - Action:
+              - kms:Decrypt
+              - kms:DescribeKey
+              - kms:Encrypt
+              - kms:GenerateDataKey*
+              - kms:ReEncrypt*
+            Effect: Allow
+            Principal:
+              AWS: "*"
+            Resource: "*"
+            Condition:
+              StringEquals:
+                kms:CallerAccount:
+                  Ref: AWS::AccountId
+                kms:ViaService:
+                  - Fn::Sub: s3.${AWS::Region}.amazonaws.com
+          - Action:
+              - kms:Decrypt
+              - kms:DescribeKey
+              - kms:Encrypt
+              - kms:GenerateDataKey*
+              - kms:ReEncrypt*
+            Effect: Allow
+            Principal:
+              AWS:
+                Fn::Sub: ${FilePublishingRole.Arn}
+            Resource: "*"
+
+  AssetsEncryptionKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName:
+        Fn::Sub: alias/cdk-${Qualifier}-assets-key
+      TargetKeyId:
+        Ref: AssetsEncryptionKey
+
+  StagingBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName:
+        Fn::Sub: cdk-${Qualifier}-assets-${AWS::AccountId}-${AWS::Region}
+      AccessControl: Private
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: aws:kms
+              KMSMasterKeyID:
+                Fn::Sub: ${AssetsEncryptionKey.Arn}
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
+
+  StagingBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: { Ref: StagingBucket }
+      PolicyDocument:
+        Id: AccessControl
+        Version: 2012-10-17
+        Statement:
+          - Sid: AllowSSLRequestsOnly
+            Action: s3:*
+            Effect: Deny
+            Resource:
+              - { "Fn::Sub": "${StagingBucket.Arn}" }
+              - { "Fn::Sub": "${StagingBucket.Arn}/*" }
+            Condition:
+              Bool: { "aws:SecureTransport": false }
+            Principal: "*"
+
+  FilePublishingRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              AWS:
+                Ref: AWS::AccountId
+          - Fn::If:
+              - CrossAccount
+              - Action: sts:AssumeRole
+                Effect: Allow
+                Principal:
+                  AWS:
+                    Ref: TrustedAccount
+              - Ref: AWS::NoValue
+      RoleName:
+        Fn::Sub: cdk-${Qualifier}-file-publishing-role-${AWS::AccountId}-${AWS::Region}
+
+  FilePublishingRoleDefaultPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - s3:Abort*
+              - s3:DeleteObject*
+              - s3:GetBucket*
+              - s3:GetObject*
+              - s3:List*
+              - s3:PutObject*
+            Resource:
+              - Fn::Sub: ${StagingBucket.Arn}
+              - Fn::Sub: ${StagingBucket.Arn}/*
+            Effect: Allow
+          - Action:
+              - kms:Decrypt
+              - kms:DescribeKey
+              - kms:Encrypt
+              - kms:GenerateDataKey*
+              - kms:ReEncrypt*
+            Effect: Allow
+            Resource:
+              Fn::Sub: ${AssetsEncryptionKey.Arn}
+        Version: 2012-10-17
+      Roles:
+        - Ref: FilePublishingRole
+      PolicyName:
+        Fn::Sub: cdk-${Qualifier}-file-publishing-role-default-policy-${AWS::AccountId}-${AWS::Region}
+
+  DeploymentActionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              AWS:
+                Ref: AWS::AccountId
+          - Fn::If:
+              - CrossAccount
+              - Action: sts:AssumeRole
+                Effect: Allow
+                Principal:
+                  AWS:
+                    Ref: TrustedAccount
+              - Ref: AWS::NoValue
+      Policies:
+        - PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - cloudformation:DescribeStackEvents
+                  - cloudformation:GetTemplate
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - cloudformation:CreateChangeSet
+                  - cloudformation:DeleteChangeSet
+                  - cloudformation:DescribeChangeSet
+                  - cloudformation:DescribeStacks
+                  - cloudformation:ExecuteChangeSet
+                Resource:
+                  - Fn::Sub: arn:${AWS::Partition}:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/CDKToolkit/*
+                  - Fn::Sub: arn:${AWS::Partition}:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/orion-*
+                  - Fn::Sub: arn:${AWS::Partition}:cloudformation:${AWS::Region}:aws:transform/*
+              - Effect: Allow
+                Action:
+                  # Permissions needed by the CLI when doing `cdk deploy`.
+                  # Our CI/CD does not need DeleteStack,
+                  # but we also want to use this role from the CLI,
+                  # and there you can call `cdk destroy`
+                  - cloudformation:DeleteStack
+                  - cloudformation:UpdateTerminationProtection
+                Resource:
+                  - Fn::Sub: arn:${AWS::Partition}:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/orion-*
+              - Effect: Allow
+                Action:
+                  - s3:Abort*
+                  - s3:DeleteObject*
+                  - s3:GetBucket*
+                  - s3:GetObject*
+                  - s3:List*
+                  - s3:PutObject*
+                Resource:
+                  - Fn::Sub: arn:${AWS::Partition}:s3:::cdk-*
+                  - Fn::Sub: arn:${AWS::Partition}:s3:::cdk-*/*
+                  - Fn::Sub: arn:${AWS::Partition}:s3:::orion-*
+                  - Fn::Sub: arn:${AWS::Partition}:s3:::orion-*/*
+              - Effect: Allow
+                Action:
+                  # Necessary to write to the cross-region artifact replication bucket
+                  # https://aws.amazon.com/premiumsupport/knowledge-center/codepipeline-deploy-cloudformation/.
+                  - kms:Decrypt
+                  - kms:DescribeKey
+                  - kms:Encrypt
+                  - kms:ReEncrypt*
+                  - kms:GenerateDataKey*
+                Resource: "*"
+              - Effect: Allow
+                Action: iam:PassRole
+                Resource:
+                  Fn::Sub: ${CloudFormationExecutionRole.Arn}
+              - Effect: Allow
+                Action:
+                  - sts:GetCallerIdentity
+                Resource: "*"
+              - Sid: ReadSSM
+                Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                  - ssm:GetParameters
+                Resource:
+                  - Fn::Sub: arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter${CdkBootstrapVersion}
+                  - Fn::Sub: arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/Orion/*
+            Version: 2012-10-17
+          PolicyName:
+            Fn::Sub: ${Qualifier}-deploy-role-default-policy-${AWS::AccountId}-${AWS::Region}
+      RoleName:
+        Fn::Sub: cdk-${Qualifier}-deploy-role-${AWS::AccountId}-${AWS::Region}
+
+  CloudFormationExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: cloudformation.amazonaws.com
+        Version: 2012-10-17
+      Policies:
+        - PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Resource:
+                  - Fn::Sub: arn:${AWS::Partition}:cloudtrail:${AWS::Region}:${AWS::AccountId}:trail/orion-*
+                Effect: Allow
+                Action:
+                  - cloudtrail:AddTags
+                  - cloudtrail:CreateTrail
+                  - cloudtrail:DeleteTrail
+                  - cloudtrail:PutEventSelectors
+                  - cloudtrail:RemoveTags
+                  - cloudtrail:StartLogging
+                  - cloudtrail:StopLogging
+                  - cloudtrail:UpdateTrail
+              - Resource:
+                  - Fn::Sub: arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/orion-*
+                  - Fn::Sub: arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/octagon-*
+                  - Fn::Sub: arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/wfm-*
+                  - Fn::Sub: arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/tps-*
+                Effect: Allow
+                Action:
+                  - dynamodb:CreateTable
+                  - dynamodb:DeleteTable
+                  - dynamodb:DescribeTable
+                  - dynamodb:UpdateTable
+                  - dynamodb:UpdateTimeToLive
+                  - dynamodb:TagResource
+                  - dynamodb:UntagResource
+              - Resource: "*"
+                Effect: Allow
+                Action:
+                  - ec2:DescribeNetworkInterfaces
+              - Resource:
+                  - Fn::Sub: arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:rule/orion-*
+                Effect: Allow
+                Action:
+                  - events:DeleteRule
+                  - events:DescribeRule
+                  - events:PutRule
+                  - events:PutTargets
+                  - events:RemoveTargets
+              - Resource: "*"
+                Effect: Allow
+                Action:
+                  - glue:CreateCrawler
+                  - glue:CreateDatabase
+                  - glue:CreateJob
+                  - glue:DeleteCrawler
+                  - glue:DeleteDatabase
+                  - glue:DeleteJob
+                  - glue:GetCrawler
+                  - glue:GetDatabase
+                  - glue:GetDatabases
+                  - glue:GetJob
+                  - glue:GetJobs
+                  - glue:StartCrawler
+                  - glue:StopCrawler
+                  - glue:TagResource
+                  - glue:UntagResource
+                  - glue:UpdateCrawler
+                  - glue:UpdateDatabase
+                  - glue:UpdateJob
+              - Resource: "*"
+                Effect: Allow
+                Action:
+                  - iam:AttachRolePolicy
+                  - iam:CreatePolicy
+                  - iam:CreateRole
+                  - iam:CreateServiceLinkedRole
+                  - iam:DeletePolicy
+                  - iam:DeleteRole
+                  - iam:DeleteRolePolicy
+                  - iam:DetachRolePolicy
+                  - iam:GetRole
+                  - iam:GetRolePolicy
+                  - iam:PutRolePolicy
+              - Resource:
+                  - Fn::Sub: arn:${AWS::Partition}:iam::${AWS::AccountId}:role/orion-*
+                Effect: Allow
+                Action:
+                  - iam:PassRole
+              - Resource:
+                  - Fn::Sub: arn:${AWS::Partition}:kms:${AWS::Region}:${AWS::AccountId}:key/*
+                Effect: Allow
+                Action:
+                  - kms:CreateGrant
+                  - kms:CreateKey
+                  - kms:Decrypt
+                  - kms:DescribeKey
+                  - kms:EnableKeyRotation
+                  - kms:Encrypt
+                  - kms:GetKeyPolicy
+                  - kms:GetKeyRotationStatus
+                  - kms:ListResourceTags
+                  - kms:PutKeyPolicy
+                  - kms:ScheduleKeyDeletion
+                  - kms:TagResource
+                  - kms:UntagResource
+              - Resource: "*"
+                Effect: Allow
+                Action:
+                  - kms:CreateKey
+              - Resource:
+                  - Fn::Sub: arn:${AWS::Partition}:kms:${AWS::Region}:${AWS::AccountId}:alias/orion-*
+                  - Fn::Sub: arn:${AWS::Partition}:kms:${AWS::Region}:${AWS::AccountId}:alias/sagemaker-*
+                  - Fn::Sub: arn:${AWS::Partition}:kms:${AWS::Region}:${AWS::AccountId}:key/*
+                Effect: Allow
+                Action:
+                  - kms:CreateAlias
+                  - kms:DeleteAlias
+              - Resource: "*"
+                Effect: Allow
+                Action:
+                  - lakeformation:DeregisterResource
+                  - lakeformation:GetDataAccess
+                  - lakeformation:GrantPermissions
+                  - lakeformation:RegisterResource
+                  - lakeformation:RevokePermissions
+                  - lakeformation:UpdateResource
+              - Resource: "*"
+                Effect: Allow
+                Action:
+                  - lambda:AddPermission
+                  - lambda:CreateEventSourceMapping
+                  - lambda:CreateFunction
+                  - lambda:DeleteEventSourceMapping
+                  - lambda:DeleteFunction
+                  - lambda:DeleteLayerVersion
+                  - lambda:GetFunction
+                  - lambda:GetFunctionCodeSigningConfig
+                  - lambda:GetLayerVersion
+                  - lambda:InvokeFunction
+                  - lambda:PublishLayerVersion
+                  - lambda:RemovePermission
+                  - lambda:TagResource
+                  - lambda:UntagResource
+                  - lambda:UpdateEventSourceMapping
+                  - lambda:UpdateFunctionCode
+                  - lambda:UpdateFunctionConfiguration
+                  - lambda:CreateEventSourceMapping
+                  - lambda:DeleteEventSourceMapping
+                  - lambda:GetEventSourceMapping
+                  - lambda:UpdateEventSourceMapping
+              - Resource: "*"
+                Effect: Allow
+                Action:
+                  - s3:CreateBucket
+                  - s3:DeleteBucket
+                  - s3:DeleteBucketPolicy
+                  - s3:GetBucketPolicy
+                  - s3:GetObject
+                  - s3:ListAllMyBuckets
+                  - s3:PutBucketAcl
+                  - s3:PutBucketEncryption
+                  - s3:PutBucketLogging
+                  - s3:PutBucketNotification
+                  - s3:PutBucketPolicy
+                  - s3:PutBucketPublicAccessBlock
+                  - s3:PutBucketTagging
+                  - s3:PutBucketVersioning
+                  - s3:PutEncryptionConfiguration
+              - Resource: "*"
+                Effect: Allow
+                Action:
+                  - serverlessrepo:GetCloudFormationTemplate
+                  - serverlessrepo:CreateCloudFormationTemplate
+              - Resource:
+                  - Fn::Sub: arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter${CdkBootstrapVersion}
+                  - Fn::Sub: arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/Orion/*
+                Effect: Allow
+                Action:
+                  - ssm:AddTagsToResource
+                  - ssm:DeleteParameter
+                  - ssm:GetParameter
+                  - ssm:GetParameters
+                  - ssm:PutParameter
+                  - ssm:RemoveTagsFromResource
+              - Resource: "*"
+                Effect: Allow
+                Action:
+                  - states:CreateStateMachine
+                  - states:DeleteStateMachine
+                  - states:DescribeStateMachine
+                  - states:TagResource
+                  - states:UntagResource
+                  - states:UpdateStateMachine
+              - Resource: "*"
+                Effect: Allow
+                Action:
+                  - sqs:AddPermission
+                  - sqs:ChangeMessageVisibility
+                  - sqs:ChangeMessageVisibilityBatch
+                  - sqs:CreateQueue
+                  - sqs:DeleteQueue
+                  - sqs:GetQueueAttributes
+                  - sqs:SetQueueAttributes
+                  - sqs:TagQueue
+              - Resource: "*"
+                Effect: Allow
+                Action:
+                  - sns:*
+                  - events:*
+                  - athena:*
+                  - sagemaker:*
+                  - iam:*
+                  - dynamodb:*
+                  - lakeformation:*
+              - Resource: "*"
+                Effect: Allow
+                Action:
+                  - cloudformation:CreateChangeSet
+          PolicyName: default
+      RoleName:
+        Fn::Sub: cdk-${Qualifier}-cfn-exec-role-${AWS::AccountId}-${AWS::Region}
+
+  ### LAKE FORMATION ###
+  DataLakeSettings:
+    Type: AWS::LakeFormation::DataLakeSettings
+    Properties:
+      Admins:
+        - DataLakePrincipalIdentifier: !GetAtt CloudFormationExecutionRole.Arn
+
+  ### SSM Parameters ###
+  AssetsEncryptionKeyArn:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Type: String
+      Description: The ARN of the KMS key used to encrypt the assets
+      Name: /Orion/KMS/ChildAssetsEncryptionKeyArn
+      Value:
+        Fn::Sub: ${AssetsEncryptionKey.Arn}
+  CdkBootstrapVersion:
+    # The SSM parameter is used in pipeline-deployed templates to verify the version
+    # of the bootstrap resources.
+    Type: AWS::SSM::Parameter
+    Properties:
+      Type: String
+      Name:
+        Fn::Sub: /cdk-bootstrap/${Qualifier}/version
+      Value: "5"
+
+Outputs:
+  BucketName:
+    Description: The name of the S3 bucket owned by the CDK toolkit stack
+    Value:
+      Fn::Sub: ${StagingBucket}
+  BucketDomainName:
+    Description: The domain name of the S3 bucket owned by the CDK toolkit stack
+    Value:
+      Fn::Sub: ${StagingBucket.RegionalDomainName}
+  # The Output is used by the CLI to verify the version of the bootstrap resources.
+  BootstrapVersion:
+    Description:
+      The version of the bootstrap resources that are currently mastered
+      in this stack
+    Value:
+      Fn::GetAtt: [CdkBootstrapVersion, Value]
