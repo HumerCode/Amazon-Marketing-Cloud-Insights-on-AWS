@@ -1,0 +1,87 @@
+# Orion SDLF Data Lake
+
+The Orion SDLF Data Lake is a platform that leverages the [Serverless Data Lake Framework](https://github.com/awslabs/aws-serverless-data-lake-framework/) (SDLF) to accelerate the delivery of enterprise data lakes on AWS.
+
+**Purpose**
+
+The Purpose of the Orion SDLF Data Lake Framework is to shorten the deployment time to production from several months to a few weeks. Refactoring SDLF on top of the Orion framework allows for more flexible use cases, further customization, and higher level abstraction to reduce the learning curve and make data lakes easier to deploy.
+
+**Integrates with the Tenant Provisioning Service (TPS)**
+
+- Adding or updating a customer record to the Tenant Provisioning Service will trigger automated deployment of a new S3 bucket and a new EventBridge rule that triggers the ETL processes of the data lake for that new bucket source.
+
+**Integrates with the Workflow Management Service (WFM)**
+
+- Scheduling new Workflows will return exexcution results autoamtically to the tenant's S3 bucket for further processing in the Data Lake.
+
+**Contents:**
+
+- [Reference Architecture](#reference-architecture)
+- [Prerequisites](#prerequisites)
+- [AWS Service Requirements](#aws-service-requirements)
+- [Resources Deployed](#resources-deployed)
+- [Parameters](#parameters)
+- [Deployment](#deployment)
+
+## Reference Architecture
+
+![Alt](/docs/images/Orion-SDLF-Arch.png)
+
+## Prerequisites
+
+1. The Data Lake resources are deployed as part of the Orion package. Refer to the Orion AMC QuickStart Deployment Steps in order to deploy the Data Lake Stacks.
+2. AWS Account
+3. IDE for e.g. [Pycharm](https://www.jetbrains.com/pycharm/) or [AWS Cloud9](https://aws.amazon.com/cloud9/)
+4. [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)
+
+## AWS Service Requirements
+
+The following AWS services are required for this utility:
+
+1. [AWS Lambda](https://aws.amazon.com/lambda/)
+2. [Amazon S3](https://aws.amazon.com/s3/)
+3. [AWS Glue](https://aws.amazon.com/glue/)
+4. [Amazon DynamoDB](https://aws.amazon.com/dynamodb/)
+5. [AWS Identity and Access Management (IAM)](https://aws.amazon.com/iam/)
+6. [Amazon Simple Queue Service](https://aws.amazon.com/sqs/)
+7. [AWS Key Management Service (KMS)](https://aws.amazon.com/kms/)
+8. [AWS Lake Formation](https://aws.amazon.com/lake-formation/)
+9. [AWS EventBridge](https://aws.amazon.com/eventbridge/)
+
+## Resources Deployed
+
+This CDK Application deploys the following resources, separated into dataset and pipeline constructs:
+
+### Datasets
+
+An Orion dataset is a logical construct referring to a grouping of data. It can be anything from a single table to an entire database with multiple tables, for example. However, an overall good practice is to limit the infrastructure deployed to the minimum to avoid unnecessary overhead and cost. It means that in general, the more data is grouped together the better. Abstraction at the transformation code level can then help make distinctions within a given dataset.
+
+Examples of datasets are:
+
+- A relational database with multiple tables (E.g. Sales DB with orders and customers tables)
+- A group of files from a data source (E.g. XML files from a Telemetry system)
+- A streaming data source (E.g. Kinesis data stream batching files and dumping them into S3)
+
+For this QuickStart, a Glue database and crawler alongside Lake Formation permissions are created. However, this will depend on the use case with the requirements for unstructured data or for a streaming data source likely to be different.
+
+### Pipelines
+
+Orion data pipelines can be thought of as a logical constructs representing an ETL process that moves and transforms data from one area of the lake to another. The stages directory is where the blueprint for a data pipeline stage is defined by data engineers. For instance, the definition for a step function stage orchestrating a Glue job and updating metadata is abstracted in the `sdlf_heavy_transform.py` file. This definition is not specific to a particular job or crawler, instead the Glue job name is passed as an input to the stage. Such a configuration promotes the reusability of stages across multiple data pipelines.
+
+In the pipelines directory, these stage blueprints are instantiated and wired together to create a data pipeline. Borrowing an analogy from object-oriented programming, blueprints defined in the stages directory are “classes”, while in the pipelines directory these become “object instances” of the class.
+
+## Parameters
+
+Before deploying the pipeline, ensure that the `data_pipeline_parameters` dictionary in the `cdk.json` file contains the correct following parameters for the **Data Lake** stacks:
+
+1. `team` — The name of the team which owns the pipeline.
+2. `pipeline` — Name to give the pipeline being deployed.
+3. `dataset` - Name of the dataset being deployed.
+4. `org` - Name of the organization deploying the data lake.
+5. `app` - Name of the application.
+
+The `cdk.json` is the same level as `app.py` within `orion-satellite`. If the parameters are not filled, default values for team, pipeline, dataset, org, and app will be used (i.e. demoteam, adtech, amcdataset, aws, and datalake).
+
+### Deployment
+
+Refer to the Orion AMC QuickStart Deployment Steps in order to deploy this stack.

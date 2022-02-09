@@ -1,0 +1,9 @@
+{
+  "s3": [],
+  "ddb": [],
+  "kms": [],
+  "sqs": [],
+  "lambdaLayer": [],
+  "eventbridge": [],
+  "cloudformation": []
+}
