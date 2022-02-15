@@ -10,7 +10,7 @@ ENV=dev
 
 all: create_repositories bootstrap_accounts ca_login install_libraries deploy_satellite insert_tps_records create_workflows
 
-delete_all: empty_buckets delete_satellite delete_artifacts delete_bootstrap delete_repositories delete_all_items
+delete_all: empty_buckets delete_satellite delete_bootstrap delete_repositories delete_all_items
 
 help:
 	@echo "Helper for the Orion MakeFile";
@@ -89,13 +89,15 @@ empty_buckets:
 	pushd scripts/cleanup_scripts; python3 ./empty_buckets.py; popd;
 	
 delete_satellite:
-	pushd orion-satellite; cdk destroy orion-dev-satellite/orion-foundations \
-	orion-dev-satellite/orion-sdlf-pipeline \
-	orion-dev-satellite/orion-sdlf-datasets \
-	orion-dev-microservices/orion-platform-manager \
-	orion-dev-microservices/orion-tps \
-	orion-dev-microservices/orion-wfm \
-	orion-cicd-satellite/orion-cicd-event-rule \
+	pushd orion-satellite; cdk destroy orion-dev-AMCDeliveryKit/orion-foundations \
+	orion-dev-AMCDeliveryKit/orion-sdlf-pipeline \
+	orion-dev-AMCDeliveryKit/orion-sdlf-datasets \
+	orion-dev-AMCDeliveryKit/orion-platform-manager \
+	orion-dev-AMCDeliveryKit/orion-tps \
+	orion-dev-AMCDeliveryKit/orion-wfm \
+	orion-dev-artifacts/base \
+	orion-dev-artifacts/layers \
+	orion-dev-artifacts/glue
 	orion-satellite-pipeline --force --profile ${CICD}; popd;
 	
 delete_artifacts:

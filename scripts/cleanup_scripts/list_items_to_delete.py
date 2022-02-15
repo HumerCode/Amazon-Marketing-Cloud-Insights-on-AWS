@@ -9,6 +9,7 @@ sqs_client = boto3.client("sqs")
 lambda_client = boto3.client("lambda")
 events_client = boto3.client('events')
 cfn_client = boto3.client('cloudformation')
+cw_client = boto3.client('logs')
 
 MAX_ITEMS = 1000
 
@@ -66,17 +67,22 @@ def list_sqs_queues():
     response = sqs_client.list_queues(
         QueueNamePrefix="wfm-"
     )
-    queue_urls = response["QueueUrls"]
-    for queue in queue_urls:
-        queue_list.append(queue)
+    if ("QueueUrls" in response):
+        queue_urls = response["QueueUrls"]
+        for queue in queue_urls:
+            queue_list.append(queue)
     return queue_list
 
 def list_lambda_layers():
     layer_list=[]
     response = lambda_client.list_layers()
     for layer in response["Layers"]:
-        layer_list.append(layer["LayerName"])
-        # :layer["LatestMatchingVersion"]["Version"]]
+        layer_list.append(
+            {
+                "layerName":layer["LayerName"], 
+                "version":layer["LatestMatchingVersion"]["Version"]
+            }
+        )
     return layer_list
 
 def list_rules():
@@ -100,6 +106,27 @@ def list_cfn_template():
             continue
     return stack_list
 
+def list_cw_logs():
+    cw_log_list=[]
+    try:
+        # creating paginator object for describe_log_groups() method
+        paginator = cw_client.get_paginator('describe_log_groups')
+
+        # creating a PageIterator from the paginator
+        response_iterator = paginator.paginate(
+            PaginationConfig={'MaxItems': MAX_ITEMS})
+
+        full_result = response_iterator.build_full_result()
+        for page in full_result['logGroups']:
+            cw_log_list.append(page["logGroupName"])
+
+    except ClientError:
+        logger.exception('Could not list CloudWatch Logs.')
+        raise
+    else:
+        return cw_log_list  
+
+
 if __name__ == "__main__":
     try:  
         print("Collecting Resources to Delete")
@@ -112,7 +139,6 @@ if __name__ == "__main__":
 
         kms_key_list = list_kms_keys(MAX_ITEMS)
         resources["kms"]=kms_key_list
-        print(kms_key_list)
 
         sqs_list = list_sqs_queues()
         resources["sqs"]=sqs_list
@@ -125,6 +151,9 @@ if __name__ == "__main__":
 
         cfn_template_list = list_cfn_template()
         resources["cloudformation"]=cfn_template_list
+
+        cw_logs_list = list_cw_logs()
+        resources["cwlogs"]=cw_logs_list
 
         print("Writing Items to Delete to JSON File: delete_file.json")
         with open("delete_file.json", "w+") as delete_file:

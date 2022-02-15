@@ -8,6 +8,7 @@ sqs_client = boto3.client("sqs")
 lambda_client = boto3.client("lambda")
 events_client = boto3.client('events')
 cfn_client = boto3.client('cloudformation')
+cw_client = boto3.client('logs')
 
 def empty_bucket(bucket_name):
     response = s3_client.list_objects_v2(Bucket=bucket_name)
@@ -57,10 +58,10 @@ def delete_queue(queue_url):
     )
     return
 
-def delete_lambda_layer(layer_name):
+def delete_lambda_layer(layer):
     lambda_client.delete_layer_version(
-        LayerName=layer_name,
-        VersionNumber=1
+        LayerName=layer["layerName"],
+        VersionNumber=layer["version"]
     )
     return
 
@@ -87,6 +88,12 @@ def delete_cfn_stack(stack_name):
         StackName=stack_name
     )
     return
+
+def delete_log_group(log_group):
+    cw_client.delete_log_group(
+        logGroupName=log_group
+    )
+    return 
 
 if __name__ == "__main__":
     try: 
@@ -118,7 +125,8 @@ if __name__ == "__main__":
             
             if len(items["lambdaLayer"]) > 0:
                 for layer in items["lambdaLayer"]:
-                    print(f"Deleting Lambda Layer: {layer}")
+                    print(layer)
+                    print(f"Deleting Lambda Layer: {layer['layerName']} Version {layer['version']}")
                     delete_lambda_layer(layer)
                     print(f"Lambda Layer Deleted: {layer}")
 
@@ -133,11 +141,18 @@ if __name__ == "__main__":
                     print(f"Deleting Cloudformation Stack: {stack}")
                     delete_cfn_stack(stack)
                     print(f"Cloudformation Stack Deleted: {stack}")
+            
+            if len(items["cwlogs"]) > 0:
+                for log_group in items["cwlogs"]:
+                    print(f"Deleting Log Group: {log_group}")
+                    delete_log_group(log_group)
 
             if len(items["kms"]) > 0:
                 for key_id in items["kms"]:
                     print(f"Scheduling KMS Key Delete: {key_id}")
                     schedule_key_deletion(key_id)
+
+
             
             json_data.close()
 
