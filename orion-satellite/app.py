@@ -16,7 +16,9 @@ from orion_satellite.producer.pipelines import SDLFPipelineStack
 from orion_satellite.microservices.PlatformManagementNotebooks import PlatformManagerSageMaker
 from orion_satellite.microservices.CustomerManagementService import TenantProvisiongService
 from orion_satellite.microservices.DataLakeHydrationMicroservices import WorkFlowManagerService
-
+from orion_artifacts.artifacts.base_stack import BaseStack
+from orion_artifacts.artifacts.glue_stack import GlueStack
+from orion_artifacts.artifacts.layers_stack import LayersStack
 
 class GetApplicationParameters():
     def __init__(
