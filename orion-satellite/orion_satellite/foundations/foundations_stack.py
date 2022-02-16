@@ -418,10 +418,4 @@ class FoundationsStack(Stack):
             is_multi_region_trail=False,
             include_global_service_events=False,
             management_events=ReadWriteType.ALL,
-        ).add_s3_event_selector(
-            s3_selector=[
-                S3EventSelector(bucket=self._raw_bucket),
-                S3EventSelector(bucket=self._stage_bucket),
-                S3EventSelector(bucket=self._analytics_bucket),
-            ]
-        )
+        ).log_all_s3_data_events()

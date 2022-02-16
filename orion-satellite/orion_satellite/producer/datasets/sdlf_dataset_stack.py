@@ -80,9 +80,9 @@ class SDLFDatasetStack(Stack):
         self.stage_b_transform: str = stage_b_transform if stage_b_transform else "heavy_transform_blueprint"
 
         self._props={
-                "id":f"orion-{team}-{name}",
+                "id":f"{team}-{name}",
                 "description":f"{name.title()} dataset",
-                "name": f"orion-{team}-{name}",
+                "name": f"{team}-{name}",
                 "type": "octagon_dataset",
                 "pipeline": pipeline,
                 "max_items_process": {

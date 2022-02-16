@@ -4,18 +4,18 @@
     "cdk_version": "1.108.0",
     "environments": {
       "cicd": {
-        "account": "222222222222",
+        "account": "ACCOUNT_ID",
         "region": "us-east-1",
         "codeartifact": {
           "repository": "orion-commons",
           "domain": "orion",
-          "domain_owner": "222222222222"
+          "domain_owner": "ACCOUNT_ID"
         },
         "execute_security_lint": false,
         "execute_tests": false
       },
       "dev": {
-        "account": "222222222222",
+        "account": "ACCOUNT_ID",
         "region": "us-east-1",
         "name": "Development",
         "manual_approvals": false,
