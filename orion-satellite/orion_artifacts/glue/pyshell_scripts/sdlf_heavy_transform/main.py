@@ -176,11 +176,11 @@ def create_update_tbl (csvdf, csv_schema, tbl_schema, silverCatalog, targetTable
             print ("Adding new columns")
             for col in extra_cols:
                 print ("New col name : " + col)
-                print ("New col type : " + pandas_athena_datatypes.get(csv_schema[col], 'string') ) 
+                print ("New col type : " + pandas_athena_datatypes.get(csv_schema[col].lower(), 'string') ) 
                 col_dict = {}
                 col_dict = {
                                 'Name': col,
-                                'Type': pandas_athena_datatypes.get(csv_schema[col], 'string')
+                                'Type': pandas_athena_datatypes.get(csv_schema[col].lower(), 'string')
                             }
                 new_cols.append (col_dict)
             
@@ -219,7 +219,9 @@ def create_update_tbl (csvdf, csv_schema, tbl_schema, silverCatalog, targetTable
         }
 
         for colm in csvdf.columns:
-            col_dict[colm] = str(pandas_athena_datatypes.get(str(csvdf.dtypes[colm]), 'string') )
+            print ("New col name : " + colm)
+            print ("New col type : " + pandas_athena_datatypes.get(str(csvdf.dtypes[colm]).lower(), 'string') ) 
+            col_dict[colm] = str(pandas_athena_datatypes.get(str(csvdf.dtypes[colm]).lower(), 'string') )
         part_dict = {}
         for prtns in list_partns:
             part_dict[prtns["santcolnm"]] = 'string'
