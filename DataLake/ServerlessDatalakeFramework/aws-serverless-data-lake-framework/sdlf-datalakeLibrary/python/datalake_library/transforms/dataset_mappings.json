@@ -1,9 +1,0 @@
-[
-    {
-        "name": "amcdataset",        
-        "transforms": {
-            "stage_a_transform": "amc_light_transform",
-            "stage_b_transform": "amc_heavy_transform"
-        }   
-    }
-]

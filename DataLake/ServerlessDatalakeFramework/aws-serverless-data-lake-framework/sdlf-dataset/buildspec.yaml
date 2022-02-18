@@ -1,8 +1,0 @@
-version: 0.2
-phases:
-  install:
-    runtime-versions:
-      docker: 18
-    commands:
-      - chmod +x ./deploy.sh
-      - ./deploy.sh
