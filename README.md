@@ -1,160 +1,193 @@
-## quickstart-amazon-marketing-cloud—Quick Start
 
-For architectural details, step-by-step instructions, and customization options, see the [deployment guide](https://aws-quickstart.github.io/quickstart-amazon-marketing-cloud/).
+# Deployment Steps for AMC QuickStart
 
-To post feedback, submit feature ideas, or report bugs, use the **Issues** section of this GitHub repo.
+#
+ 
+## Prerequisites for the Deployment
 
-To submit code for this Quick Start, see the [AWS Quick Start Contributor's Kit](https://aws-quickstart.github.io/).
+To complete this deployment, you'll need the following in your local environment
 
-# quickstart-amazon-marketing-cloud—Quick Start
+Programmatic access to an AWS Account
+Python (version 3.7 or above) and its package manager, pip (version 9.0.3 or above), are required
 
-## Prerequisites
+```
+$ python --version
+$ pip --version
+```
+The AWS CLI installed and configured
 
-There are two options for how to deploy this QuickStart: [Using AWS Cloud9](#using-aws-cloud9) or [Deploying Locally using AWS CLI](#deploying-locally-using-aws-cli).
+```
+$ aws --version
+```
 
-### Deploying Locally using AWS CLI
+The AWS CDK CLI (version 2.10 and above) installed 
 
+```
+$ cdk --version
+```
+
+The Git CLI installed and configured 
+
+```
+$ git --version
+```
+
+If this is your first time using Git, set your git username and email by running:
+
+```
+$ git config --global user.name "YOUR NAME"
+$ git config --global user.email "YOU@EMAIL.COM"
+```
+
+You can verify your git configuration with
+
+```
+$ git config --list
+```
+
+The jq Linux command line utility to extract data from JSON documents.
+
+```
+$ jq --version
+```
+
+If not installed already, you can install jq by running in your command line:
+```
+$ sudo yum install jq
+```
+
+### [OPTIONAL] Using AWS Cloud9 for Deployment:
+If you would like to deploy this quickstart using an AWS Cloud9 Environment rather than on your local environment, follow these steps to set up AWS Cloud9:
 1. Log in to the AWS account console using the Admin role and select an AWS region. We recommend choosing a mature region where most services are available (e.g. eu-west-1, us-east-1…)
-2. Navigate to AWS Lake Formation. If this is the first time you visit the page, you might be asked to add yourself as a Data Lake administrator which you can accept. Then, click on `Settings` on the left-hand side menu and make sure both boxes are unchecked before clicking save.
-3. Verify that you have the [prerequisites](https://docs.aws.amazon.com/cdk/latest/guide/getting_started.html#getting_started_prerequisites) to install the AWS CDK.
-4. [Install the AWS CDK](https://docs.aws.amazon.com/cdk/latest/guide/getting_started.html#getting_started_install).
-5. [Install the AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
-6. Download the package, upload it to your IDE (for e.g. [Pycharm](https://www.jetbrains.com/pycharm/)), and unzip it
-7. Configure the AWS CLI with a profile by using the configure command, as follows:
-
+2. Navigate to `Cloud9` in the AWS console. Set up a [Cloud9 Environment](https://docs.aws.amazon.com/cloud9/latest/user-guide/create-environment-main.html) in the same AWS region (t3.small or higher, Amazon Linux 2) and open the IDE
+3. Download the package, upload it to your Cloud9 instance, and unzip it
+4. Install jq by running in your command line:
 ```
-aws configure
+$ sudo yum install jq
 ```
 
-When prompted, specify the AWS access key and AWS secret access key of the IAM user to use with CodeCommit. Also, be sure to specify the AWS Region where the repository exists, such as us-east-1. When prompted for the default output format, specify json. For example, if you are configuring a profile for an IAM user:
+Python, Pip, AWS CLI, AWS CDK CLI, and Git CLI packages should all be installed and configured for you by defualt in your Cloud9 environment. Ensure that these pacakges are installed with the correct version with the following commands:
 
 ```
-AWS Access Key ID [None]: Type your IAM user AWS access key ID here, and then press Enter
-AWS Secret Access Key [None]: Type your IAM user AWS secret access key here, and then press Enter
-Default region name [None]: Type a supported region for CodeCommit here, and then press Enter
-Default output format [None]: Type json here, and then press Enter
+$ python --version
+$ pip --version 
+$ aws --version
+$ cdk --version
+$ git --version
 ```
 
-Continue to the [How to Deploy](#how-to-deploy) Section in order to deploy this QuickStart.
+The version requirements for the packages installed are:
+Python (version 3.7 or above)
+pip (version 9.0.3 or above)
+AWS CDK CLI (version 2.10 and above)
 
-### Using AWS Cloud9
-
-1. Log in to the AWS account console using the Admin role and select an AWS region. We recommend choosing a mature region where most services are available (e.g. eu-west-1, us-east-1…)
-2. Navigate to AWS Lake Formation. If this is the first time you visit the page, you might be asked to add yourself as a Data Lake administrator which you can accept. Then, click on `Settings` on the left-hand side menu and make sure both boxes are unchecked before clicking save.
-3. Navigate to `Cloud9` in the AWS console. Set up a [Cloud9 Environment](https://docs.aws.amazon.com/cloud9/latest/user-guide/create-environment-main.html) in the same AWS region (t3.small or higher, Amazon Linux 2) and open the IDE
-4. Download the package, upload it to your Cloud9 instance, and unzip it
-
-Continue to the [How to Deploy](#how-to-deploy) Section in order to deploy this QuickStart.
+Continue to the [Initial setup with the DDK CLI](#Initial-setup-with-the-DDK-CLI) Section in order to deploy this QuickStart.
 
 #
 
-## How To Deploy
+## Initial setup with the DDK CLI
 
-1. Locate two separate **cdk.json** files located under the **orion-commons/** and **orion-satellite/** repositories and customize it to your environment:
-   - NOTE: You **must** change the account and domain_owner parameters in cicd and account parameters in dev (the child account) to match your own AWS Account IDs. The AWS Account IDs in cicd and dev can be the same value to deploy the Quickstart in a single account or different from one another if you wish to deploy the resources in a separate child account. An example of the cdk.json structure is below:
-
-```
-{
-    ...
-    "environments": {
-      "cicd": {
-        "account": "111111111111", #FIX
-        "region": "us-east-1",
-        "codeartifact": {
-          "repository": "orion-commons",
-          "domain": "orion",
-          "domain_owner": "111111111111" #FIX
-        },
-        "execute_security_lint": true
-      },
-      "dev": {
-        "account": "222222222222", # FIX: Child environment AWS account ID can be different from the CI/CD stage
-        "region": "us-east-1",
-        "name": "Development",
-        "manual_approvals": false,
-        "resource_config": {
-          "artifacts-bucket": {"versioned": false, "removal_policy": "destroy"},
-          "athena-bucket": {"versioned": false, "removal_policy": "destroy"},
-          "artifacts-bucket-key": {"enable_key_rotation": true, "removal_policy": "destroy"},
-          "athena-bucket-key": {"enable_key_rotation": true, "removal_policy": "destroy"}
-        }
-      }
-    },
-    ...
-  }
-}
-```
-
-- Other customizations include:
-  - Changing/Adding child environments (e.g. dev, test). Adding a new child environment (say test or prod) would be as simple as adding a new entry in this JSON file with relevant configuration and pushing it to the source repository. The pipeline will then self-mutate and deliver the same infrastructure in the new child environment.
-  - Changing region to a new AWS Region name.
-  - Whether to execute a security check stage (true or false; default true)
-  - Whether manual approval is required
-  - Environment specific infrastructure configuration such as the removal policy and versioning status of S3 buckets.
-
-2. Initialize a Python Virtual Environment by running the command:
+Clone the repository for AMC QuickStart
 
 ```
-`python -m venv .env && source .env/bin/activate`
+$ git clone GITHUB-PATH 
+$ cd amc_quickstart
 ```
 
-The virtual environment here is used to manage Python packages and library for the quickstart without installing them globally.
-
-3. Install JQuery on your local environment by running the command:
-
+Install AWS DDK CLI, a command line interface to manage your DDK apps
 ```
-sudo yum install jq
+$ pip install aws-ddk 
 ```
 
-4. From within the **quickstart-amazon-marketing-cloud** repository run:
+To verify the installation, run:
+```
+$ ddk --help
+```
+
+Create and actitavte a virtualenv
+```
+$ python -m venv .venv && source .venv/bin/activate
+```
+
+Install the dependencies from requirements.txt
+This is when the AWS DDK Core library is installed
+```
+$ pip install -r requirements.txt --no-cache-dir
+```
+
+If your AWS account hasn't been used to deploy DDK apps before, then you need to bootstrap your environment:
 
 ```
-make all
+$ ddk bootstrap --help
+$ ddk bootstrap --profile [AWS_PROFILE] --trusted-accounts [AWS_ACCOUNT_ID]
 ```
 
-Congratulations! Orion is now being deployed in your AWS Account. The deployment takes approximately 2 hours to complete. As you wait, take some time to read the additional documentation on what the make all command is deploying in your account [below](#make-all-command-deployment).
+You might recognize a number of files typically found in a CDK Python application (e.g. app.py, cdk.json...). In addition, a file named ddk.json holding configuration about DDK specific constructs is present. Edit the DDK file with right account id and other microservice and data lake parameetr.
+
+```
+$ Edit ddk.json 
+```
+
+Initialise git for the repository
+
+```
+$ git init --initial-branch main
+```
+
+Execute the create repository command to create a new codecommit repository
+
+```
+$ ddk create-repository AMC_QUICKSTART_REPO_NAME --profile [AWS_PROFILE] --region [AWS_REGION]
+```
+
+Add and push the initial commit to the repository
+
+```
+$ git config --global credential.helper "!aws codecommit --profile <my-profile> credential-helper $@"
+$ git config --global credential.UseHttpPath true
+$ git add .
+$ git commit -m "Configure AMC QUICKSTART"
+$ git push --set-upstream origin main
+```
 
 #
 
-## Make All Command Deployment
+## Deploying the Quickstart
 
-The Makefile goes through a series of 5 steps to deploy this Quickstart in your AWS account: [Create Repositories](#create-repositories), [Bootstrap Accounts](#bootstrap-accounts), [CA Login & Install Libraries](#CA-login-and-install-libraries), [Deploy All](#deploy-all), and [Insert TPS Config & AMC Workflows](#insert-TPS-records-and-AMC-workflows).
+Once the above steps are performed, run the deploy command to deploy the quickstart
 
-![Alt](./docs/images/Orion-AMC-Quickstart-Make-All.png)
+```
+$ ddk deploy --profile [AWS_PROFILE]
+```
 
-A more detailed explanation of each step is below:
+The deploy all step deploys an AWS CodePipeline along with its respective AWS CloudFormation Stacks. The last stage of each pipeline delivers the AMC Quickstart infrastructure respectively in the child (default dev) environment through CloudFormation.
 
-### Create Repositories
+![Alt](/docs/images/AMC-Quickstart-Deploy.png)
 
-The deployment starts by provisioning and populating three AWS CodeCommit repositories in the account. As Orion relies on a CI/CD approach, you have initialized code repositories hosting the infrastructure as code. These two repositories are **orion-commons** and **orion-satellite**.
+_Foundations:_ This application creates the foundational resources for the quickstart. These resources include Lambda Layers, Glue Jobs, S3 Buckets, routing SQS Queues, and Amazon DynamoDB Tables for data and metadata storage.
 
-### Bootstrap Accounts
+_Data Lake:_ This application creates the resources for the data lake. All the resources needed for orchestration between services and data processing code are provisioned here.
 
-Next, [bootstrap](https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping.html) the account to deploy AWS infrastructure required by the CDK and Orion to manage Infrastructure As Code (IaC). The AWS Infrastructure deployed includes IAM Roles, an AWS CodeArtifacts Domain, and Orion helper functions and resource factories. To do so, the framework provisions two AWS CloudFormation stacks: **orion-cicd-bootstrap** and **orion-dev-bootstrap**.
+_Microservices:_ This application creates the resources for the supporting Microservices. All the resources needed for orchestration between the microservices, data processing code, and data and metadata storage for the microservices are provisioned here.
 
-When the bootstrap stacks are deployed, a CodePipeline pipeline named **orion-commons-pipeline** is automatically triggered. It pulls code from the **orion-commons** repository and creates a Python library with the same name hosted in CodeArtifact
+For a walkthrough of the steps the AWS CodePipeline goes through to deploy these resources please refer to [here](#amc-quickstart-codepipeline-steps).
 
-The AWS Lake Formation access control model was also enabled in the data lake.
 
-### CA Login and Install Libraries
+_NOTE:_ If deploying in a new AWS Account, the Assets stage of the CodePipeline may fail due to limitations for the number of concurrent file assets to publish. This is a current limitation of AWS CodeBuild. To fix, click the `Retry` button in CodePipeline for the Assets Stage. This will manually continue the Assets Stage to continue building file assets from its most current progress.
+ 
+#
 
-_CA Login:_ Now that the **orion-commons** library is available, it can be installed on locally. To do that, we must first connect to the CodeArtifact repository and establish a link between the CodeArtifact private repository and the local environment.
+## Hydrating the Data Lake
 
-_Install Libraries:_ The second command installs a number of Python libraries locally including **orion-commons**.
+To hydrate the data lake run the below shell script
+```
+$ make insert_tps_records
+$ make create_workflows
+```
 
-### Deploy All
+_NOTE:_ Make sure the `ENV` variable in the `Makefile` is set to the correct environment name before proceeding to hydrate the data lake (default: `dev`)
 
-The deploy all step deploys **orion-satellite** AWS CodePipeline along with its respective AWS CloudFormation Stacks. The pipelines will self-mutate based on any added child environments or stages and deliver the same infrastructure in the new child environment. A number of stages are added by default to the CodePipeline(e.g. security checks with [Bandit](https://github.com/PyCQA/bandit) and [CFNNag](https://github.com/stelligent/cfn_nag), and a testing phase). If you recall from the previous phase, these were defined in the Orion Commons library and are now used within the Orion Artifacts and Orion Satellite applications to comply with best practices specified centrally.
-
-The last stage of each pipeline delivers the satellite infrastructure respectively in the child (dev) environment through CloudFormation.
-
-![Alt](./docs/images/Orion-AMC-Quickstart-Deploy-All.png)
-
-_Artifacts:_ This application creates shared resources between teams. These resources include Lambda Layers, Glue Jobs, and a S3 Bucket to host the Artifacts.
-
-_AMCDeliveryKit:_ This application creates the resources for the Data Lake and supporting Microservices. All the resources needed for orchestration between services, data processing code, and data and metadata storage are provisioned here. For a walkthrough of the steps the AWS CodePipeline goes through to deploy these resources please refer to [here](#orion-satellite-codepipeline-steps).
-
-### Insert TPS Records and AMC Workflows
+For a more detailed description of the aforementioned commands, refer to below:
 
 _Insert TPS Records:_ To initialize the process of onboarding your AMC instance on the Amazon AD Tech platform, this script adds client configurations to a TPS Customer Configuration table in Amazon DynamoDB. The configuration includes your AMC Endpoint URL, AMC Bucket Name and other related information on your AMC Instance. The Tenant Provisioning Service (TPS) will then automatically:
 
@@ -162,7 +195,7 @@ _Insert TPS Records:_ To initialize the process of onboarding your AMC instance 
 - Provide functionality to automatically enable different modules (AMC/Sponsored ADs/DSP) during the onboarding process for each client
 - Provide a centralized location to manage various clients and modules and supports multi-tenancy
 
-_Insert AMC Workflows:_ To initialize the creation, scheduling and execution of AMC workflows, this script adds 4 default workflows to an AMC Workflows Library table in Amazon DynamoDB. From there Workflow Manager Service (WFM) will automatically create workflow schedules and add them to your AMC instance. WFM also allows you to:
+_Create Workflows:_ To initialize the creation, scheduling and execution of AMC workflows, this script adds 4 default workflows to an AMC Workflows Library table in Amazon DynamoDB. From there Workflow Manager Service (WFM) will automatically create workflow schedules and add them to your AMC instance. WFM also allows you to:
 
 - Automatically trigger the deployment of the SQS queues, IAM policies, workflows and workflow schedules in WFM for the customer's AMC instance upon adding or updating a customer record to the Tenant Provisioning Service (TPS)
 - Synchronize workflows and workflow schedules in the Workflow Library service with multiple AMC Instances
@@ -170,9 +203,13 @@ _Insert AMC Workflows:_ To initialize the creation, scheduling and execution of 
 - Scheduled with dynamic relative time windows rather than using AMC's scheduling feature which only allows predefined scheduled reporting such as Daily or Weekly
 - Track the status of all workflow executions for customer AMC instances whether they are submitted through WFM or other means (postman, etc.). Having the status synced to DynamoDB allows events to be triggered or notifications to be sent when executions change state. This table can also be used to track historical executions for troubleshooting or performance monitoring.
 
+
 #
 
-## Orion Satellite CodePipeline Steps
+## AMC Quickstart CodePipeline Steps
+
+
+![Alt](/docs/images/AMC-Quickstart-CodePipeline-Steps.png)
 
 The Code Pipeline Steps (as shown to the right) are:
 
@@ -180,22 +217,36 @@ The Code Pipeline Steps (as shown to the right) are:
 - Build → Runs `cdk synth` to translate CDK defintions into CloudFormation Template Definitions
 - UpdatePipeline → Automatically update if new CDK applications or stages are added in the source code
 - Assets → Publish CDK Assets
-- SecurityLint → Perform security checks (default with [Bandit](https://github.com/PyCQA/bandit) and [CFNNag](https://github.com/stelligent/cfn_nag))
-- Test → Performs Unit Testing
-- Orion Satellite → Prepares and Deploys the Data Lake Resources in CloudFormation Stacks
-- Orion Microservices → Prepares and Deploys the Microservice Resource in CloudFormation Stacks (TPS, WFM, and PMN)
-- Orion Satellite Event Rule → Prepares and Deploys a CloudFormation Stack to trigger CodePipeline to run whenever Orion Artifacts CodePipeline Completes
-
-![Alt](./docs/images/Orion-AMC-Quickstart-CodePipeline-Steps.png)
+- AMCQuickstart → Prepares and Deploys all of the Resources in CloudFormation Stacks, including:
+    - Foundational Resources
+    - Data Lake Resources
+    - Microservice Resources
 
 #
 
-## Additional Resources
+## Cleaning Up the Quickstart
 
-For more Information on Orion: (Link to Open Source Code Once Avalaible)
+Once the solution has been deployed and tested, use the following command to clean up the resources
 
-To clean up your environment, please read the clean up documentation located [here](Cleanup.md)
+```
+$ make delete_all
+```
+_NOTE:_ Before running this command, look into the  `Makefile` and ensure that:
 
-To post feedback, submit feature ideas, or report bugs, use the **Issues** section of this GitHub repo.
+ 1. The `delete_repositories` function is passing the correct `-d AMC_QUICKSTART_REPO_NAME` (default: `ddk-amc-quickstart`)
+ 
+ 2. The `delete_bootstrap` function is passing the correct `--stack-name BOOTSTRAP_STACK_NAME` (default: `DdkDevBootstrap`)
 
-To submit code for this Quick Start, see the [AWS Quick Start Contributor's Kit](https://aws-quickstart.github.io/).
+This command will go through the following sequence of steps in order to clean up your AWS account environment:
+
+![Alt](/docs/images/AMC-Quickstart-Delete.png)
+ 
+
+
+
+
+
+
+
+
+

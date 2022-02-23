@@ -1,0 +1,35 @@
+{
+  "environments": {
+    "cicd": {
+      "account": "111111111111",
+      "region": "us-east-1"
+    },
+    "dev": {
+      "account": "111111111111",
+      "region": "us-east-1",
+      "name": "Development",
+      "manual_approvals": false,
+      "resource_prefix": "amc",
+      "data_pipeline_parameters": {
+        "team": "demoteam",
+        "pipeline": "adtech",
+        "dataset": "amcdataset",
+        "org": "aws",
+        "app": "datalake"
+      },
+      "tps_parameters": { "team": "demoteam", "pipeline": "cmpl" },
+      "wfm_parameters": {
+        "team": "demoteam",
+        "pipeline": "dlhs",
+        "dataset": "amcdataset"
+      },
+      "resources": {
+        "amc-raw-bucket": { "versioned": false },
+        "amc-stage-bucket": { "versioned": false },
+        "amc-analytics-bucket": { "versioned": false },
+        "amc-artifacts-bucket": { "versioned": false },
+        "amc-athena-bucket": { "versioned": false }
+      }
+    }
+  }
+}
