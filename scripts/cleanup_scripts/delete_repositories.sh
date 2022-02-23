@@ -11,12 +11,14 @@ DEFAULT_PROFILE="default"
 DEFAULT_REGION=$(aws configure get region --profile ${DEFAULT_PROFILE})
 BASENAME=$(basename -a $0)
 DIRNAME=$(pwd)
+DEFAULT_REPO=""
 
 usage() {
     echo "Usage Options for ${BASENAME}
     -s : Name of the AWS Profile for the CICD Account
     -t : Name of the Child CICD account
     -r : Region for the Deployment
+    -d : Name of Repositories to Delete
     -h : Displays this help message
     "
 }
@@ -26,6 +28,7 @@ delete_repositories() {
     for REPOSITORY in ${REPOSITORIES[@]}; do
         REPOSITORY_DETAILS=$(aws codecommit get-repository --repository-name ${REPOSITORY} --region ${REGION} --profile ${CICD_PROFILE} &>/dev/null)
         RETSTAT=$?
+        echo "Deleting REPO ${REPOSITORY}"
         if [ ${RETSTAT} -eq 0 ]; then
             echo "Remote Repository ${REPOSITORY} already exists, deleting..."
             aws codecommit delete-repository --profile ${CICD_PROFILE} --region ${REGION} --repository-name ${REPOSITORY}
@@ -48,11 +51,12 @@ delete_repositories() {
 
 }
 
-while getopts "s:t:r:h" option; do
+while getopts "s:t:r:d:h" option; do
     case ${option} in
     s) CICD_PROFILE=${OPTARG:-$DEFAULT_PROFILE} ;;
     t) CHILD_PROFILE=${OPTARG:-$DEFAULT_PROFILE} ;;
     r) REGION=${OPTARG:-$DEFAULT_REGION} ;;
+    d) REPO=${OPTARG:-$DEFAULT_REPO} ;;
     h)
         usage
         exit
@@ -73,7 +77,8 @@ while getopts "s:t:r:h" option; do
 done
 OPTIND=1
 
-declare -a REPOSITORIES=$(find . -maxdepth 1 -name "orion*" -type d | sed "s/.\///")
+# declare -a REPOSITORIES=$(find . -maxdepth 1 -name "orion*" -type d | sed "s/.\///")
+declare -a REPOSITORIES=$REPO
 
 CICD_ACCOUNT=$(aws sts get-caller-identity --query "Account" --output text --profile ${CICD_PROFILE})
 CHILD_ACCOUNT=$(aws sts get-caller-identity --query "Account" --output text --profile ${CHILD_PROFILE})

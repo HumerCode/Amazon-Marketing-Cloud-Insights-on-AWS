@@ -1,3 +1,18 @@
+# Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License").
+# You may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
 import boto3
 import json
 import re
@@ -41,7 +56,11 @@ def list_kms_keys(max_items):
 
         full_result = response_iterator.build_full_result()
         for page in full_result['Keys']:
-            key_id_list.append(page["KeyId"])
+            response = kms_client.describe_key(
+                KeyId=page["KeyId"]
+            )
+            if response["KeyMetadata"]["KeyState"] not in ["Disabled","PendingDeletion", "Unavailable"]:
+                key_id_list.append(page["KeyId"])
 
         # Check for AWS Managed Keys
         paginator = kms_client.get_paginator('list_aliases')
@@ -56,8 +75,8 @@ def list_kms_keys(max_items):
                 if "TargetKeyId" in page:
                     key_id_list.remove(page["TargetKeyId"])
 
-    except ClientError:
-        logger.exception('Could not list KMS Keys.')
+    except:
+        print('Could not list KMS Keys.')
         raise
     else:
         return key_id_list   
@@ -100,7 +119,7 @@ def list_cfn_template():
         StackStatusFilter=['CREATE_COMPLETE','ROLLBACK_COMPLETE','UPDATE_COMPLETE', 'UPDATE_ROLLBACK_COMPLETE']
     )
     for stack in response["StackSummaries"]:
-        if re.match("orion-[a-zA-Z0-9]*-instance-[a-zA-Z0-9_.-]*", stack["StackName"]):
+        if re.match("[a-zA-Z0-9_.-]*-amcdataset-instance-[a-zA-Z0-9_.-]*", stack["StackName"]):
             stack_list.append(stack["StackName"])
         else:
             continue
@@ -120,8 +139,8 @@ def list_cw_logs():
         for page in full_result['logGroups']:
             cw_log_list.append(page["logGroupName"])
 
-    except ClientError:
-        logger.exception('Could not list CloudWatch Logs.')
+    except:
+        print('Could not list CloudWatch Logs.')
         raise
     else:
         return cw_log_list  
