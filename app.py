@@ -27,6 +27,7 @@ from amc_quickstart.data_lake.datasets import SDLFDatasetStack
 from amc_quickstart.microservices.platform_management_notebooks import PlatformManagerSageMaker
 from amc_quickstart.microservices.customer_management_service import TenantProvisiongService
 from amc_quickstart.microservices.data_lake_hydration_service import WorkFlowManagerService
+from aws_ddk_core.config import Config
 
 class AMCDeliveryKit(cdk.Stage):
     def __init__(
@@ -87,14 +88,14 @@ class AMCDeliveryKit(cdk.Stage):
         )
 
 satellite_app = cdk.App()
-
+config = Config()
 pipeline_name = "ddk-amc-quickstart-pipeline"
 pipeline = (
     CICDPipelineStack(satellite_app, id=pipeline_name, environment_id="dev",  pipeline_name=pipeline_name)
     .add_source_action(repository_name="ddk-amc-quickstart")
     .add_synth_action()
     .build()
-    .add_stage("dev", AMCDeliveryKit(satellite_app, environment_id="dev"))
+    .add_stage("dev", AMCDeliveryKit(satellite_app, environment_id="dev", env=config.get_env("dev")))
 )   
 
 satellite_app.synth()

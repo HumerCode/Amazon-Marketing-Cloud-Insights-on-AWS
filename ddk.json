@@ -1,9 +1,5 @@
 {
   "environments": {
-    "cicd": {
-      "account": "111111111111",
-      "region": "us-east-1"
-    },
     "dev": {
       "account": "111111111111",
       "region": "us-east-1",
