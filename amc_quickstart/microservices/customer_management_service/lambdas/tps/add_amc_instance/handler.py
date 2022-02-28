@@ -56,7 +56,7 @@ def parse_params(event):
 
 def launch_stack(event):
     if (event.get('TenantName') != None and event.get('BucketName') and event.get('CrossAccountAccessAccountId')):
-        stack_name = '{}-amcdataset-instance-{}'.format(prefix, event['TenantName'])
+        stack_name = '{}-{}-instance-{}'.format(prefix, event["AmcDatasetName"], event['TenantName'])
 
         try:
             logger.info('Parsing Event Message for Parameters')

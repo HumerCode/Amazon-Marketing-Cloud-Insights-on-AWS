@@ -45,19 +45,19 @@ class TenantProvisiongService(BaseStack):
         scope,
         construct_id: str,
         environment_id: str,
-        team: str,
         microservice: str,
-        pipeline: str,
+        team: str,
+        dataset: str,
         resource_prefix: str,
         **kwargs: Any,
     ) -> None:
         super().__init__(scope, construct_id, environment_id, **kwargs)
 
         self._environment_id: str = environment_id
-        self._team = team
         self._microservice_name = microservice
         self._region = f"{cdk.Aws.REGION}"
-        self._pipeline = pipeline
+        self._team = team
+        self._dataset = dataset
         self._resource_prefix=resource_prefix
         
         self._data_lake_library_layer_arn = get_ssm_value(
@@ -123,7 +123,7 @@ class TenantProvisiongService(BaseStack):
             f"{self._microservice_name}-script-s3-deployment",
             sources=[Source.asset(f"{self._template_path}/scripts")],
             destination_bucket=self._artifacts_bucket,
-            destination_key_prefix=f"{self._microservice_name}/scripts/{self._team}/{self._pipeline}",
+            destination_key_prefix=f"{self._microservice_name}/scripts/{self._team}",
             server_side_encryption_aws_kms_key_id=self._artifacts_bucket_key.key_id,
             server_side_encryption=ServerSideEncryption.AWS_KMS,
             role=bucket_deployment_role,
@@ -581,9 +581,10 @@ class TenantProvisiongService(BaseStack):
             runtime = Runtime.PYTHON_3_8,
             role = add_amc_instance_role,
             environment={
-                "templateUrl": f"https://{self._artifacts_bucket.bucket_name}.s3.amazonaws.com/{self._microservice_name}/scripts/{self._team}/{self._pipeline}/amc-initialize.yaml",
+                "templateUrl": f"https://{self._artifacts_bucket.bucket_name}.s3.amazonaws.com/{self._microservice_name}/scripts/{self._team}/amc-initialize.yaml",
                 "lambdaRoleArn": add_amc_instance_role.role_arn,
-                "Prefix": self._resource_prefix
+                "Prefix": self._resource_prefix,
+                "ENV": self._environment_id
             },
         )
         self._artifacts_bucket_key.grant_decrypt(self._add_amc_instance)
@@ -616,7 +617,9 @@ class TenantProvisiongService(BaseStack):
             environment={
                 "AccountId": cdk.Aws.ACCOUNT_ID,
                 "Region": cdk.Aws.REGION,
-                "Prefix": self._resource_prefix
+                "Prefix": self._resource_prefix,
+                "ENV": self._environment_id,
+                "Dataset":self._dataset
             },
         )
         

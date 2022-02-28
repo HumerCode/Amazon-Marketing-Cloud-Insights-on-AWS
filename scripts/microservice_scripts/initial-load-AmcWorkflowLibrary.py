@@ -51,9 +51,8 @@ if __name__ == "__main__":
 
         with open(config_path) as config_data:
             config = json.loads(config_data.read())
-            team = config["environments"][env]["wfm_parameters"]["team"]
-            pipeline =  config["environments"][env]["wfm_parameters"]["pipeline"]
-            table_name = "-".join(["wfm", team, pipeline, "AMCWorkflowLibrary"])
+            team = config["environments"][env]["data_pipeline_parameters"]["team"]
+            table_name = "-".join(["wfm", team, "AMCWorkflowLibrary", env])
 
         if table_is_empty(table_name):
             # Read the JSON file

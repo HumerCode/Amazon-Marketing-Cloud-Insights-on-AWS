@@ -4,12 +4,13 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
 
+set -x 
 
 DEFAULT_PROFILE="default"
 DEFAULT_REGION=$(aws configure get region --profile ${DEFAULT_PROFILE})
 BASENAME=$(basename -a $0)
 DIRNAME=$(pwd)
-DEFAULT_ENV="d"
+DEFAULT_ENV="dev"
 
       
 
@@ -49,39 +50,79 @@ while getopts "s:t:r:e:h" option; do
 done
 OPTIND=1
 
-CONFIG_PATH=".environments.${ENV}.tps_parameters.team"
-
-TEAM=$(sed -e 's/^"//' -e 's/"$//' <<<"$(jq "$CONFIG_PATH" \
+CONFIG_PATH=".environments.${ENV}.data_pipeline_parameters.team"
+AMC_TEAM_NAME=$(sed -e 's/^"//' -e 's/"$//' <<<"$(jq "$CONFIG_PATH" \
       "$DIRNAME"/ddk.json)")
-      
-echo "$CICD_PROFILE"
-echo "$CHILD_PROFILE"
-echo "$REGION"
-echo "$TEAM"
-echo "$ENV"
 
+CONFIG_PATH=".environments.${ENV}.data_pipeline_parameters.dataset"
+AMC_DATASET_NAME=$(sed -e 's/^"//' -e 's/"$//' <<<"$(jq "$CONFIG_PATH" \
+      "$DIRNAME"/ddk.json)")
 
-DEVOPS_ACCOUNT=$(aws sts get-caller-identity --query 'Account' --output text --profile ${CHILD_PROFILE})
+CUSTOMER_ID=$(sed -e 's/^"//' -e 's/"$//' <<<"$(jq ".customerId" \
+      "$DIRNAME"/scripts/microservice_scripts/tps.json)")
+
+CUSTOMER_NAME=$(sed -e 's/^"//' -e 's/"$//' <<<"$(jq ".customerName" \
+      "$DIRNAME"/scripts/microservice_scripts/tps.json)")
+
+ENDEMIC_TYPE=$(sed -e 's/^"//' -e 's/"$//' <<<"$(jq ".endemicType" \
+      "$DIRNAME"/scripts/microservice_scripts/tps.json)")
+
+CUSTOMER_PREFIX=$(sed -e 's/^"//' -e 's/"$//' <<<"$(jq ".customerPrefix" \
+      "$DIRNAME"/scripts/microservice_scripts/tps.json)")
+
+AMC_ORANGE_ACCOUNT=$(sed -e 's/^"//' -e 's/"$//' <<<"$(jq ".amcOrangeAwsAccount" \
+      "$DIRNAME"/scripts/microservice_scripts/tps.json)")
+
+AMC_GREEN_ACCOUNT=$(sed -e 's/^"//' -e 's/"$//' <<<"$(jq ".amcGreenAwsAccount" \
+      "$DIRNAME"/scripts/microservice_scripts/tps.json)")
+
+AMC_API_ENDPOINT=$(sed -e 's/^"//' -e 's/"$//' <<<"$(jq ".amcApiEndpoint" \
+      "$DIRNAME"/scripts/microservice_scripts/tps.json)")
+
+AMC_S3_BUCKET=$(sed -e 's/^"//' -e 's/"$//' <<<"$(jq ".amcS3BucketName" \
+      "$DIRNAME"/scripts/microservice_scripts/tps.json)")
+   
+# echo "$CICD_PROFILE"
+# echo "$CHILD_PROFILE"
+# echo "$REGION"
+# echo "$AMC_TEAM_NAME"
+# echo "$ENV"
+# echo "$AMC_DATASET_NAME"
+# echo "$CUSTOMER_ID"
+# echo "$CUSTOMER_NAME"
+# echo "$ENDEMIC_TYPE"
+# echo "$CUSTOMER_PREFIX"
+# echo "$AMC_ORANGE_ACCOUNT"
+# echo "$AMC_GREEN_ACCOUNT"
+# echo "$AMC_API_ENDPOINT"
+# echo "$AMC_S3_BUCKET"
+
+# DEVOPS_ACCOUNT=$(aws sts get-caller-identity --query 'Account' --output text --profile ${CHILD_PROFILE})
 
 insert_dynamo_record() {
-	TABLE_NAME=tps-${TEAM}-CustomerConfig-${ENV}
-	NEW_UUID=$(dd bs=18 count=1 if=/dev/urandom | base64 | tr -dc 'a-z0-9'| fold -w 12 | head -n 1)
-  	BUCKET_NAME=amc-testdemocustomer-${NEW_UUID}
+	TABLE_NAME=tps-${AMC_TEAM_NAME}-CustomerConfig-${ENV}
 	JSON_STRING=$( jq -n \
-						--arg bn "$BUCKET_NAME" \
-						--arg on "$TEAM" \
+						--arg ci "$CUSTOMER_ID" \
+                        --arg cn "$CUSTOMER_NAME" \
+                        --arg et "$ENDEMIC_TYPE" \
+                        --arg cp "$CUSTOMER_PREFIX" \
+                        --arg tn "$AMC_TEAM_NAME" \
+						--arg oa "$AMC_ORANGE_ACCOUNT" \
+                        --arg ga "$AMC_GREEN_ACCOUNT" \
+                        --arg ae "$AMC_API_ENDPOINT" \
+                        --arg sb "$AMC_S3_BUCKET" \
+                        --arg dn "$AMC_DATASET_NAME" \
 						--arg re "$REGION" \
-						--arg ac "$DEVOPS_ACCOUNT" \
-						'{"customerId":{"S": "testdemocustomer"},
-						"customerName":{"S": "Test Demo Customer"},
-						"endemicType":{"S": "ENDEMIC"},
-						"customerPrefix":{"S": "testdemocustomer"},							
-						"AMC":{"M": {"amcTeamName": {"S": $on},
-									"amcOrangeAwsAccount": {"S": $ac},
-									"amcGreenAwsAccount": {"S": $ac},
-									"amcApiEndpoint": {"S": "https://PLACEHOLDER.com"},
-									"amcS3BucketName": {"S": $bn},
-									"amcDatasetName": {"S": "amcdataset"},
+						'{"customerId":{"S": $ci},
+						"customerName":{"S": $cn},
+						"endemicType":{"S": $et},
+						"customerPrefix":{"S": $cp},							
+						"AMC":{"M": {"amcTeamName": {"S": $tn},
+									"amcOrangeAwsAccount": {"S": $oa},
+									"amcGreenAwsAccount": {"S": $ga},
+									"amcApiEndpoint": {"S": $ae},
+									"amcS3BucketName": {"S": $sb},
+									"amcDatasetName": {"S": $dn},
 									"amcRegion": {"S": $re}
 									}
 								}
@@ -92,6 +133,7 @@ insert_dynamo_record() {
 		--profile "${CHILD_PROFILE}" \
 		--region "${REGION}"
 	sleep 120
+    echo "$JSON_STRING"
 	echo "$BUCKET_NAME"
 }
 

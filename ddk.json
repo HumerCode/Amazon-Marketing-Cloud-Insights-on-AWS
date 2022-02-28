@@ -13,12 +13,6 @@
         "org": "aws",
         "app": "datalake"
       },
-      "tps_parameters": { "team": "demoteam", "pipeline": "cmpl" },
-      "wfm_parameters": {
-        "team": "demoteam",
-        "pipeline": "dlhs",
-        "dataset": "amcdataset"
-      },
       "resources": {
         "amc-raw-bucket": { "versioned": false },
         "amc-stage-bucket": { "versioned": false },

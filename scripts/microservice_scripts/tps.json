@@ -1,0 +1,10 @@
+{
+  "customerId": "testdemocustomer",
+  "customerName": "Test Demo Customer",
+  "endemicType": "ENDEMIC",
+  "customerPrefix": "testdemocustomer",
+  "amcOrangeAwsAccount": "111111111111",
+  "amcGreenAwsAccount": "111111111111",
+  "amcApiEndpoint": "https://PLACEHOLDER.com",
+  "amcS3BucketName": "amc-bucket-test-1212"
+}

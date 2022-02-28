@@ -151,7 +151,6 @@ def set_sqs_queue_attributes(queue_url, queue_attributes):
 def check_sqs_queues(customer_id, item):
     team = os.environ['TEAM']
     microservice = os.environ['MICROSERVICE']
-    pipeline = os.environ['PIPELINE']
     env = os.environ['ENV']
 
     responses = []

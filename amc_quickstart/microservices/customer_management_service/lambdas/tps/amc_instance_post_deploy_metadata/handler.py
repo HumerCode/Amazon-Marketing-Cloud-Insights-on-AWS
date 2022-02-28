@@ -24,7 +24,10 @@ logger = Logger(service="AddAMCInstancePostDeployMetadata", level="INFO")
 
 dynamodb = boto3.resource('dynamodb')
 prefix = os.environ["Prefix"]
-customer_table = dynamodb.Table('{}-ats-customer-config-dev'.format(prefix))
+env = os.environ["ENV"] 
+dataset = os.environ ["Dataset"] 
+
+customer_table = dynamodb.Table('{}-ats-customer-config-{}'.format(prefix, env))
 ssm=boto3.client('ssm')
 
 
@@ -117,8 +120,8 @@ def lambda_handler(event, context):
                     "amcWorkflowPackages": event["TenantName"],
                     "maximumConcurrentWorkflowExecutions": 10,
                     "WFM": {
-                      "amcWorkflowExecutionDLQSQSQueueName": f'wfm-{event["AmcTeamName"]}-dlhs-dev-workflowExecution-{event["TenantName"]}-DLQ.fifo',
-                      "amcWorkflowExecutionSQSQueueName": f'wfm-{event["AmcTeamName"]}-dlhs-dev-workflowExecution-{event["TenantName"]}.fifo',
+                      "amcWorkflowExecutionDLQSQSQueueName": f'wfm-{event["AmcTeamName"]}-{env}-workflowExecution-{event["TenantName"]}-DLQ.fifo',
+                      "amcWorkflowExecutionSQSQueueName": f'wfm-{event["AmcTeamName"]}-{env}-workflowExecution-{event["TenantName"]}.fifo',
                       "enableWorkflowLibraryNewContent": True,
                       "enableWorkflowLibraryRemoval": True,
                       "enableWorkflowLibraryScheduleCreation": True,
@@ -126,16 +129,16 @@ def lambda_handler(event, context):
                       "enableWorkflowLibraryUpdates": True,
                       "runWorkflowByCampaign": {
                         "campaignAttributionLagDays": 14,
-                        "campaignListDatabaseName": f'{event["AmcTeamName"]}_amcdataset_dev_analytics',
+                        "campaignListDatabaseName": f'{event["AmcTeamName"]}_{dataset}_{env}_analytics',
                         "campaignListTableName": f'{event["TenantName"]}_active_campaigns_advertisers_v1_adhoc',
                         "defaultWorkflowExecutionTimeZone": "America/New_York",
                         "maximumCampaignAgeDays": 90,
                         "maximumCampaignEndAgeDays": 18,
                         "minimumCampaignAgeDays": 3
                       },
-                      "snsTopicArn": f'arn:aws:sns:{os.environ["Region"]}:{os.environ["AccountId"]}:wfm-{event["AmcTeamName"]}-dlhs-SNSTopic',
+                      "snsTopicArn": f'arn:aws:sns:{os.environ["Region"]}:{os.environ["AccountId"]}:wfm-{event["AmcTeamName"]}-SNSTopic-{env}',
                       "syncWorkflowStatuses": {
-                        "amcWorkflowExecutionTrackingDynamoDBTableName": f'wfm-{event["AmcTeamName"]}-dlhs-AMCExecutionStatus',
+                        "amcWorkflowExecutionTrackingDynamoDBTableName": f'wfm-{event["AmcTeamName"]}-AMCExecutionStatus',
                         "lastSyncedTime": "2021-06-02T15:58:21",
                         "latestLastUpdatedTime": "2021-06-02T15:41:17Z",
                         "workflowExeuctionStatusLookBackHours": 72,
@@ -152,7 +155,7 @@ def lambda_handler(event, context):
                   "endemicType": event['customerType']
                 }
 
-                table_name = dynamodb.Table(f'wfm-{event["AmcTeamName"]}-dlhs-CustomerConfig')
+                table_name = dynamodb.Table(f'wfm-{event["AmcTeamName"]}-CustomerConfig-{env}')
                 try:
                     response = put_item(table_name, item, 'customer_hash_key')
                 except Exception as e:
