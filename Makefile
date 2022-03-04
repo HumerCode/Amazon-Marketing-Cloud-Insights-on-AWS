@@ -4,7 +4,7 @@ CHILD=quickstart
 REGION=$(shell aws configure get region --profile ${CICD})
 ENV=dev
 
-.PHONY: create_repositories delete_repositories create_vpc bootstrap_accounts ca_login install_libraries deploy_artifacts deploy_satellite deploy_all insert_tps_records create_workflows
+.PHONY:  delete_repositories delete_all_items delete_repositories delete_bootstrap empty_buckets delete_adk
 
 delete_all: empty_buckets delete_adk delete_bootstrap delete_repositories delete_all_items
 
@@ -43,11 +43,6 @@ delete_all_items:
 	pushd scripts/cleanup_scripts; python3 ./list_items_to_delete.py; popd;
 	pushd scripts/cleanup_scripts; python3 ./delete_script.py; popd;
 
-insert_tps_records: 
-	./scripts/microservice_scripts/insert_tps_records.sh -s ${CICD} -t ${CHILD} -r ${REGION} -e ${ENV}
-
-create_workflows: 
-	pushd scripts/microservice_scripts; python3 ./initial-load-AmcWorkflowLibrary.py  ${REGION} ${CHILD} ${ENV}; popd;
 
 
 
