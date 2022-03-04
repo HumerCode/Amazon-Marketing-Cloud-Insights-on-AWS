@@ -1,6 +1,6 @@
 SHELL=/bin/bash
-CICD=default
-CHILD=default
+CICD=quickstart
+CHILD=quickstart
 REGION=$(shell aws configure get region --profile ${CICD})
 ENV=dev
 

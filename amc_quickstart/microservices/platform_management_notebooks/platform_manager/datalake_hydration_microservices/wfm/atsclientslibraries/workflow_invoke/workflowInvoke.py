@@ -17,7 +17,7 @@ import boto3
 import json
 
 
-def invoke_workflow(workflow, ATS_TEAM_NAME):
+def invoke_workflow(workflow, ATS_TEAM_NAME, ENV):
     client = boto3.client('lambda')
     item = workflow
 
@@ -27,7 +27,7 @@ def invoke_workflow(workflow, ATS_TEAM_NAME):
     }
 
     response = client.invoke(
-        FunctionName=f'wfm-{ATS_TEAM_NAME}-dlhs-ExecutionQueueProducer',
+        FunctionName=f'wfm-{ATS_TEAM_NAME}-ExecutionQueueProducer-{ENV}',
         InvocationType='Event',
         Payload=json.dumps(payload)
     )

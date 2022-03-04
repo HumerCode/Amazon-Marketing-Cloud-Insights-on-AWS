@@ -61,13 +61,20 @@ class AMCDeliveryKit(cdk.Stage):
 
         # MICROSERVICES
         # WFM
+        # self._wfm_params = params.get_wfm_params()
+        # self._wfm_team = self._wfm_params.get("team", "demoteam")
+        # self._wfm_pipeline = self._wfm_params.get("pipeline", "dlhs")
+        # self._wfm_dataset = self._wfm_params.get("dataset", "amcdataset")
         wfm_stack = WorkFlowManagerService(self, f"{self._resource_prefix}-wfm", environment_id=environment_id, microservice="wfm", team=self._team, resource_prefix=self._resource_prefix)
         wfm_stack.add_dependency(
             foundations_stack
         ) 
 
         # TPS
-        tps_stack = TenantProvisiongService(self, f"{self._resource_prefix}-tps", environment_id=environment_id, microservice="tps", team=self._team, dataset=self._dataset, resource_prefix=self._resource_prefix)
+        # self._tps_params = params.get_tps_params()
+        # self._tps_team = self._tps_params.get("team", "demoteam")
+        # self._tps_pipeline = self._tps_params.get("pipeline", "cmpl")
+        tps_stack = TenantProvisiongService(self, f"{self._resource_prefix}-tps", environment_id=environment_id, microservice="tps", team=self._team, resource_prefix=self._resource_prefix)
         tps_stack.add_dependency(
             foundations_stack
         ) 
@@ -85,10 +92,12 @@ class AMCDeliveryKit(cdk.Stage):
 
 satellite_app = cdk.App()
 config = Config()
+
+cicd_repository_name = GetApplicationParameters(environment_id="cicd").get_cicd_repository()
 pipeline_name = "ddk-amc-quickstart-pipeline"
 pipeline = (
     CICDPipelineStack(satellite_app, id=pipeline_name, environment_id="dev",  pipeline_name=pipeline_name)
-    .add_source_action(repository_name="ddk-amc-quickstart")
+    .add_source_action(repository_name=cicd_repository_name)
     .add_synth_action()
     .build()
     .add_stage("dev", AMCDeliveryKit(satellite_app, environment_id="dev", env=config.get_env("dev")))

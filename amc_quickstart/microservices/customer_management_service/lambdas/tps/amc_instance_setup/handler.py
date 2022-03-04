@@ -82,17 +82,11 @@ def lambda_handler(event, context):
                                 output_payload['CrossAccountAccessAccountId'] = new_payload.get("AMC",{}).get("amcOrangeAwsAccount",None)
                                 output_payload['AmcDatasetName'] = new_payload.get("AMC",{}).get("amcDatasetName",None)
                                 output_payload['AmcTeamName'] = new_payload.get("AMC",{}).get("amcTeamName",None)
-                                output_payload['amcGreenAwsAccount'] = new_payload.get("AMC",{}).get("amcGreenAwsAccount",None)
                                 output_payload['amcRegion'] = new_payload['AMC']['amcRegion']
                                 output_payload['amcApiEndpoint'] =  new_payload.get("AMC",{}).get("amcApiEndpoint",None)
-                                output_payload['SasDatasetName'] =new_payload.get("SAS",{}).get("sasDatasetName",None)
-                                output_payload['SasTeamName'] =new_payload.get("AMC",{}).get("amcTeamName",None)
-                                output_payload['SasProfiles'] =new_payload.get("SAS",{}).get("sasProfileDetails",None)
-                                output_payload['SasBaseUrl'] =new_payload.get("SAS",{}).get("sasBaseApiUrl",None)
-                                output_payload['SasCredArn'] =new_payload.get("SAS",{}).get("sasCredentails",None)
                                 response = triggerStateMachine(sqsMessageId, output_payload)
                             except Exception as e1:
-                                logger.info("Error in Customer config AMC/SAS details. Check input parameters")
+                                logger.info("Error in Customer config AMC details. Check input parameters")
                                 response = 'DynamoDB operation is skipped due to faulty input parameters'
                         else:
                             logger.info("Not NewImage!")

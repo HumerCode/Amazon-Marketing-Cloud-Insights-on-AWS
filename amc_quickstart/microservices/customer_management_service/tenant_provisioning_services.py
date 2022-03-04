@@ -47,7 +47,6 @@ class TenantProvisiongService(BaseStack):
         environment_id: str,
         microservice: str,
         team: str,
-        dataset: str,
         resource_prefix: str,
         **kwargs: Any,
     ) -> None:
@@ -57,7 +56,6 @@ class TenantProvisiongService(BaseStack):
         self._microservice_name = microservice
         self._region = f"{cdk.Aws.REGION}"
         self._team = team
-        self._dataset = dataset
         self._resource_prefix=resource_prefix
         
         self._data_lake_library_layer_arn = get_ssm_value(
@@ -618,8 +616,7 @@ class TenantProvisiongService(BaseStack):
                 "AccountId": cdk.Aws.ACCOUNT_ID,
                 "Region": cdk.Aws.REGION,
                 "Prefix": self._resource_prefix,
-                "ENV": self._environment_id,
-                "Dataset":self._dataset
+                "ENV": self._environment_id
             },
         )
         

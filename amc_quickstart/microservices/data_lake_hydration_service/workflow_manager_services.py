@@ -721,7 +721,7 @@ class WorkFlowManagerService(BaseStack):
                             "athena:ListQueryExecutions",
                             "athena:GetQueryResultsStream"
                         ],
-                        resources=[f"arn:aws:athena:{cdk.Aws.REGION}:{cdk.Aws.ACCOUNT_ID}:workgroup/{name_prefix}-AthenaWorkGroup"]
+                        resources=[f"arn:aws:athena:{cdk.Aws.REGION}:{cdk.Aws.ACCOUNT_ID}:workgroup/{name_prefix}-AthenaWorkGroup-{self._environment_id}"]
                     )
                 ]
             )
@@ -906,7 +906,7 @@ class WorkFlowManagerService(BaseStack):
                     PolicyStatement(
                         effect=Effect.ALLOW,
                         actions=["lambda:InvokeFunction"],
-                        resources=[f"arn:aws:lambda:{cdk.Aws.REGION}:{cdk.Aws.ACCOUNT_ID}:function:{name_prefix}-ExecutionQueueProducer"]
+                        resources=[f"arn:aws:lambda:{cdk.Aws.REGION}:{cdk.Aws.ACCOUNT_ID}:function:{name_prefix}-ExecutionQueueProducer-{self._environment_id}"]
                     )
                 ]
             )
@@ -923,7 +923,7 @@ class WorkFlowManagerService(BaseStack):
                     PolicyStatement(
                         effect=Effect.ALLOW,
                         actions=["lambda:InvokeFunction"],
-                        resources=[f"arn:aws:lambda:{cdk.Aws.REGION}:{cdk.Aws.ACCOUNT_ID}:function:{name_prefix}-AmcApiInterface"]
+                        resources=[f"arn:aws:lambda:{cdk.Aws.REGION}:{cdk.Aws.ACCOUNT_ID}:function:{name_prefix}-AmcApiInterface-{self._environment_id}"]
                     )
                 ]
             )
@@ -940,7 +940,7 @@ class WorkFlowManagerService(BaseStack):
                     PolicyStatement(
                         effect=Effect.ALLOW,
                         actions=["lambda:InvokeFunction"],
-                        resources=[f"arn:aws:lambda:{cdk.Aws.REGION}:{cdk.Aws.ACCOUNT_ID}:function:{name_prefix}-WorkflowExecutionQueueConsumer"]
+                        resources=[f"arn:aws:lambda:{cdk.Aws.REGION}:{cdk.Aws.ACCOUNT_ID}:function:{name_prefix}-WorkflowExecutionQueueConsumer-{self._environment_id}"]
                     )
                 ]
             )
@@ -957,7 +957,7 @@ class WorkFlowManagerService(BaseStack):
                     PolicyStatement(
                         effect=Effect.ALLOW,
                         actions=["lambda:InvokeFunction"],
-                        resources=[f"arn:aws:lambda:{cdk.Aws.REGION}:{cdk.Aws.ACCOUNT_ID}:function:{name_prefix}-SyncWorkflowStatuses"]
+                        resources=[f"arn:aws:lambda:{cdk.Aws.REGION}:{cdk.Aws.ACCOUNT_ID}:function:{name_prefix}-SyncWorkflowStatuses-{self._environment_id}"]
                     )
                 ]
             )
@@ -1260,7 +1260,7 @@ class WorkFlowManagerService(BaseStack):
                         PolicyStatement(
                             effect=Effect.ALLOW,
                             actions=["lambda:InvokeFunction"],
-                            resources=[f"arn:aws:lambda:{cdk.Aws.REGION}:{cdk.Aws.ACCOUNT_ID}:function:{name_prefix}-WorkflowLibraryTrigger"]
+                            resources=[f"arn:aws:lambda:{cdk.Aws.REGION}:{cdk.Aws.ACCOUNT_ID}:function:{name_prefix}-WorkflowLibraryTrigger-{self._environment_id}"]
                         )
                     ]
                 )
