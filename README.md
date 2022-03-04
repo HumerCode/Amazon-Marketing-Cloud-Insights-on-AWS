@@ -193,7 +193,7 @@ To hydrate the data lake and begin populating the data lake with data from your 
 1. Log In to your AWS Account and go to Amazon SageMaker
 2. On the Left Side of Your Screen Click on Notebook --> Notebook Instances (you should see one notebook named `saw-platform-manager` with Status "InService")
 3. Click "Open JupyterLab" to open the Notebook Instance in a new tab
-4. Open the `Getting_Started_With_AMC_Quickstart.ipynb` Notebook in the `platofrm_manager` folder and follow the steps in the notebook to hydrate the data lake.
+4. Open the `Getting_Started_With_AMC_Quickstart.ipynb` Notebook in the `platform_manager` folder and follow the steps in the notebook to hydrate the data lake.
 
 **This Notebook will cover the following:**
 
