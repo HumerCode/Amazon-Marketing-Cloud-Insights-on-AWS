@@ -34,8 +34,7 @@ def check_iam_policy(config):
     amc_endpoint_iam_policy_arn = os.environ['AMC_ENDPOINT_IAM_POLICY_ARN']
 
     endpoint_id = re.match('https://([^.]*).*', config['AMC']['amcApiEndpoint']).groups()[0]
-    endpoint_resource = 'arn:aws:execute-api:{}:{}:{}/*'.format(config['AMC']['amcInstanceRegion'],
-                                                                config['AMC']['amcGreenAwsAccount'], endpoint_id)
+    endpoint_resource = 'arn:aws:execute-api:{}:*:{}/*'.format(config['AMC']['amcInstanceRegion'], endpoint_id)
 
     client = boto3.client('iam')
 
@@ -151,7 +150,6 @@ def set_sqs_queue_attributes(queue_url, queue_attributes):
 def check_sqs_queues(customer_id, item):
     team = os.environ['TEAM']
     microservice = os.environ['MICROSERVICE']
-    pipeline = os.environ['PIPELINE']
     env = os.environ['ENV']
 
     responses = []

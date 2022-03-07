@@ -46,26 +46,17 @@ class WorkFlowManagerService(BaseStack):
         environment_id: str,
         team: str,
         microservice: str,
-        pipeline: str,
-        dataset: str,
         resource_prefix: str,
         **kwargs: Any,
     ) -> None:
         super().__init__(scope, construct_id, environment_id, **kwargs)
 
         self._environment_id: str = environment_id
-        self._team = team
-        self._microservice_name = microservice
         self._region = f"{cdk.Aws.REGION}"
-        self._pipeline = pipeline
-        self._dataset = dataset
+        self._microservice_name = microservice
+        self._team = team
+        # self._pipeline = pipeline
         self._resource_prefix = resource_prefix
-
-        # self._data_lake_library_layer_arn = get_ssm_value(
-        #     self,
-        #     "data-lake-library-layer-arn-ssm",
-        #     parameter_name=f"/{self._resource_prefix}/Layer/DataLakeLibrary",
-        # )
 
         self._athena_bucket_key: IKey = Key.from_key_arn(
             self,
@@ -85,32 +76,32 @@ class WorkFlowManagerService(BaseStack):
 
         self._wfm_masker_key = KMSFactory.key(
             self,
-            id=f"{self._microservice_name}-{self._team}-{self._pipeline}-master-key",
+            id=f"{self._microservice_name}-{self._team}-master-key",
             environment_id = self._environment_id,
             description=f"{self._resource_prefix} WFM Service Master Key",
-            alias=f"{self._resource_prefix}-{self._microservice_name}-{self._team}-{self._pipeline}-master-key",
+            alias=f"{self._resource_prefix}-{self._microservice_name}-{self._team}-master-key",
             enable_key_rotation=True,
             pending_window=cdk.Duration.days(30),
             removal_policy=cdk.RemovalPolicy.DESTROY,
         )
         StringParameter(
             self,
-            f"{self._resource_prefix}-{self._microservice_name}-{self._team}-{self._pipeline}-master-key-arn-ssm",
-            parameter_name=f"/AMC/KMS/{self._microservice_name}/{self._team}/{self._pipeline}/MasterKey",
+            f"{self._resource_prefix}-{self._microservice_name}-{self._team}-master-key-arn-ssm",
+            parameter_name=f"/AMC/KMS/{self._microservice_name}/{self._team}/MasterKey",
             string_value=self._wfm_masker_key.key_arn,
         )
         
         # Athena WorkGroup
-        self._create_athena_workgroup(workgroup_name=f"{self._microservice_name}-{self._team}-{self._pipeline}-AthenaWorkGroup")
+        self._create_athena_workgroup(workgroup_name=f"{self._microservice_name}-{self._team}-AthenaWorkGroup-{self._environment_id}")
         
         # DDB Tables
         self._customer_config_table = self._create_ddb_table(
-            name=f"{self._microservice_name}-{self._team}-{self._pipeline}-CustomerConfig",
+            name=f"{self._microservice_name}-{self._team}-CustomerConfig",
             ddb_props={"partition_key": DDB.Attribute(name="customerId", type=DDB.AttributeType.STRING)},
         )
 
         self._amc_workflows_table = self._create_ddb_table(
-            name=f"{self._microservice_name}-{self._team}-{self._pipeline}-AMCWorkflows",
+            name=f"{self._microservice_name}-{self._team}-AMCWorkflows",
             ddb_props={
                 "partition_key": DDB.Attribute(name="customerId", type=DDB.AttributeType.STRING),
                 "sort_key": DDB.Attribute(name="workflowId", type=DDB.AttributeType.STRING)
@@ -118,7 +109,7 @@ class WorkFlowManagerService(BaseStack):
         )
 
         self._amc_workflow_library_table = self._create_ddb_table(
-            name=f"{self._microservice_name}-{self._team}-{self._pipeline}-AMCWorkflowLibrary",
+            name=f"{self._microservice_name}-{self._team}-AMCWorkflowLibrary",
             ddb_props={
                 "partition_key": DDB.Attribute(name="workflowId", type=DDB.AttributeType.STRING),
                 "sort_key": DDB.Attribute(name="version", type=DDB.AttributeType.NUMBER)
@@ -126,7 +117,7 @@ class WorkFlowManagerService(BaseStack):
         )
 
         self._amc_workflow_schedules_table = self._create_ddb_table(
-            name=f"{self._microservice_name}-{self._team}-{self._pipeline}-AMCWorkflowSchedules",
+            name=f"{self._microservice_name}-{self._team}-AMCWorkflowSchedules",
             ddb_props={
                 "partition_key": DDB.Attribute(name="customerId", type=DDB.AttributeType.STRING),
                 "sort_key": DDB.Attribute(name="Name", type=DDB.AttributeType.STRING)
@@ -134,7 +125,7 @@ class WorkFlowManagerService(BaseStack):
         )
 
         self._amc_execution_status_table = self._create_ddb_table(
-            name=f"{self._microservice_name}-{self._team}-{self._pipeline}-AMCExecutionStatus",
+            name=f"{self._microservice_name}-{self._team}-AMCExecutionStatus",
             ddb_props={
                 "partition_key": DDB.Attribute(name="customerId", type=DDB.AttributeType.STRING),
                 "sort_key": DDB.Attribute(name="workflowExecutionId", type=DDB.AttributeType.STRING)
@@ -142,14 +133,14 @@ class WorkFlowManagerService(BaseStack):
         )
 
         # SNS Topic Creation
-        self._sns_topic = self._create_sns_topic(topic_name_prefix=f"{self._microservice_name}-{self._team}-{self._pipeline}")
+        self._sns_topic = self._create_sns_topic(topic_name_prefix=f"{self._microservice_name}-{self._team}")
 
 
         # IAM Role Creation for Lambdas
         self._create_iam_policies()
         
         # Create Lambda Layers
-        function_prefix = f"{self._microservice_name}-{self._team}-{self._pipeline}"
+        function_prefix = f"{self._microservice_name}-{self._team}"
 
         self._wfm_helper_layer = LayerVersion(
             self,
@@ -236,7 +227,7 @@ class WorkFlowManagerService(BaseStack):
                 principals=[ServicePrincipal("sns.amazonaws.com")]
             )
         )
-        topic_name = f"{topic_name_prefix}-SNSTopic"
+        topic_name = f"{topic_name_prefix}-SNSTopic-{self._environment_id}"
         sns_topic = Topic(
             self,
             topic_name,
@@ -259,7 +250,7 @@ class WorkFlowManagerService(BaseStack):
             self,
             id=workgroup_name,
             name=workgroup_name,
-            description=f"AthenaWorkgroup used by the {self._microservice_name} {self._team} {self._pipeline} Service",
+            description=f"AthenaWorkgroup used by the {self._microservice_name} {self._team} Service",
             recursive_delete_option=True,
             state="ENABLED",
             work_group_configuration=CfnWorkGroup.WorkGroupConfigurationProperty(
@@ -268,7 +259,7 @@ class WorkFlowManagerService(BaseStack):
                 publish_cloud_watch_metrics_enabled=False,
                 requester_pays_enabled=True,
                 result_configuration=CfnWorkGroup.ResultConfigurationProperty(
-                    output_location=f"s3://{self._athena_bucket.bucket_name}/{self._microservice_name}-{self._team}-{self._pipeline}-athenaresults/",
+                    output_location=f"s3://{self._athena_bucket.bucket_name}/{self._microservice_name}-{self._team}-athenaresults/",
                     encryption_configuration=CfnWorkGroup.EncryptionConfigurationProperty(
                         encryption_option="SSE_KMS",
                         kms_key=self._athena_bucket_key.key_arn
@@ -284,11 +275,11 @@ class WorkFlowManagerService(BaseStack):
     # DDB Tables
     def _create_ddb_table(self, name: str, ddb_props: Dict[str, Any]) -> DDB.Table:
 
-        if name.split("-")[3] == "AMCWorkflowSchedules":
+        if name.split("-")[-1] == "AMCWorkflowSchedules":
             table: DDB.Table = DDB.Table(
                 self,
-                f"{name}-table",
-                table_name=name,
+                f"{name}-{self._environment_id}-table",
+                table_name=f"{name}-{self._environment_id}",
                 encryption=DDB.TableEncryption.CUSTOMER_MANAGED,
                 encryption_key=self._wfm_masker_key,
                 stream=DDB.StreamViewType.NEW_AND_OLD_IMAGES,
@@ -302,11 +293,11 @@ class WorkFlowManagerService(BaseStack):
                 sort_key=DDB.Attribute(name="State", type=DDB.AttributeType.STRING)
             )
 
-        elif name.split("-")[3] == "AMCExecutionStatus":
+        elif name.split("-")[-1] == "AMCExecutionStatus":
             table: DDB.Table = DDB.Table(
                 self,
-                f"{name}-table",
-                table_name=name,
+                f"{name}-{self._environment_id}-table",
+                table_name=f"{name}-{self._environment_id}",
                 encryption=DDB.TableEncryption.CUSTOMER_MANAGED,
                 encryption_key=self._wfm_masker_key,
                 stream=DDB.StreamViewType.NEW_AND_OLD_IMAGES,
@@ -339,8 +330,8 @@ class WorkFlowManagerService(BaseStack):
         else:
             table: DDB.Table = DDB.Table(
                 self,
-                f"{name}-table",
-                table_name=name,
+                f"{name}-{self._environment_id}-table",
+                table_name=f"{name}-{self._environment_id}",
                 encryption=DDB.TableEncryption.CUSTOMER_MANAGED,
                 encryption_key=self._wfm_masker_key,
                 stream=DDB.StreamViewType.NEW_AND_OLD_IMAGES,
@@ -391,9 +382,9 @@ class WorkFlowManagerService(BaseStack):
         # SyncWorkflowStatuses
         lambda_sync_workflow_status = LambdaFactory.function(
             self,
-            f"{function_name_prefix}-SyncWorkflowStatuses",
+            f"{function_name_prefix}-SyncWorkflowStatuses-{self._environment_id}",
             environment_id = self._environment_id,
-            function_name=f"{function_name_prefix}-SyncWorkflowStatuses",
+            function_name=f"{function_name_prefix}-SyncWorkflowStatuses-{self._environment_id}",
             code=Code.from_asset(os.path.join(f"{Path(__file__).parents[1]}", "data_lake_hydration_service/lambdas/sync_workflow_status")),
             handler="handler.lambda_handler",
             description="Synchronizes workflow execution statues from AMC to a dynamoDB Table",
@@ -412,9 +403,9 @@ class WorkFlowManagerService(BaseStack):
         # GenerateDateRangeValues
         LambdaFactory.function(
             self,
-            f"{function_name_prefix}-GenerateDateRangeValues",
+            f"{function_name_prefix}-GenerateDateRangeValues-{self._environment_id}",
             environment_id=self._environment_id,
-            function_name=f"{function_name_prefix}-GenerateDateRangeValues",
+            function_name=f"{function_name_prefix}-GenerateDateRangeValues-{self._environment_id}",
             code=Code.from_asset(os.path.join(f"{Path(__file__).parents[1]}", "data_lake_hydration_service/lambdas/generate_data_range")),
             handler="handler.lambda_handler",
             description="Generates date range values which can be used in submitting multiple workflow executions",
@@ -427,9 +418,9 @@ class WorkFlowManagerService(BaseStack):
         # GenerateExecutionResubmissions
         LambdaFactory.function(
             self,
-            f"{function_name_prefix}-GenerateExecutionResubmissions",
+            f"{function_name_prefix}-GenerateExecutionResubmissions-{self._environment_id}",
             environment_id = self._environment_id,
-            function_name=f"{function_name_prefix}-GenerateExecutionResubmissions",
+            function_name=f"{function_name_prefix}-GenerateExecutionResubmissions-{self._environment_id}",
             code=Code.from_asset(os.path.join(f"{Path(__file__).parents[1]}", "data_lake_hydration_service/lambdas/generate_execution_resubmission")),
             handler="handler.lambda_handler",
             description="Generates execution resubmissions",
@@ -447,9 +438,9 @@ class WorkFlowManagerService(BaseStack):
         # WorkflowStatusTableTrigger
         workflow_status_trigger = LambdaFactory.function(
             self,
-            f"{function_name_prefix}-WorkflowStatusTrigger",
+            f"{function_name_prefix}-WorkflowStatusTrigger-{self._environment_id}",
             environment_id = self._environment_id,
-            function_name=f"{function_name_prefix}-WorkflowStatusTrigger",
+            function_name=f"{function_name_prefix}-WorkflowStatusTrigger-{self._environment_id}",
             code=Code.from_asset(os.path.join(f"{Path(__file__).parents[1]}", "data_lake_hydration_service/lambdas/workflow_status_trigger")),
             handler="handler.lambda_handler",
             description="A lambda function that process a DynamoDB Stream of workflow statuses to generate alerts",
@@ -475,9 +466,9 @@ class WorkFlowManagerService(BaseStack):
         # AMC API Interface
         self._lambda_amc_api_interface = LambdaFactory.function(
             self,
-            f"{function_name_prefix}-AmcApiInterface",
+            f"{function_name_prefix}-AmcApiInterface-{self._environment_id}",
             environment_id = self._environment_id,
-            function_name=f"{function_name_prefix}-AmcApiInterface",
+            function_name=f"{function_name_prefix}-AmcApiInterface-{self._environment_id}",
             code=Code.from_asset(os.path.join(f"{Path(__file__).parents[1]}", "data_lake_hydration_service/lambdas/amc_api_interface")),
             handler="handler.lambda_handler",
             description="A lambda interface that acts as a wrapper for the AMC REST API",
@@ -495,9 +486,9 @@ class WorkFlowManagerService(BaseStack):
         # WorkflowTableTrigger
         workflow_table_trigger = LambdaFactory.function(
             self,
-            f"{function_name_prefix}-WorkflowTableTrigger",
+            f"{function_name_prefix}-WorkflowTableTrigger-{self._environment_id}",
             environment_id = self._environment_id,
-            function_name=f"{function_name_prefix}-WorkflowTableTrigger",
+            function_name=f"{function_name_prefix}-WorkflowTableTrigger-{self._environment_id}",
             code=Code.from_asset(os.path.join(f"{Path(__file__).parents[1]}", "data_lake_hydration_service/lambdas/workflow_table_trigger")),
             handler="handler.lambda_handler",
             description="Synchronizes workflow table records from the workflow DyanmoDB table to AMC",
@@ -522,9 +513,9 @@ class WorkFlowManagerService(BaseStack):
         # WorkflowExecutionQueueConsumer
         self._execution_queue_consumer = LambdaFactory.function(
             self,
-            f"{function_name_prefix}-WorkflowExecutionQueueConsumer",
+            f"{function_name_prefix}-WorkflowExecutionQueueConsumer-{self._environment_id}",
             environment_id = self._environment_id,
-            function_name=f"{function_name_prefix}-WorkflowExecutionQueueConsumer",
+            function_name=f"{function_name_prefix}-WorkflowExecutionQueueConsumer-{self._environment_id}",
             code=Code.from_asset(os.path.join(f"{Path(__file__).parents[1]}", "data_lake_hydration_service/lambdas/workflow_queue_consumer")),
             handler="handler.lambda_handler",
             description="Consumes from the Workflow Execution SQS queue and submits them to the AMC API Endpoint as a new exeuction",
@@ -541,9 +532,9 @@ class WorkFlowManagerService(BaseStack):
         # Lambda Workflow Execution Queue Producer
         lambda_events_queue_producer = LambdaFactory.function(
             self,
-            f"{function_name_prefix}-ExecutionQueueProducer",
+            f"{function_name_prefix}-ExecutionQueueProducer-{self._environment_id}",
             environment_id = self._environment_id,
-            function_name=f"{function_name_prefix}-ExecutionQueueProducer",
+            function_name=f"{function_name_prefix}-ExecutionQueueProducer-{self._environment_id}",
             code=Code.from_asset(os.path.join(f"{Path(__file__).parents[1]}", "data_lake_hydration_service/lambdas/execution_queue_producer")),
             handler="handler.lambda_handler",
             description="Queues a workflow exeuction in SQS to be submitted to the AMC API Interface",
@@ -566,9 +557,9 @@ class WorkFlowManagerService(BaseStack):
         # RunWorkflowByCampaign
         lambda_run_by_campaign = LambdaFactory.function(
             self,
-            f"{function_name_prefix}-ExecuteWorkflowByCampaign",
+            f"{function_name_prefix}-ExecuteWorkflowByCampaign-{self._environment_id}",
             environment_id = self._environment_id,
-            function_name=f"{function_name_prefix}-ExecuteWorkflowByCampaign",
+            function_name=f"{function_name_prefix}-ExecuteWorkflowByCampaign-{self._environment_id}",
             code=Code.from_asset(os.path.join(f"{Path(__file__).parents[1]}", "data_lake_hydration_service/lambdas/execute_workflow_by_campaign")),
             handler="handler.lambda_handler",
             description="execute the specified workflow and pass campaignID as a parameter from a specified Athena Table",
@@ -593,9 +584,9 @@ class WorkFlowManagerService(BaseStack):
         # WorkflowScheduleTrigger
         workflow_schedule_trigger = LambdaFactory.function(
             self,
-            f"{function_name_prefix}-WorkflowScheduleTrigger",
+            f"{function_name_prefix}-WorkflowScheduleTrigger-{self._environment_id}",
             environment_id = self._environment_id,
-            function_name=f"{function_name_prefix}-WorkflowScheduleTrigger",
+            function_name=f"{function_name_prefix}-WorkflowScheduleTrigger-{self._environment_id}",
             code=Code.from_asset(os.path.join(f"{Path(__file__).parents[1]}", "data_lake_hydration_service/lambdas/workflow_schedule_trigger")),
             handler="handler.lambda_handler",
             description="A Trigger creating Cloudwatch Rules to submit workflow executions to the workflow exeuction queue producer based on records inserted into the WorkflowSchedule DynamoDB Table",
@@ -621,9 +612,9 @@ class WorkFlowManagerService(BaseStack):
         # Lambda Workflow Library Trigger
         workflow_library_trigger = LambdaFactory.function(
             self,
-            f"{function_name_prefix}-WorkflowLibraryTrigger",
+            f"{function_name_prefix}-WorkflowLibraryTrigger-{self._environment_id}",
             environment_id = self._environment_id,
-            function_name=f"{function_name_prefix}-WorkflowLibraryTrigger",
+            function_name=f"{function_name_prefix}-WorkflowLibraryTrigger-{self._environment_id}",
             code=Code.from_asset(os.path.join(f"{Path(__file__).parents[1]}", "data_lake_hydration_service/lambdas/workflow_library_trigger")),
             handler="handler.lambda_handler",
             description="A Trigger that is invoked when records are modified in the Workflow Library table, this will create workflows and schedule them to run based on their default schedule configuration",
@@ -651,9 +642,9 @@ class WorkFlowManagerService(BaseStack):
         # Lambda Workflow Customer Config Trigger
         customer_config_trigger = LambdaFactory.function(
             self,
-            f"{function_name_prefix}-CustomerConfigTrigger",
+            f"{function_name_prefix}-CustomerConfigTrigger-{self._environment_id}",
             environment_id = self._environment_id,
-            function_name=f"{function_name_prefix}-CustomerConfigTrigger",
+            function_name=f"{function_name_prefix}-CustomerConfigTrigger-{self._environment_id}",
             code=Code.from_asset(os.path.join(f"{Path(__file__).parents[1]}", "data_lake_hydration_service/lambdas/customer_config_trigger")),
             handler="handler.lambda_handler",
             description="A Trigger that is invoked when records are modified in the customer config table, this will create an AMC Executions SQS Queue and update the AMC API Invoke policy to include the customer's AMC instance",
@@ -668,7 +659,6 @@ class WorkFlowManagerService(BaseStack):
                 "KMS_MASTER_KEY":self._wfm_masker_key.key_arn, 
                 "TEAM":self._team,
                 "MICROSERVICE":self._microservice_name,
-                "PIPELINE":self._pipeline,
                 "ENV":self._environment_id,
                 "AMC_ENDPOINT_IAM_POLICY_ARN":self._invoke_amc_api_policy.managed_policy_arn
             },
@@ -685,9 +675,9 @@ class WorkFlowManagerService(BaseStack):
         # Custom Scheduler
         self._lambda_custom_scheduler = LambdaFactory.function(
             self,
-            f"{function_name_prefix}-CustomScheduler",
+            f"{function_name_prefix}-CustomScheduler-{self._environment_id}",
             environment_id = self._environment_id,
-            function_name=f"{function_name_prefix}-CustomScheduler",
+            function_name=f"{function_name_prefix}-CustomScheduler-{self._environment_id}",
             code=Code.from_asset(os.path.join(f"{Path(__file__).parents[1]}", "data_lake_hydration_service/lambdas/custom_scheduler")),
             handler="handler.lambda_handler",
             description="This function will query workflows based on their frequency from AMCWorkflowSchedules table and pass payload to WorkflowExecutionQueueProducer Lambda",
@@ -707,7 +697,7 @@ class WorkFlowManagerService(BaseStack):
 
     # IAM POLICIES
     def _create_iam_policies(self):
-        name_prefix = f"{self._microservice_name}-{self._team}-{self._pipeline}"
+        name_prefix = f"{self._microservice_name}-{self._team}"
         
         # Athena Policies - Allow Workgroup Access
         athena_workgroup_access_policy = ManagedPolicy(
@@ -731,7 +721,7 @@ class WorkFlowManagerService(BaseStack):
                             "athena:ListQueryExecutions",
                             "athena:GetQueryResultsStream"
                         ],
-                        resources=[f"arn:aws:athena:{cdk.Aws.REGION}:{cdk.Aws.ACCOUNT_ID}:workgroup/{name_prefix}-AthenaWorkGroup"]
+                        resources=[f"arn:aws:athena:{cdk.Aws.REGION}:{cdk.Aws.ACCOUNT_ID}:workgroup/{name_prefix}-AthenaWorkGroup-{self._environment_id}"]
                     )
                 ]
             )
@@ -916,7 +906,7 @@ class WorkFlowManagerService(BaseStack):
                     PolicyStatement(
                         effect=Effect.ALLOW,
                         actions=["lambda:InvokeFunction"],
-                        resources=[f"arn:aws:lambda:{cdk.Aws.REGION}:{cdk.Aws.ACCOUNT_ID}:function:{name_prefix}-ExecutionQueueProducer"]
+                        resources=[f"arn:aws:lambda:{cdk.Aws.REGION}:{cdk.Aws.ACCOUNT_ID}:function:{name_prefix}-ExecutionQueueProducer-{self._environment_id}"]
                     )
                 ]
             )
@@ -933,7 +923,7 @@ class WorkFlowManagerService(BaseStack):
                     PolicyStatement(
                         effect=Effect.ALLOW,
                         actions=["lambda:InvokeFunction"],
-                        resources=[f"arn:aws:lambda:{cdk.Aws.REGION}:{cdk.Aws.ACCOUNT_ID}:function:{name_prefix}-AmcApiInterface"]
+                        resources=[f"arn:aws:lambda:{cdk.Aws.REGION}:{cdk.Aws.ACCOUNT_ID}:function:{name_prefix}-AmcApiInterface-{self._environment_id}"]
                     )
                 ]
             )
@@ -950,7 +940,7 @@ class WorkFlowManagerService(BaseStack):
                     PolicyStatement(
                         effect=Effect.ALLOW,
                         actions=["lambda:InvokeFunction"],
-                        resources=[f"arn:aws:lambda:{cdk.Aws.REGION}:{cdk.Aws.ACCOUNT_ID}:function:{name_prefix}-WorkflowExecutionQueueConsumer"]
+                        resources=[f"arn:aws:lambda:{cdk.Aws.REGION}:{cdk.Aws.ACCOUNT_ID}:function:{name_prefix}-WorkflowExecutionQueueConsumer-{self._environment_id}"]
                     )
                 ]
             )
@@ -967,7 +957,7 @@ class WorkFlowManagerService(BaseStack):
                     PolicyStatement(
                         effect=Effect.ALLOW,
                         actions=["lambda:InvokeFunction"],
-                        resources=[f"arn:aws:lambda:{cdk.Aws.REGION}:{cdk.Aws.ACCOUNT_ID}:function:{name_prefix}-SyncWorkflowStatuses"]
+                        resources=[f"arn:aws:lambda:{cdk.Aws.REGION}:{cdk.Aws.ACCOUNT_ID}:function:{name_prefix}-SyncWorkflowStatuses-{self._environment_id}"]
                     )
                 ]
             )
@@ -1270,7 +1260,7 @@ class WorkFlowManagerService(BaseStack):
                         PolicyStatement(
                             effect=Effect.ALLOW,
                             actions=["lambda:InvokeFunction"],
-                            resources=[f"arn:aws:lambda:{cdk.Aws.REGION}:{cdk.Aws.ACCOUNT_ID}:function:{name_prefix}-WorkflowLibraryTrigger"]
+                            resources=[f"arn:aws:lambda:{cdk.Aws.REGION}:{cdk.Aws.ACCOUNT_ID}:function:{name_prefix}-WorkflowLibraryTrigger-{self._environment_id}"]
                         )
                     ]
                 )

@@ -1,8 +1,7 @@
 {
   "environments": {
     "cicd": {
-      "account": "111111111111",
-      "region": "us-east-1"
+      "repository": "ddk-amc-quickstart"
     },
     "dev": {
       "account": "111111111111",
@@ -16,12 +15,6 @@
         "dataset": "amcdataset",
         "org": "aws",
         "app": "datalake"
-      },
-      "tps_parameters": { "team": "demoteam", "pipeline": "cmpl" },
-      "wfm_parameters": {
-        "team": "demoteam",
-        "pipeline": "dlhs",
-        "dataset": "amcdataset"
       },
       "resources": {
         "amc-raw-bucket": { "versioned": false },

@@ -29,15 +29,9 @@ class GetApplicationParameters():
         
     def get_data_pipeline_params(self) -> Dict[str, Any]:
         return self._config.get("data_pipeline_parameters", {})
-
-    def get_tps_params(self) -> Dict[str, Any]:
-        return self._config.get("tps_parameters", {})
-
-    def get_wfm_params(self) -> Dict[str, Any]:
-        return self._config.get("wfm_parameters", {})
         
     def get_resource_prefix(self) -> str:
         return self._config.get("resource_prefix", "ddk")
 
-    # def get_platform_manager_params(self) -> Dict[str, Any]:
-    #     return self._config.get("platform_manager_parameters", {})
+    def get_cicd_repository(self) -> Dict[str, Any]:
+        return self._config.get("repository", "ddk-amc-quickstart")
