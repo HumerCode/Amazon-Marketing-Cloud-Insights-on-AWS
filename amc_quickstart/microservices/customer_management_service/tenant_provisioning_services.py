@@ -350,7 +350,8 @@ class TenantProvisiongService(BaseStack):
             "lambda-ddb-event-source-mapping",
             batch_size=100,
             event_source_arn=self._table.table_stream_arn,
-            starting_position=StartingPosition.TRIM_HORIZON
+            starting_position=StartingPosition.TRIM_HORIZON,
+            retry_attempts=1
         )
 
         self._lambda_amc_instance_setup = LambdaFactory.function(

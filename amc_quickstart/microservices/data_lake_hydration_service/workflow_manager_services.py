@@ -47,6 +47,7 @@ class WorkFlowManagerService(BaseStack):
         team: str,
         microservice: str,
         resource_prefix: str,
+        sns_email: str,
         **kwargs: Any,
     ) -> None:
         super().__init__(scope, construct_id, environment_id, **kwargs)
@@ -55,8 +56,8 @@ class WorkFlowManagerService(BaseStack):
         self._region = f"{cdk.Aws.REGION}"
         self._microservice_name = microservice
         self._team = team
-        # self._pipeline = pipeline
         self._resource_prefix = resource_prefix
+        self._sns_email = sns_email
 
         self._athena_bucket_key: IKey = Key.from_key_arn(
             self,
@@ -161,15 +162,15 @@ class WorkFlowManagerService(BaseStack):
 
         # EventBridge Rules 
         self._rule_execute_workflow_consumer = self._create_cloudwatch_event(
-            name = "ProcessGlueCrawlerRunRequests",
-            description="Runs the process-glue-crawler-run-requests lambda function every 10 minutes",
-            schedule = "rate(10 minutes)",
+            name = f"{self._microservice_name}-TriggerExecutionQueueConsumer",
+            description="Runs the Workflow Execution Queue Consumer Lambda function every 10 minutes",
+            schedule = "rate(1 minutes)",
             target_input = '{ "method": "syncExecutionStatuses" }',
             target_function = self._execution_queue_consumer
         )
 
         self._rule_get_glue_status = self._create_cloudwatch_event(
-            name = "syncExecutionStatuses",
+            name = f"{self._microservice_name}-syncExecutionStatuses",
             description="Runs the amc api interface lambda function every 10 minutes to get all execution statuses",
             schedule = "rate(10 minutes)",
             target_input = '{ "method": "syncExecutionStatuses" }',
@@ -177,7 +178,7 @@ class WorkFlowManagerService(BaseStack):
         )
 
         self._rule_hourly_custom_scheduler = self._create_cloudwatch_event(
-            name = "CustomSchedulerOnHourly",
+            name = f"{self._microservice_name}-CustomSchedulerOnHourly",
             description="Runs the CustomScheduler lambda function on hourly",
             schedule = "rate(1 hour)",
             target_input = '{"query": "custom(H * *)" }',
@@ -185,7 +186,7 @@ class WorkFlowManagerService(BaseStack):
         )
 
         self._rule_daily_custom_scheduler = self._create_cloudwatch_event(
-            name = "CustomSchedulerOnDaily",
+            name = f"{self._microservice_name}-CustomSchedulerOnDaily",
             description="Runs the CustomScheduler lambda function on daily",
             schedule = "rate(1 hour)",
             target_input = '{"query": "custom(D * {H})" }',
@@ -193,7 +194,7 @@ class WorkFlowManagerService(BaseStack):
         )
 
         self._rule_weekly_custom_scheduler = self._create_cloudwatch_event(
-            name = "CustomSchedulerOnWeekly",
+            name = f"{self._microservice_name}-CustomSchedulerOnWeekly",
             description="Runs the CustomScheduler lambda function on weekly",
             schedule = "rate(1 hour)",
             target_input = '{"query": "custom(W {D} {H})" }',
@@ -201,7 +202,7 @@ class WorkFlowManagerService(BaseStack):
         )
 
         self._rule_weekly_custom_scheduler = self._create_cloudwatch_event(
-            name = "CustomSchedulerOnMonthly",
+            name = f"{self._microservice_name}-CustomSchedulerOnMonthly",
             description="Runs the CustomScheduler lambda function on m onthyl",
             schedule = "rate(1 hour)",
             target_input = '{"query": "custom(M {D} {H})" }',
@@ -239,7 +240,7 @@ class WorkFlowManagerService(BaseStack):
             self,
             "Subscription",
             topic = sns_topic,
-            endpoint="nobody@demo.com", #FIX
+            endpoint=self._sns_email,
             protocol=SubscriptionProtocol.EMAIL
         )
         return sns_topic
@@ -460,7 +461,8 @@ class WorkFlowManagerService(BaseStack):
             "lambda-ddb-event-source-mapping",
             batch_size=5,
             event_source_arn=self._amc_execution_status_table.table_stream_arn,
-            starting_position=StartingPosition.TRIM_HORIZON
+            starting_position=StartingPosition.TRIM_HORIZON,
+            retry_attempts=1
         )
 
         # AMC API Interface
@@ -507,7 +509,8 @@ class WorkFlowManagerService(BaseStack):
             "lambda-ddb-event-source-mapping",
             batch_size=5,
             event_source_arn=self._amc_workflows_table.table_stream_arn,
-            starting_position=StartingPosition.TRIM_HORIZON
+            starting_position=StartingPosition.TRIM_HORIZON,
+            retry_attempts=1
         )
 
         # WorkflowExecutionQueueConsumer
@@ -636,7 +639,8 @@ class WorkFlowManagerService(BaseStack):
             "lambda-ddb-event-source-mapping",
             batch_size=5,
             event_source_arn=self._amc_workflow_library_table.table_stream_arn,
-            starting_position=StartingPosition.TRIM_HORIZON
+            starting_position=StartingPosition.TRIM_HORIZON,
+            retry_attempts=1
         )
 
         # Lambda Workflow Customer Config Trigger
@@ -669,7 +673,8 @@ class WorkFlowManagerService(BaseStack):
             "lambda-ddb-event-source-mapping",
             batch_size=5,
             event_source_arn=self._customer_config_table.table_stream_arn,
-            starting_position=StartingPosition.TRIM_HORIZON
+            starting_position=StartingPosition.TRIM_HORIZON,
+            retry_attempts=1
         )
 
         # Custom Scheduler

@@ -77,11 +77,6 @@ class SDLFDatasetStack(BaseStack):
             ),
         )
 
-        # self._glue_job_role_arn = get_ssm_value(
-        #     self,
-        #     f"glue-job-{self._dataset}-role-arn",
-        #     parameter_name=f"/Orion/IAM/{self._team}/{self._dataset}/HeavyTranformGlueRoleARN"
-        # )
         self._glue_path = "amc_quickstart/foundations/glue/pyshell_scripts"
         self._get_artifacts()
         self._create_sdlf_glue_artifacts()
@@ -136,18 +131,7 @@ class SDLFDatasetStack(BaseStack):
             }
             }
 
-
         RegisterConstruct(self, self._props["id"], props=self._props)
-
-        # #Glue DB, crawler etc
-        # database: Database = Database(
-        #     self,
-        #     f"orion-{name}-database",
-        #     database_name=f"aws_datalake_{self._environment_id}_{team}_{name}_db", 
-        #     location_uri=f"s3://{self._stage_bucket.bucket_name}/post-stage/{team}/{name}",
-        # )
-
-     
         
         database: CfnDatabase = CfnDatabase(
             self,

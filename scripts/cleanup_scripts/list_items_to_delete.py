@@ -16,6 +16,10 @@
 import boto3
 import json
 import re
+import sys
+import os
+
+env = str(sys.argv[1])
 
 s3_client = boto3.client('s3')
 dynamodb_client = boto3.client('dynamodb')
@@ -28,41 +32,26 @@ cw_client = boto3.client('logs')
 
 MAX_ITEMS = 1000
 
-def list_s3_buckets():
+def list_s3_buckets(prefix):
     bucket_list=[]
     response = s3_client.list_buckets()
     for bucket in response["Buckets"]:
-        if "do-not-delete" in bucket["Name"]:
-            continue
-        else:
+        if (re.match(f"{prefix}-*", bucket["Name"]) or re.match("ddk-*", bucket["Name"])):
             bucket_list.append(bucket["Name"])
     return bucket_list
 
-def list_ddb_tables():
+def list_ddb_tables(prefix):
     table_list = []
     response = dynamodb_client.list_tables()
-    table_list = response["TableNames"]
+    for table_name in response["TableNames"]:
+        if ((re.match(f"{prefix}-*", table_name) or re.match("wfm-*", table_name)) or (re.match(f"octagon-*", table_name) or re.match("tps-*", table_name))):
+            table_list.append(table_name)
     return table_list
 
 def list_kms_keys(max_items):
     key_id_list=[]
     try:
         # creating paginator object for list_keys() method
-        paginator = kms_client.get_paginator('list_keys')
-
-        # creating a PageIterator from the paginator
-        response_iterator = paginator.paginate(
-            PaginationConfig={'MaxItems': max_items})
-
-        full_result = response_iterator.build_full_result()
-        for page in full_result['Keys']:
-            response = kms_client.describe_key(
-                KeyId=page["KeyId"]
-            )
-            if response["KeyMetadata"]["KeyState"] not in ["Disabled","PendingDeletion", "Unavailable"]:
-                key_id_list.append(page["KeyId"])
-
-        # Check for AWS Managed Keys
         paginator = kms_client.get_paginator('list_aliases')
 
         # creating a PageIterator from the paginator
@@ -71,10 +60,12 @@ def list_kms_keys(max_items):
 
         full_result = response_iterator.build_full_result()
         for page in full_result['Aliases']:
-            if "alias/aws" in page["AliasName"]:
-                if "TargetKeyId" in page:
-                    key_id_list.remove(page["TargetKeyId"])
-
+            if ((re.match(f"alias/{prefix}-*", page["AliasName"]) or re.match("alias/pmn-*", page["AliasName"])) or (re.match(f"alias/ddk-*", page["AliasName"]) or re.match("alias/tps-*", page["AliasName"]))):
+                response = kms_client.describe_key(
+                    KeyId=page["TargetKeyId"]
+                )
+                if response["KeyMetadata"]["KeyState"] not in ["Disabled","PendingDeletion", "Unavailable"]:
+                    key_id_list.append(page["TargetKeyId"])
     except:
         print('Could not list KMS Keys.')
         raise
@@ -96,12 +87,20 @@ def list_lambda_layers():
     layer_list=[]
     response = lambda_client.list_layers()
     for layer in response["Layers"]:
-        layer_list.append(
-            {
-                "layerName":layer["LayerName"], 
-                "version":layer["LatestMatchingVersion"]["Version"]
-            }
-        )
+        if ((re.match(f"tpsscript*", layer["LayerName"]) or re.match("platformmanagerscript*", layer["LayerName"])) or (re.match(f"data-lake-library", layer["LayerName"]) or re.match("amcgluescript*", layer["LayerName"]))):
+            layer_list.append(
+                {
+                    "layerName":layer["LayerName"], 
+                    "version":layer["LatestMatchingVersion"]["Version"]
+                }
+            )
+        elif (re.match(f"wfm-*", layer["LayerName"]) or re.match("AWSDataWrangler-Python38", layer["LayerName"])):
+            layer_list.append(
+                {
+                    "layerName":layer["LayerName"], 
+                    "version":layer["LatestMatchingVersion"]["Version"]
+                }
+            )
     return layer_list
 
 def list_rules():
@@ -119,13 +118,13 @@ def list_cfn_template():
         StackStatusFilter=['CREATE_COMPLETE','ROLLBACK_COMPLETE','UPDATE_COMPLETE', 'UPDATE_ROLLBACK_COMPLETE']
     )
     for stack in response["StackSummaries"]:
-        if re.match("[a-zA-Z0-9_.-]*-amcdataset-instance-[a-zA-Z0-9_.-]*", stack["StackName"]):
+        if re.match(f"{prefix}-[a-zA-Z0-9_.-]*-instance-[a-zA-Z0-9_.-]*", stack["StackName"]):
             stack_list.append(stack["StackName"])
         else:
             continue
     return stack_list
 
-def list_cw_logs():
+def list_cw_logs(prefix):
     cw_log_list=[]
     try:
         # creating paginator object for describe_log_groups() method
@@ -137,8 +136,10 @@ def list_cw_logs():
 
         full_result = response_iterator.build_full_result()
         for page in full_result['logGroups']:
-            cw_log_list.append(page["logGroupName"])
-
+            if ((re.match(f"/aws/lambda/{prefix}-*", page["logGroupName"]) or re.match("/aws/lambda/AMC-*", page["logGroupName"])) or (re.match(f"/aws/lambda/tps-*", page["logGroupName"]) or re.match("/aws/lambda/wfm-*", page["logGroupName"]))):
+                cw_log_list.append(page["logGroupName"])
+            elif re.match("/aws/codebuild/codepipelineAssetsFileAsset-*", page["logGroupName"]):
+                cw_log_list.append(page["logGroupName"])
     except:
         print('Could not list CloudWatch Logs.')
         raise
@@ -148,12 +149,21 @@ def list_cw_logs():
 
 if __name__ == "__main__":
     try:  
+        # Get Resource Prefix from DDK.json
+        config_path = os.path.abspath(__file__).split("/")[:-3]
+        config_path = "/".join(config_path) + "/ddk.json"
+
+        with open(config_path) as config_data:
+            config = json.loads(config_data.read())
+            prefix = config["environments"][env]["resource_prefix"]
+
+
         print("Collecting Resources to Delete")
         resources={}
-        bucket_list = list_s3_buckets()
+        bucket_list = list_s3_buckets(prefix)
         resources["s3"]=bucket_list
 
-        ddb_table_list = list_ddb_tables()
+        ddb_table_list = list_ddb_tables(prefix)
         resources["ddb"]=ddb_table_list
 
         kms_key_list = list_kms_keys(MAX_ITEMS)
@@ -171,7 +181,7 @@ if __name__ == "__main__":
         cfn_template_list = list_cfn_template()
         resources["cloudformation"]=cfn_template_list
 
-        cw_logs_list = list_cw_logs()
+        cw_logs_list = list_cw_logs(prefix)
         resources["cwlogs"]=cw_logs_list
 
         print("Writing Items to Delete to JSON File: delete_file.json")

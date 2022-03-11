@@ -132,7 +132,7 @@ class PlatformManagerSageMaker(BaseStack):
             id=f"{self._microservice_name}-table-key",
             environment_id = self._environment_id,
             description=f"{self._microservice_name.title()} Table Key",
-            alias=f"sagemaker-demo-cm",
+            alias=f"pmn-sagemaker-cmk",
             enable_key_rotation=True,
             pending_window=cdk.Duration.days(30),
             removal_policy=cdk.RemovalPolicy.DESTROY,
@@ -222,14 +222,14 @@ class PlatformManagerSageMaker(BaseStack):
             self, 
             f"{self._microservice_name}-lc",
             notebook_instance_lifecycle_config_name=f"{self._microservice_name}-lc",
-            on_create=[sagemaker.CfnNotebookInstanceLifecycleConfig.NotebookInstanceLifecycleHookProperty(
+            on_start=[sagemaker.CfnNotebookInstanceLifecycleConfig.NotebookInstanceLifecycleHookProperty(
                 content=cdk.Fn.base64(f"""
                 #!/bin/bash
               
                 set -e
                 S3_BUCKET={self._artifacts_bucket_name}
                 aws s3 sync s3://$S3_BUCKET/platform_notebook_manager_samples/ /home/ec2-user/SageMaker/
-
+                chmod 777 /home/ec2-user/SageMaker/platform_manager
                 """)
             )]
         )
@@ -241,7 +241,7 @@ class PlatformManagerSageMaker(BaseStack):
             role_arn=sagemaker_role.role_arn,
             kms_key_id=self._sagemaker_kms_key.key_id,
             lifecycle_config_name=sagemaker_lifecycle_config.attr_notebook_instance_lifecycle_config_name,
-            notebook_instance_name="saw-platform-manager",
+            notebook_instance_name=f"{self._resource_prefix}-quickstart-platform-manager-notebooks",
             root_access="Enabled",
             
         )

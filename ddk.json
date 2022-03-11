@@ -8,6 +8,7 @@
       "region": "us-east-1",
       "name": "Development",
       "manual_approvals": false,
+      "email": "nobody@demo.com",
       "resource_prefix": "amc",
       "data_pipeline_parameters": {
         "team": "demoteam",

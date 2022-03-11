@@ -45,18 +45,6 @@ You can verify your git configuration with
 $ git config --list
 ```
 
-The jq Linux command line utility to extract data from JSON documents.
-
-```
-$ jq --version
-```
-
-If not installed already, you can install jq by running in your command line:
-
-```
-$ sudo yum install jq
-```
-
 ### [OPTIONAL] Using AWS Cloud9 for Deployment:
 
 If you would like to deploy this quickstart using an AWS Cloud9 Environment rather than on your local environment, follow these steps to set up AWS Cloud9:
@@ -64,11 +52,6 @@ If you would like to deploy this quickstart using an AWS Cloud9 Environment rath
 1. Log in to the AWS account console using the Admin role and select an AWS region. We recommend choosing a mature region where most services are available (e.g. eu-west-1, us-east-1…)
 2. Navigate to `Cloud9` in the AWS console. Set up a [Cloud9 Environment](https://docs.aws.amazon.com/cloud9/latest/user-guide/create-environment-main.html) in the same AWS region (t3.small or higher, Amazon Linux 2) and open the IDE
 3. Download the package, upload it to your Cloud9 instance, and unzip it
-4. Install jq by running in your command line:
-
-```
-$ sudo yum install jq
-```
 
 Python, Pip, AWS CLI, AWS CDK CLI, and Git CLI packages should all be installed and configured for you by defualt in your Cloud9 environment. Ensure that these pacakges are installed with the correct version with the following commands:
 
@@ -172,7 +155,7 @@ $ ddk deploy --profile [AWS_PROFILE]
 
 The deploy all step deploys an AWS CodePipeline along with its respective AWS CloudFormation Stacks. The last stage of each pipeline delivers the AMC Quickstart infrastructure respectively in the child (default dev) environment through CloudFormation.
 
-![Alt](/docs/images/AMC-Quickstart-Deploy.png)
+![Alt](docs/images/AMC-Quickstart-Deploy.png)
 
 _Foundations:_ This application creates the foundational resources for the quickstart. These resources include Lambda Layers, Glue Jobs, S3 Buckets, routing SQS Queues, and Amazon DynamoDB Tables for data and metadata storage.
 
@@ -213,9 +196,40 @@ _Create Workflows:_ To initialize the creation, scheduling and execution of AMC 
 
 #
 
+## Enable Default Lake Formation Permissions and Give Your IAM Role Database Permissions
+
+In order to query the data in Athena, we highly recommend you enable default Lake Formation Permissions and give your current IAM Role permisssion in AWS Lake Formation. Enabling AWS Lake Formation Permissions helps to build, secure, and manage your data lake quickly and efficiently. Follow the below steps in order to enable Lake Formation and grant your Role the correct permissions:
+
+1. In your AWS Account Console go to the AWS Lake Formation page
+2. In the navigation pane, under Data catalog, choose Settings
+
+   1. Clear both check boxes and choose Save (you have now enabled Lake Formation to control your Data Catalog resources)
+
+3. In the navigation pane under Permissions, choose Data Lake Permissions
+
+   1. Click the Grant Button on the upper right corner
+
+   2. For **IAM users and roles** enter your current IAM Role
+
+   3. For **LF-Tags or catalog resources** select Named data catalog resources
+
+      1. For **Databases**, select your database with name: `aws_datalake_{environment}_{team}_{name}_db"` (default name is `aws_datalake_dev_demoteam_amcdataset_db`)
+
+      2. For **Tables**, select `All Tables`
+
+      3. Leave `Data Filters - Optional` Empty
+
+   4. For **Table Permissions** select `Super`
+
+   5. Click Grant at the bottom of the page to create your Lake Formation Permissions
+
+You have enabled Lake Formation permissions and given your IAM Role permissions to access all tables in your Glue Database. You are now able to access the data returned from your workflow execution using Amazon Athena once the data is uploaded and processed in the data lake.
+
+#
+
 ## AMC Quickstart CodePipeline Steps
 
-![Alt](/docs/images/AMC-Quickstart-CodePipeline-Steps.png)
+![Alt](docs/images/AMC-Quickstart-CodePipeline-Steps.png)
 
 The Code Pipeline Steps (as shown to the right) are:
 
@@ -232,7 +246,7 @@ The Code Pipeline Steps (as shown to the right) are:
 
 ## Cleaning Up the Quickstart
 
-Once the solution has been deployed and tested, use the following command to clean up the resources
+Once the solution has been deployed and tested, use the following command to clean up the resources deployed by the AMC QuickStart:
 
 ```
 $ make delete_all
@@ -246,7 +260,13 @@ _NOTE:_ Before running this command, look into the `Makefile` and ensure that:
 
 This command will go through the following sequence of steps in order to clean up your AWS account environment:
 
-![Alt](/docs/images/AMC-Quickstart-Delete.png)
+![Alt](docs/images/AMC-Quickstart-Delete.png)
+
+Some CloudWatch General Log Groups May Remain in your Account with Logs specific to AMC Quickstart resources, including:
+
+- /aws/sagemaker/NotebookInstances
+- /aws-glue/jobs/error
+- /aws-glue/jobs/output
 
 #
 

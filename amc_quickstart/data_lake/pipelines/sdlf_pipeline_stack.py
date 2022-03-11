@@ -53,9 +53,7 @@ class SDLFPipelineStack(BaseStack):
         raw_bucket_arn: str = get_ssm_value(self, "raw-bucket-ssm", "/AMC/S3/RawBucketArn")
         stage_bucket_arn: str = get_ssm_value(self, "stage-bucket-ssm", "/AMC/S3/StageBucketArn")
         analytics_bucket_arn: str = get_ssm_value(self, "analytics-bucket-ssm", "/AMC/S3/AnalyticsBucketArn")
-        # self._raw_bucket_name: str = self.parse_arn(raw_bucket_arn).resource
-        # self._stage_bucket_name: str = self.parse_arn(stage_bucket_arn).resource
-        # self._analytics_bucket_name: str = self.parse_arn(analytics_bucket_arn).resource
+
         self._raw_bucket_name: str = self.split_arn(
             arn=raw_bucket_arn, arn_format=ArnFormat.COLON_RESOURCE_NAME
         ).resource
