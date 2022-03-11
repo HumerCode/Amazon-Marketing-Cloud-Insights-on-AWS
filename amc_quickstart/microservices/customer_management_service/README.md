@@ -29,7 +29,7 @@ The Tenant Provisioning Service is part of the Client Manager MicroServices pack
 
 ## Reference Architecture
 
-![Alt](../../../docs/images/AMC-QuickStart-TPS-Architecture.png)
+![Alt](/docs/images/AMC-QuickStart-TPS-Architecture.png)
 
 ## Prerequisites
 
