@@ -164,7 +164,7 @@ class WorkFlowManagerService(BaseStack):
         self._rule_execute_workflow_consumer = self._create_cloudwatch_event(
             name = f"{self._microservice_name}-TriggerExecutionQueueConsumer",
             description="Runs the Workflow Execution Queue Consumer Lambda function every 10 minutes",
-            schedule = "rate(1 minutes)",
+            schedule = "rate(1 minute)",
             target_input = '{ "method": "syncExecutionStatuses" }',
             target_function = self._execution_queue_consumer
         )
