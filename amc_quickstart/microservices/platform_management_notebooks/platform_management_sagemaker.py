@@ -22,6 +22,7 @@ import aws_cdk.aws_sagemaker as sagemaker
 from aws_cdk.aws_s3 import Bucket, IBucket
 from aws_cdk.aws_s3_deployment import BucketDeployment, ServerSideEncryption, Source
 from aws_cdk.aws_ssm import StringParameter
+import aws_cdk.aws_lakeformation as lakeformation
 from aws_ddk_core.resources import KMSFactory
 
 
@@ -212,6 +213,15 @@ class PlatformManagerSageMaker(BaseStack):
                     ],
                     resources=[f"arn:aws:lambda:{cdk.Aws.REGION}:{cdk.Aws.ACCOUNT_ID}:function:wfm-*"],
                 ),
+                PolicyStatement(
+                    effect=Effect.ALLOW,
+                    actions=[
+                        "quicksight:*",
+                        "lakeformation:*",
+                        "glue:*"
+                    ],
+                    resources=["*"],
+                ),
                 ]
             ),
         )
@@ -224,12 +234,27 @@ class PlatformManagerSageMaker(BaseStack):
             notebook_instance_lifecycle_config_name=f"{self._microservice_name}-lc",
             on_start=[sagemaker.CfnNotebookInstanceLifecycleConfig.NotebookInstanceLifecycleHookProperty(
                 content=cdk.Fn.base64(f"""
-                #!/bin/bash
+#!/bin/bash
               
-                set -e
-                S3_BUCKET={self._artifacts_bucket_name}
-                aws s3 sync s3://$S3_BUCKET/platform_notebook_manager_samples/ /home/ec2-user/SageMaker/
-                chmod 777 /home/ec2-user/SageMaker/platform_manager
+set -e
+                
+S3_BUCKET={self._artifacts_bucket_name}
+aws s3 sync s3://$S3_BUCKET/platform_notebook_manager_samples/ /home/ec2-user/SageMaker/
+chmod 777 /home/ec2-user/SageMaker/platform_manager
+chmod 777 /home/ec2-user/SageMaker/platform_manager/client_manager_microservices/tps
+chmod 777 /home/ec2-user/SageMaker/platform_manager/datalake_hydration_microservices/wfm
+
+sudo -u ec2-user -i << 'EOF'
+                
+# PARAMETERS
+PACKAGE=awswrangler
+ENVIRONMENT=python3
+                
+source /home/ec2-user/anaconda3/bin/activate "$ENVIRONMENT"
+pip install --upgrade "$PACKAGE"
+source /home/ec2-user/anaconda3/bin/deactivate
+                
+EOF
                 """)
             )]
         )
@@ -245,4 +270,8 @@ class PlatformManagerSageMaker(BaseStack):
             root_access="Enabled",
             
         )
+        cfn_data_lake_settings = lakeformation.CfnDataLakeSettings(self, "SageMakerDataLakeSettings",
+            admins=[lakeformation.CfnDataLakeSettings.DataLakePrincipalProperty(
+                data_lake_principal_identifier=sagemaker_role.role_arn
+        )])
 

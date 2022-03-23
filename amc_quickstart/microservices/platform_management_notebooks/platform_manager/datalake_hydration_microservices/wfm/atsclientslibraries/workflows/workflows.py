@@ -30,6 +30,20 @@ def set_workflow_record(workflow_details, TEAM_NAME, ENV):
     
     return dynamodb_resp_wr
 
+def set_workflow_records(workflow_list, TEAM_NAME, ENV, customer_id):
+    responses =[]
+    try:
+        for workflow in workflow_list:
+            workflow["customerId"] = customer_id
+            workflow["workflowId"] = workflow["workflowId"] + "_v" + str(workflow["version"])
+            responses.append(set_workflow_record(workflow_details=workflow, TEAM_NAME=TEAM_NAME, ENV=ENV)) 
+        return responses
+    except Exception as e:
+        print(e)
+        print("Cannot add role/user to Lake Formation")
+        raise e
+    return
+    
 ## DynamoDB scan with pagination
 def dump_table(table_name, dynamodb_client_rd):
     results = []

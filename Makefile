@@ -22,7 +22,7 @@ delete_repositories:
 	./scripts/cleanup_scripts/delete_repositories.sh -s ${CICD} -t ${CHILD} -r ${REGION} -d ddk-amc-quickstart
 
 empty_buckets:	
-	pushd scripts/cleanup_scripts; python3 ./list_items_to_delete.py; popd;
+	pushd scripts/cleanup_scripts; python3 ./list_items_to_delete.py ${ENV}; popd;
 	pushd scripts/cleanup_scripts; python3 ./empty_buckets.py; popd;
 	
 delete_adk:
@@ -42,8 +42,6 @@ delete_all_items:
 	sleep 180
 	pushd scripts/cleanup_scripts; python3 ./list_items_to_delete.py; popd;
 	pushd scripts/cleanup_scripts; python3 ./delete_script.py; popd;
-
-
 
 
 

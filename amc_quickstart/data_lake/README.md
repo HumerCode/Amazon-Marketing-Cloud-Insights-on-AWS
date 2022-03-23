@@ -25,7 +25,7 @@ The Purpose of the AMC Quickstart Data Lake Framework is to shorten the deployme
 
 ## Reference Architecture
 
-![Alt](/docs/images/AMC-QuickStart-Data-Lake-Architecture.png)
+![Alt](../../docs/images/AMC-QuickStart-Data-Lake-Architecture.png)
 
 ## Prerequisites
 
