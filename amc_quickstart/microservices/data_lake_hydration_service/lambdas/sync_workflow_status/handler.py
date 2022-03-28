@@ -102,12 +102,6 @@ def getExecutionStatusByWorkFlowExecutionId(config, workflowExecutionId):
 
     if (AMC_API_RESPONSE.status == 200):
         receivedExecutionStatus = True
-        # if 'workflowId' in workflow_status_response:
-        #    message.append(
-        #        "Received Execution Status for Workflow Execution ID {}, updating dynamoDB Tracking Table".format(
-        #            workflowExecutionId))
-        #    update_tracking_table_with_statuses(config, workflow_status_response.copy())
-        #    logger.info(message)
 
     else:
         receivedExecutionStatus = False
@@ -289,8 +283,6 @@ def sync_workflow_statuses(config):
                 updates_for_outdated_executions.append(execution_status['body'])
 
     # get execution records from DynamoDB
-    # execution_records_from_time_window =  getDynamoDBExecutionRecordsByminimum_create_date_string(config,minimum_create_date_string)
-
     execution_records_from_time_window = wfmutils.dynamodb_get_workflow_executions(config,
                                                                                    minimum_create_date_string=minimum_create_date_string)
 

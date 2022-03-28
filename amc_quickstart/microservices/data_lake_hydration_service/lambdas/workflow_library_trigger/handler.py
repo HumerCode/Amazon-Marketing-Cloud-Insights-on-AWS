@@ -216,7 +216,6 @@ def lambda_handler(event, context):
     configs = wfmutils.dynamodb_get_customer_config_records(os.environ['CUSTOMERS_DYNAMODB_TABLE'])
     response = {}
     for record in event['Records']:
-        # logger.info('dynamoDB Record: {}'.format(record))
 
         if 'dynamodb' in record and 'NewImage' in record['dynamodb']:
             new_record = wfmutils.deseralize_dynamodb_item(record['dynamodb']['NewImage'])

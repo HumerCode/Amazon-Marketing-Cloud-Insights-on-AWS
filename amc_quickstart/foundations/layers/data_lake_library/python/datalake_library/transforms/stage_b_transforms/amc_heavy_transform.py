@@ -80,7 +80,6 @@ class CustomTransform():
               WithDecryption=True
              ).get('Parameter').get('Value')
              
-        # job_name = '{}-{}-{}-glue-job'.format('sdlf', team, dataset)  # Name of the Glue Job
         analytics_bucket = S3Configuration().analytics_bucket
 
         #######################################################
@@ -104,72 +103,34 @@ class CustomTransform():
             table_partitions = '/'.join(key.split('/')[4:-1])
             logger.info('table_partitions:{}'.format(table_partitions))
 
-            # table=wr.catalog.sanitize_table_name(tablePath.rsplit('/')[-1])
-
-            ### TO DO UPDATE TABLES APPEND ###
             sanitized_table_name = wr.catalog.sanitize_table_name(tablePath.rsplit('/')[-1])
             if sanitized_table_name not in tables:
                 tables.append(
-                    # key.split('/')[-1].split('_')[0]
-                    # sanitized_table_name
                     "{}/{}".format(sanitized_table_name, table_partitions)
                 )
 
-        # commented as crawler not needed
-        # crawlerName='sdlf-{}-{}-post-stage-crawler'.format(team,dataset)
-        # getCrawlerResponse=client.get_crawler(Name=crawlerName)
-        # s3Targets = getCrawlerResponse['Crawler']['Targets']['S3Targets']
-        # for S3Target in s3Targets:
-        #     s3LocationsToAdd[S3Target['Path']]= False
-        
-        # for (locationToAdd, add) in s3LocationsToAdd.items():
-        #         if add:
-        #             s3Targets.append({'Path': locationToAdd, 'Exclusions' : []})
-        # crawlerUpdateRequest = getCrawlerResponse.copy()
-        # crawlerUpdateRequest['Crawler']['Targets']['S3Targets'] = s3Targets
-        # logger.info('updatedCrawlerRequest: {}'.format(crawlerUpdateRequest))
-
-        ### TO DO ADD LOGIC TO BATCH KEY PROCESSING ###
-        # uniqueKeys = list(dict.fromkeys([i.rsplit('/', 1)[0] for i in keys]))
         uniqueKeys=[]
         for i in keys:
             uniqueKeys.append('s3://{}/{}'.format(bucket, i))
 
         source_locations = ','.join(uniqueKeys)
-        #### END UPDATE ####
-
-        #Try to read the schema from the destination table (if it exists) and convert the CSV inferrred schema to match the table schema
-        # try:
-        #     glueClient = boto3.client('glue')
-        #     tableSchema = {}
-        #     getTableResult = glueClient.get_table(DatabaseName=silver_catalog,Name=targetTableName)
-        #     logger.info('Get Table result:{}'.format(getTableResult))
-        #     for tableColumn in getTableResult['Table']['StorageDescriptor']['Columns']:
-        #         tableSchema[tableColumn['Name']] = tableColumn['Type']
-        #         logger.info('{}'.format(tableschema))
-
-        # except: # catch *all* exceptions
-        #     logger.info('error getting table schema {}'.format(sys.exc_info()[0]))
-
         
         # S3 Path where Glue Job outputs processed keys
         # IMPORTANT: Build the output s3_path without the s3://stage-bucket/
         processed_keys_path = 'post-stage/{}/{}'.format(team, dataset)
-        # job_name = '{}-{}-{}-glue-job'.format(job_prefix,team,dataset)  # Name of the Glue Job
-        #source_location = 's3://{}/{}'.format(bucket, keys[0].rsplit('/', 1)[0])
         source_location = 's3://{}/{}'.format(bucket, keys[0])
 
         output_location = 's3://{}/{}'.format(bucket, processed_keys_path)
         logger.info('trying to call job: {} \nsource_location: {} \noutput_location: {} \ntables: {}'.format(job_name,source_location,output_location,tables))
-        # kms_key = KMSConfiguration(team).get_kms_arn
+
         kms_key = KMSConfiguration("Stage").get_kms_arn
+        
         # Submitting a new Glue Job
         job_response = client.start_job_run(
             JobName=job_name,
             Arguments={
                 # Specify any arguments needed based on bucket and keys (e.g. input/output S3 locations)
                 '--JOB_NAME': job_name,
-                # '--additional-python-modules' : "pyarrow==2,awswrangler==2.4.0",
                 '--job-bookmark-option': 'job-bookmark-disable',
                 '--SOURCE_LOCATIONS': source_locations,
                 '--SOURCE_LOCATION': source_location,
@@ -180,6 +141,7 @@ class CustomTransform():
             },
             MaxCapacity=1.0
         )
+        
         # Collecting details about Glue Job after submission (e.g. jobRunId for Glue)
         json_data = json.loads(json.dumps(
             job_response, default=datetimeconverter))

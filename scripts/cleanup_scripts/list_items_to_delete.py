@@ -157,7 +157,6 @@ if __name__ == "__main__":
             config = json.loads(config_data.read())
             prefix = config["environments"][env]["resource_prefix"]
 
-
         print("Collecting Resources to Delete")
         resources={}
         bucket_list = list_s3_buckets(prefix)

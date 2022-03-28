@@ -217,12 +217,20 @@ class WorkFlowManagerService(BaseStack):
             PolicyStatement(
                 effect=Effect.ALLOW,
                 actions=[
-                    "kms:Encrypt",
-                    "kms:Decrypt",
-                    "kms:ReEncrypt*",
-                    "kms:GenerateDataKey*",
                     "kms:CreateGrant",
-                    "kms:DescribeKey"
+                    "kms:Decrypt",
+                    "kms:DescribeKey",
+                    "kms:Encrypt",
+                    "kms:GenerateDataKey",
+                    "kms:GenerateDataKeyPair",
+                    "kms:GenerateDataKeyPairWithoutPlaintext",
+                    "kms:GenerateDataKeyWithoutPlaintext",
+                    "kms:ReEncryptTo",
+                    "kms:ReEncryptFrom",
+                    "kms:ListAliases",
+                    "kms:ListGrants",
+                    "kms:ListKeys",
+                    "kms:ListKeyPolicies"
                 ],
                 resources=["*"],
                 principals=[ServicePrincipal("sns.amazonaws.com")]
@@ -742,14 +750,46 @@ class WorkFlowManagerService(BaseStack):
                 statements=[
                     PolicyStatement(
                         effect=Effect.ALLOW,
-                        actions=["glue:Get*"],
+                        actions=[
+                            "glue:GetDatabase",
+                            "glue:GetDatabases",
+                            "glue:GetMapping",
+                            "glue:GetPartition",
+                            "glue:GetPartitions",
+                            "glue:GetPartitionIndexes",
+                            "glue:GetSchema",
+                            "glue:GetSchemaByDefinition",
+                            "glue:GetSchemaVersion",
+                            "glue:GetSchemaVersionsDiff",
+                            "glue:GetTable",
+                            "glue:GetTables",
+                            "glue:GetTableVersion",
+                            "glue:GetTableVersions",
+                            "glue:GetTags"
+                        ],
                         resources=[f"arn:aws:glue:{cdk.Aws.REGION}:{cdk.Aws.ACCOUNT_ID}:catalog"],
                     ), 
                     PolicyStatement(
                         effect=Effect.ALLOW,
                         actions=[
-                            "glue:Get*",
-                            "glue:List*"
+                            "glue:GetDatabase",
+                            "glue:GetDatabases",
+                            "glue:GetMapping",
+                            "glue:GetPartition",
+                            "glue:GetPartitions",
+                            "glue:GetPartitionIndexes",
+                            "glue:GetSchema",
+                            "glue:GetSchemaByDefinition",
+                            "glue:GetSchemaVersion",
+                            "glue:GetSchemaVersionsDiff",
+                            "glue:GetTable",
+                            "glue:GetTables",
+                            "glue:GetTableVersion",
+                            "glue:GetTableVersions",
+                            "glue:GetTags",
+                            "glue:ListJobs",
+                            "glue:ListSchemas",
+                            "glue:ListSchemaVersions"
                         ],
                         resources=[
                             f"arn:aws:glue:{cdk.Aws.REGION}:{cdk.Aws.ACCOUNT_ID}:database/*",
@@ -771,11 +811,14 @@ class WorkFlowManagerService(BaseStack):
                     PolicyStatement(
                         effect=Effect.ALLOW,
                         actions=[
-                            "sqs:List*",
+                            "sqs:ListQueues",
+                            "sqs:ListDeadLetterSourceQueues",
+                            "sqs:ListQueueTags",
                             "sqs:ReceiveMessage",
-                            "sqs:SendMessage*",
-                            "sqs:DeleteMessage*",
-                            "sqs:GetQueue*"
+                            "sqs:SendMessage",
+                            "sqs:DeleteMessage",
+                            "sqs:GetQueueAttributes",
+                            "sqs:GetQueueUrl"
                         ],
                         resources=[f"arn:aws:sqs:{cdk.Aws.REGION}:{cdk.Aws.ACCOUNT_ID}:{name_prefix}-{self._environment_id}-workflowExecution*"]
                     )
@@ -797,8 +840,16 @@ class WorkFlowManagerService(BaseStack):
                             "s3:PutObject",
                             "s3:AbortMultipartUpload",
                             "s3:ListMultipartUploadParts",
-                            "s3:Get*",
-                            "s3:List*"
+                            "s3:GetObject",
+                            "s3:GetObjectAttributes",
+                            "s3:GetObjectTagging",
+                            "s3:GetObjectVersion",
+                            "s3:GetObjectVersionAttributes",
+                            "s3:GetObjectVersionTagging",
+                            "s3:ListBucket",
+                            "s3:ListAllMyBuckets",
+                            "s3:ListBucketVersions",
+                            "s3:ListBucketMultipartUploads"
                         ],
                         resources=[f"{self._athena_bucket.bucket_arn}/{name_prefix}-athenaresults/*"],
                     ),
@@ -825,12 +876,16 @@ class WorkFlowManagerService(BaseStack):
                     PolicyStatement(
                         effect=Effect.ALLOW,
                         actions=[
+                            "kms:CreateGrant",
+                            "kms:Decrypt",
                             "kms:DescribeKey",
                             "kms:Encrypt",
-                            "kms:Decrypt",
-                            "kms:ReEncrypt*",
-                            "kms:GenerateDataKey*",
-                            "kms:CreateGrant"
+                            "kms:GenerateDataKey",
+                            "kms:GenerateDataKeyPair",
+                            "kms:GenerateDataKeyPairWithoutPlaintext",
+                            "kms:GenerateDataKeyWithoutPlaintext",
+                            "kms:ReEncryptTo",
+                            "kms:ReEncryptFrom"
                         ],
                         resources=["*"],
                         conditions={

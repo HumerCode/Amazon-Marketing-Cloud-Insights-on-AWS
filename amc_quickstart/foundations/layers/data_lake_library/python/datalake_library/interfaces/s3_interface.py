@@ -33,17 +33,17 @@ class S3Interface:
         self._s3_client = s3_client or boto3.client('s3')
         self._s3_resource = s3_resource or boto3.resource('s3')
 
-    def download_object(self, bucket, key):
-        self._logger.info('Downloading object: {}/{}'.format(bucket, key))
-        object_path = '/tmp/' + key.split('/')[-1]
-        key = unquote_plus(key)
-        try:
-            self._s3_resource.Bucket(bucket).download_file(key, object_path)
-        except ClientError:
-            msg = 'Error downloading object: {}/{}'.format(bucket, key)
-            self._logger.exception(msg)
-            raise
-        return object_path
+    # def download_object(self, bucket, key):
+    #     self._logger.info('Downloading object: {}/{}'.format(bucket, key))
+    #     object_path = '/tmp/' + key.split('/')[-1]
+    #     key = unquote_plus(key)
+    #     try:
+    #         self._s3_resource.Bucket(bucket).download_file(key, object_path)
+    #     except ClientError:
+    #         msg = 'Error downloading object: {}/{}'.format(bucket, key)
+    #         self._logger.exception(msg)
+    #         raise
+    #     return object_path
 
     def upload_object(self, object_path, bucket, key, kms_key=None):
         self._logger.info('Uploading object: {}'.format(object_path))

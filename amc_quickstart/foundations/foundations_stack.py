@@ -53,7 +53,7 @@ class FoundationsStack(BaseStack):
         
         # CustomerConfig DDB Table
         self._customer_config_table = self._create_customer_config_ddb_table(
-            name=f"ats-customer-config-{self._environment_id}",
+            name=f"data-lake-customer-config-{self._environment_id}",
             ddb_props={"partition_key": DDB.Attribute(name="customer_hash_key", type=DDB.AttributeType.STRING),
                         "sort_key": DDB.Attribute(name="hash_key", type=DDB.AttributeType.STRING)},
         )
@@ -118,7 +118,17 @@ class FoundationsStack(BaseStack):
                 PolicyStatement(
                     effect=Effect.ALLOW,
                     actions=[
-                        "dynamodb:*"
+                        "dynamodb:DescribeTable",
+                        "dynamodb:Query",
+                        "dynamodb:Scan",
+                        "dynamodb:GetItem",
+                        "dynamodb:PutItem",
+                        "dynamodb:ConditionCheckItem",
+                        "dynamodb:DeleteItem",
+                        "dynamodb:UpdateItem",
+                        "dynamodb:GetRecords",
+                        "dynamodb:ListTables",
+                        "dynamodb:DescribeTable"
                     ],
                     resources=[
                         self._customer_config_table.table_arn,
@@ -134,7 +144,20 @@ class FoundationsStack(BaseStack):
                 PolicyStatement(
                     effect=Effect.ALLOW,
                     actions=[
-                        "kms:*"
+                        "kms:CreateGrant",
+                        "kms:Decrypt",
+                        "kms:DescribeKey",
+                        "kms:Encrypt",
+                        "kms:GenerateDataKey",
+                        "kms:GenerateDataKeyPair",
+                        "kms:GenerateDataKeyPairWithoutPlaintext",
+                        "kms:GenerateDataKeyWithoutPlaintext",
+                        "kms:ReEncryptTo",
+                        "kms:ReEncryptFrom",
+                        "kms:ListAliases",
+                        "kms:ListGrants",
+                        "kms:ListKeys",
+                        "kms:ListKeyPolicies"
                     ],
                     resources=["*"],
                     conditions={
@@ -148,7 +171,14 @@ class FoundationsStack(BaseStack):
                 PolicyStatement(
                     effect=Effect.ALLOW,
                     actions=[
-                        "sqs:*"
+                        "sqs:SendMessage",
+                        "sqs:DeleteMessage",
+                        "sqs:ReceiveMessage",
+                        "sqs:GetQueueAttributes",
+                        "sqs:ListQueues",
+                        "sqs:GetQueueUrl",
+                        "sqs:ListDeadLetterSourceQueues",
+                        "sqs:ListQueueTags"
                     ],
                     resources=[f"arn:aws:sqs:{cdk.Aws.REGION}:{cdk.Aws.ACCOUNT_ID}:{self._resource_prefix}-*"],
                 )
@@ -222,7 +252,7 @@ class FoundationsStack(BaseStack):
         StringParameter(
             self,
             f"{self._resource_prefix}-{name}-table-arn-ssm",
-            parameter_name=f"/AMC/DynamoDB/ats/{tbleName}",
+            parameter_name=f"/AMC/DynamoDB/DataLake/{tbleName}",
             string_value=table.table_name,
         )
 
@@ -355,7 +385,17 @@ class FoundationsStack(BaseStack):
                         ),
                         PolicyStatement(
                             effect=Effect.ALLOW,
-                            actions=["s3:*Object*"],
+                            actions=[
+                                "s3:GetObject",
+                                "s3:GetObjectAttributes",
+                                "s3:GetObjectTagging",
+                                "s3:GetObjectVersion",
+                                "s3:GetObjectVersionAttributes",
+                                "s3:GetObjectVersionTagging",
+                                "s3:PutObjectTagging",
+                                "s3:PutObjectVersionTagging",
+                                "s3:PutObject"
+                            ],
                             resources=[
                                 self.format_arn(
                                     resource=f"{self._resource_prefix}-{self._environment_id}-{self.region}-{self.account}-*",

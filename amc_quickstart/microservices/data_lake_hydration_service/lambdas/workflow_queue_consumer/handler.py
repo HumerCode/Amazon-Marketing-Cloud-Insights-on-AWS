@@ -62,7 +62,6 @@ def getOffsetValue(offset_string):
 
 
 def getCurrentDateWithOffset(offset_in_days):
-    # return (datetime.today() + timedelta(days=offset_in_days)).strftime('%Y-%m-%dT00:00:00')
     return ((datetime.today() + timedelta(days=offset_in_days)).strftime('%Y-%m-%dT00:00:00'))
 
 
@@ -109,7 +108,6 @@ def executeWorkflow(customerConfig, event):
             message = 'Successfully created an exeuction for workflow {} response body: {}'.format(
                 payload['workflowId'], AMC_API_RESPONSE_DICTIONARY)
             logger.info(message)
-            # updateExeuctionTrackingTable(customerConfig,AMC_API_RESPONSE_DICTIONARY)
 
         else:
             executedWorkflow = False
@@ -316,8 +314,6 @@ def invoke_consume_queue(customer_config):
         "customerConfig": customer_config
     }
 
-    # os.environ['EXECUTION_QUEUE_CONSUMER_FUNCTION_NAME']
-
     logger.info('Invoking function name: {} for customerId{} '.format(os.environ['AWS_LAMBDA_FUNCTION_NAME'],
                                                                       customer_config['customerId']))
     # invoke the email-s3-file lambda passing the event in the payload
@@ -326,13 +322,10 @@ def invoke_consume_queue(customer_config):
         InvocationType='Event',
         Payload=bytes(json.dumps(event, default=wfmutils.json_encoder_default), 'utf-8')
     )
-    # response_payload = lambda_invoke_response['Payload']
-    # lambda_invoke_response['Payload'] = response_payload.read().decode("utf-8")
 
     response = {
         "customerId": customer_config['customerId'],
         "statusCode": lambda_invoke_response['ResponseMetadata']['HTTPStatusCode']
-        # 'invokeResponse' :lambda_invoke_response
     }
 
     logger.info('response {}'.format(response))
@@ -491,7 +484,6 @@ def lambda_handler(event, context):
     logger.info('No method specified, Consuming All queues')
     customer_config_records = wfmutils.dynamodb_get_customer_config_records(customers_dynamodb_table_name)
     for customer_id in customer_config_records:
-        # process_queue_results = process_queue(customer_config_records[customer_id])
         invoke_process_queue_results = invoke_consume_queue(customer_config_records[customer_id])
         results.append(invoke_process_queue_results.copy())
         all_workflow_execution_response_codes.append(invoke_process_queue_results['statusCode'])

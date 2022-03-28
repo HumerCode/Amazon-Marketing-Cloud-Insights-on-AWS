@@ -19,7 +19,7 @@ from typing import Any
 
 import aws_cdk as cdk
 from aws_cdk.aws_events import EventPattern, Rule, Schedule
-from aws_ddk_core.pipelines.pipeline import Pipeline 
+from aws_ddk_core.pipelines import DataPipeline  
 from aws_cdk.aws_ssm import StringParameter
 from aws_ddk_core.base import BaseStack
 from aws_cdk import ArnFormat
@@ -119,8 +119,8 @@ class SDLFPipelineStack(BaseStack):
         )
     
 
-        self._data_lake_pipeline: Pipeline = (
-            Pipeline(
+        self._data_lake_pipeline: DataPipeline = (
+            DataPipeline(
                 self, 
                 id=pipeline_id,
                 name=f"{pipeline_id}-pipeline",

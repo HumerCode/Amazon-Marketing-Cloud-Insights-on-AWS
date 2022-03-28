@@ -39,8 +39,9 @@ delete_bootstrap:
 	aws cloudformation delete-stack --stack-name DdkDevBootstrap --profile ${CICD}
 
 delete_all_items:
-	sleep 180
-	pushd scripts/cleanup_scripts; python3 ./list_items_to_delete.py; popd;
+	# sleep 180
+
+	pushd scripts/cleanup_scripts; python3 ./list_items_to_delete.py ${ENV}; popd;
 	pushd scripts/cleanup_scripts; python3 ./delete_script.py; popd;
 
 

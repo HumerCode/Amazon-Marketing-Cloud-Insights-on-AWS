@@ -94,7 +94,9 @@ pipeline = (
     .add_source_action(repository_name=cicd_repository_name)
     .add_synth_action()
     .build()
+    .add_checks()
     .add_stage("dev", AMCDeliveryKit(satellite_app, environment_id="dev", env=config.get_env("dev")))
+    .synth()
 )   
 
 satellite_app.synth()

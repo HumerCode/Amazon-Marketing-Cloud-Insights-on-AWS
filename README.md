@@ -136,8 +136,6 @@ $ ddk create-repository AMC_QUICKSTART_REPO_NAME --profile [AWS_PROFILE] --regio
 Add and push the initial commit to the repository
 
 ```
-$ git config --global credential.helper "!aws codecommit --profile <my-profile> credential-helper $@"
-$ git config --global credential.UseHttpPath true
 $ git add .
 $ git commit -m "Configure AMC QUICKSTART"
 $ git push --set-upstream origin main
@@ -176,7 +174,7 @@ To hydrate the data lake and begin populating the data lake with data from your 
 1. Log In to your AWS Account and go to Amazon SageMaker
 2. On the Left Side of Your Screen Click on Notebook --> Notebook Instances (you should see one notebook named `saw-platform-manager` with Status "InService")
 3. Click "Open JupyterLab" to open the Notebook Instance in a new tab
-4. Right click the `Getting_Started_With_AMC_Quickstart.ipynb` Notebook in the `platform_manager` folder
+4. Open the `Getting_Started_With_AMC_Quickstart.ipynb` Notebook in the `platform_manager` folder
    1. Duplicate the Notebook
    2. Follow the steps in the notebook to hydrate the data lake.
 
@@ -195,37 +193,6 @@ _Create Workflows:_ To initialize the creation, scheduling and execution of AMC 
 - Send execution requests to an SQS queue rather than directly to the AMC endpoint to prevents timeout failures when there are large number of requests in a short period of time
 - Scheduled with dynamic relative time windows rather than using AMC's scheduling feature which only allows predefined scheduled reporting such as Daily or Weekly
 - Track the status of all workflow executions for customer AMC instances whether they are submitted through WFM or other means (postman, etc.). Having the status synced to DynamoDB allows events to be triggered or notifications to be sent when executions change state. This table can also be used to track historical executions for troubleshooting or performance monitoring.
-
-#
-
-## Enable Default Lake Formation Permissions and Give Your IAM Role Database Permissions
-
-In order to query the data in Athena, we highly recommend you enable default Lake Formation Permissions and give your current IAM Role permisssion in AWS Lake Formation. Enabling AWS Lake Formation Permissions helps to build, secure, and manage your data lake quickly and efficiently. Follow the below steps in order to enable Lake Formation and grant your Role the correct permissions:
-
-1. In your AWS Account Console go to the AWS Lake Formation page
-2. In the navigation pane, under Data catalog, choose Settings
-
-   1. Clear both check boxes and choose Save (you have now enabled Lake Formation to control your Data Catalog resources)
-
-3. In the navigation pane under Permissions, choose Data Lake Permissions
-
-   1. Click the Grant Button on the upper right corner
-
-   2. For **IAM users and roles** enter your current IAM Role
-
-   3. For **LF-Tags or catalog resources** select Named data catalog resources
-
-      1. For **Databases**, select your database with name: `aws_datalake_{environment}_{team}_{name}_db"` (default name is `aws_datalake_dev_demoteam_amcdataset_db`)
-
-      2. For **Tables**, select `All Tables`
-
-      3. Leave `Data Filters - Optional` Empty
-
-   4. For **Table Permissions** select `Super`
-
-   5. Click Grant at the bottom of the page to create your Lake Formation Permissions
-
-You have enabled Lake Formation permissions and given your IAM Role permissions to access all tables in your Glue Database. You are now able to access the data returned from your workflow execution using Amazon Athena once the data is uploaded and processed in the data lake.
 
 #
 

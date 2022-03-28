@@ -67,7 +67,6 @@ def get_rules(name_prefix):
 
 def update_rule(rule):
     response = client.put_rule(
-        # EventPattern=rule['EventPattern'],
         Name=rule['Name'],
         ScheduleExpression=rule['ScheduleExpression'],
 
@@ -245,7 +244,6 @@ def lambda_handler(event, context):
                     function_name = os.environ['RUN_WORKFLOW_BY_CAMPAIGN_LAMBDA_ARN'].split(':')[-1]
     
                 statement_id = '{}'.format(old_record['Name'])
-                # remove_lambda_permissions_if_exist(function_name, statement_id)
                 delete_rule_result = delete_rule(old_record)
     
             if (record['eventName'] == 'INSERT' or record['eventName'] == 'MODIFY'):
@@ -253,7 +251,6 @@ def lambda_handler(event, context):
                     logger.info('running individually not by campaign')
                     target = {
                         "Arn": os.environ['EXECUTION_QUEUE_PRODUCER_LAMBA_ARN'],
-                        # "Id": new_record['Name'][:100],
                         "Id": "1",
                         "Input": json.dumps(new_record["Input"])
                     }
@@ -264,7 +261,6 @@ def lambda_handler(event, context):
                     logger.info('running by {}'.format(new_record['runBy']))
                     target = {
                         "Arn": os.environ['RUN_WORKFLOW_BY_CAMPAIGN_LAMBDA_ARN'],
-                        # "Id": new_record['Name'][:100],
                         "Id": "1",
                         "Input": json.dumps(new_record["Input"])
                     }
@@ -274,10 +270,7 @@ def lambda_handler(event, context):
                 logger.info('target update response {}'.format(target_result))
     
                 statement_id = '{}'.format(new_record['Name'])
-    
-                # remove_lambda_permissions_if_exist(function_name, statement_id):q
-                # add_lambda_permission(rule_arn, function_name, statement_id)
-        
+            
         elif (newimgexist == 1 and 'custom' in new_record["ScheduleExpression"] and oldimgexist == 1 and 'cron' in old_record["ScheduleExpression"]) :
             logger.info('REMOVING : {}'.format(old_record))
             function_name = os.environ['EXECUTION_QUEUE_PRODUCER_LAMBA_ARN'].split(':')[-1]
@@ -285,7 +278,6 @@ def lambda_handler(event, context):
                 function_name = os.environ['RUN_WORKFLOW_BY_CAMPAIGN_LAMBDA_ARN'].split(':')[-1]
 
             statement_id = '{}'.format(old_record['Name'])
-            # remove_lambda_permissions_if_exist(function_name, statement_id)
             delete_rule_result = delete_rule(old_record)
         
         elif (record['eventName'] == 'REMOVE' and oldimgexist == 1 and 'cron' in old_record["ScheduleExpression"]) :
@@ -295,7 +287,6 @@ def lambda_handler(event, context):
                 function_name = os.environ['RUN_WORKFLOW_BY_CAMPAIGN_LAMBDA_ARN'].split(':')[-1]
 
             statement_id = '{}'.format(old_record['Name'])
-            # remove_lambda_permissions_if_exist(function_name, statement_id)
             delete_rule_result = delete_rule(old_record)
             
 

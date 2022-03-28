@@ -26,16 +26,12 @@ dynamodb = boto3.resource('dynamodb')
 prefix = os.environ["Prefix"]
 env = os.environ["ENV"] 
 
-customer_table = dynamodb.Table('{}-ats-customer-config-{}'.format(prefix, env))
+customer_table = dynamodb.Table('{}-data-lake-customer-config-{}'.format(prefix, env))
 ssm=boto3.client('ssm')
 
 
 def put_item(table, item, key):
     try:
-        # response = table.put_item(
-        #     Item=item,
-        #     ConditionExpression=f"attribute_not_exists({key})",
-        # )
         response = table.put_item(
             Item=item
         )

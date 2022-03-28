@@ -25,7 +25,6 @@ import logging
 from aws_lambda_powertools import Logger
 from boto3.dynamodb.types import TypeDeserializer, TypeSerializer
 
-# POWERTOOLS_SERVICE_NAME defined
 logger = Logger(service="WorkFlowManagement", level="INFO")
 
 def deserializeDyanmoDBItem(item):

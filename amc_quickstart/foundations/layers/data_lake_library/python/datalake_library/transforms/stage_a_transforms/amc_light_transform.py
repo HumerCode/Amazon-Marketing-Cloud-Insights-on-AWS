@@ -66,14 +66,10 @@ class CustomTransform():
         #retreive the source file as an S3 object
         s3Object = s3.Object(bucket, key)
 
-        #originally we would pass the sourceFileS3Path to the email function to email the CSV file (rather that the parquet file)
-        #sourceFileS3Path = 's3://{}/{}'.format(bucket, key)
-
         #get the file size - originally we would send the file size to the email lambda to determine if it can be attached
         fileSize=s3Object.content_length
 
         #get the file last modified date as a formatted string        
-        # fileLastModified = s3Object.last_modified.strftime("%Y-%m-%d %H:%M:%S")
         fileLastModified = s3_interface.get_last_modified(bucket, key)
         fileLastModified = fileLastModified.replace(' ', '-').replace(':', '-').split('+')[0]
         print('fileLastModified: {}'.format(fileLastModified))
@@ -84,7 +80,6 @@ class CustomTransform():
         processed_keys = []
 
         #break the file key into it's name compoments
-        # keyParts=re.match("([^/]*)/([^/]*)/workflow=([^/]*)/schedule=([^/]*)/(.*)",key) # USE IF SHIFT TO RAW BUCKET INGESTION
         keyParts = re.match("workflow=([^/]*)/schedule=([^/]*)/(.*)", key) # USE WHEN INGESTION BUCKET OUTSIDE OF LAKE
 
         if keyParts is not None :
@@ -115,9 +110,8 @@ class CustomTransform():
         if versionResults is not None :
             fileVersion = versionResults.groups()[0]
 
-        ### TODO ADD CUSTOMER  HASH ###
         customer_config = ssm.get_parameter(
-            Name='/AMC/DynamoDB/{}/CustomerConfig'.format('ats'),
+            Name='/AMC/DynamoDB/DataLake/CustomerConfig',
             WithDecryption=True
         ).get('Parameter').get('Value')
         config_table = dynamodb.Table(customer_config)
@@ -125,7 +119,6 @@ class CustomTransform():
             IndexName='amc-index',
             Select='ALL_PROJECTED_ATTRIBUTES',
             KeyConditionExpression=Key('hash_key').eq(bucket)
-            #KeyConditionExpression=Key('amc_hash_key').eq(bucket)
         )
         prefix = response['Items'][0]['prefix'].lower()
         customer_hash_key = response['Items'][0]['customer_hash_key'].lower()
@@ -147,31 +140,14 @@ class CustomTransform():
                     print ("Count small")
                     return processed_keys
 
-            #commented out the pandas read, perhaps we should be doing this using a glue dynamic frame instead
-            #csvdf = pd.read_csv(io.StringIO(s3Object.get()['Body'].read().decode("UTF8").replace('\\"',"'")))
-
-            # TODO ADD LOGIC TO HANDLE OUT-OF-BOX WORKFLOWS #
-            # config_table = dynamodb.Table('sdlf-ats-customer-config-{}'.format(os.environ['ENV']))
-            # response = config_table.query(
-            #     IndexName='amc-index',
-            #     Select='ALL_PROJECTED_ATTRIBUTES',
-            #     KeyConditionExpression=Key('amc_hash_key').eq(bucket)
-            # )
-            #
             oob_reports = []
-
 
             if 'oob_reports' in response['Items'][0]:
                 for wf in response['Items'][0]['oob_reports']:
                     oob_reports.append(wf)
 
-
             #Calculate the output path with paritioning based on the original file name
             output_path = ''
-            # if fileVersion != '':
-            #     output_path = "{}_{}_{}_{}/customer_hash={}/export_year={}/export_month={}/file_last_modified={}/{}.{}".format(prefix,workflowName,scheduleFrequency,fileVersion,prefix,fileYear,fileMonth,fileLastModified,fileBasename,fileExtension)
-            # else:
-            #     output_path = "{}_{}_{}/customer_hash={}/export_year={}/export_month={}/file_last_modified={}/{}.{}".format(prefix,workflowName,scheduleFrequency,prefix,fileYear,fileMonth,fileLastModified,fileBasename,fileExtension)
 
             # ### OUTPUT_PATH FOR OOB_REPORTS
             if workflowName not in oob_reports:
@@ -198,24 +174,11 @@ class CustomTransform():
             s3_path = 'pre-stage/{}/{}/{}'.format(team,dataset, output_path)
             print('S3 Path: {}'.format(s3_path))
 
-            # IMPORTANT: Notice "stage_bucket" not "bucket"
-            #kms_key = KMSConfiguration(team).get_kms_arn
-            #s3_interface.upload_object(
-            #    output_path, stage_bucket, s3_path, kms_key=kms_key)
-
             s3OutputPath = 's3://{}/{}'.format(stage_bucket,s3_path)
 
-
-            # kms_key = KMSConfiguration(team).get_kms_arn
             kms_key = KMSConfiguration("Stage").get_kms_arn
-
-    
-            #print('s3Output Path: {}'.format(s3OutputPath))
             
-            #content = io.StringIO(s3Object.get()['Body'].read().decode("UTF8").replace('\\"',"'"))
-
             content = s3Object.get()['Body'].read().decode("UTF8").replace('\\"',"'")
-            # print('content:{}'.format(content))
 
             fileMetaData = {
             'keyTeam' : keyTeam,
@@ -236,24 +199,11 @@ class CustomTransform():
             'partitionedPath': output_path.rsplit('/', 1)[0]
             }
 
-
-
             s3.Object(stage_bucket, s3_path).put(Body=content, ServerSideEncryption='aws:kms',SSEKMSKeyId=kms_key,
             Metadata=fileMetaData
             )
 
-            #s3.meta.client.copy({"Bucket": bucket, "Key": key},event['TargetBucket'],event['TargetKey'])
-            #write the parquet file using the kms key
-            #wr.s3.to_parquet(df=csvdf, path=s3OutputPath, compression='snappy', 
-            #s3_additional_kwargs={
-            #'ServerSideEncryption': 'aws:kms',
-            #'SSEKMSKeyId': kms_key
-            #})
-
             # IMPORTANT S3 path(s) must be stored in a list
-            
-            #processed_key = {'key' : s3_path, 'bucket': stage_bucket, 'fileMetaData': fileMetaData }
-
             processed_keys = [s3_path]
 
         #######################################################
