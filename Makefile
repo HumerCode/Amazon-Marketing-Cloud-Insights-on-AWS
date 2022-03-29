@@ -28,14 +28,14 @@ empty_buckets:
 	pushd scripts/cleanup_scripts; python3 ./empty_buckets.py ${CHILD}; popd;
 	
 delete_adk:
-	cdk destroy ddk-amc-quickstart-pipeline \
-	AMC-${ENV}-QuickStart/amc-foundations \
+	cdk destroy AMC-${ENV}-QuickStart/amc-foundations \
 	AMC-${ENV}-QuickStart/amc-data-lake-pipeline \
 	AMC-${ENV}-QuickStart/amc-platform-manager \
 	AMC-${ENV}-QuickStart/amc-tps \
 	AMC-${ENV}-QuickStart/amc-wfm \
-	AMC-${ENV}-QuickStart/amc-data-lake-datasets --force --profile ${CICD};
+	AMC-${ENV}-QuickStart/amc-data-lake-datasets --force --profile ${CHILD};
 
+	cdk destroy ddk-amc-quickstart-pipeline --force --profile ${CICD}
 	
 delete_bootstrap:
 	aws cloudformation delete-stack --stack-name DdkDevBootstrap --profile ${CICD}

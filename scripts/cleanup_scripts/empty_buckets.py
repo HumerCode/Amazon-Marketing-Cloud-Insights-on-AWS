@@ -19,9 +19,7 @@ import sys
 
 
 profile_name = str(sys.argv[1])
-
 session = boto3.session.Session(profile_name=profile_name)
-
 
 s3_client = session.client('s3')
 s3_resource = session.resource('s3')
