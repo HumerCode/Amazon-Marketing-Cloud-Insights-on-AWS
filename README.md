@@ -239,6 +239,18 @@ Some CloudWatch General Log Groups May Remain in your Account with Logs specific
 
 #
 
+## Data Visualization Using Amazon QuickSight
+
+If you require more advanced and customizable data visualizations consider using Amazon QuickSight as your BI Tool. With Amazon QuickSight you can perform advanced analytics, gather machine learning (ML) insights and embed interactive visualizations and dashboards with natural language query capabilities.
+
+There are 2 options to help you get started using Amazon QuickSight:
+
+1. Refer to the AWS Solutions Guidance page for this QuickStart for a step-by-step walkthrough of how to configure Amazon QuickSight in your AWS Account.
+
+2. Open the `manage_quicksight.ipynb` Jupyter Notebook in your SageMaker Notebook Instance under the `platform_manager/quicksight/` directory. Follow the instructions and execute the cells in notebook to help automate the creation of your QuickSight resources. **_NOTE: You must have an existing QuickSight template to automate the creation of QuickSight dashboards and analysis_**
+
+#
+
 ## FAQ
 
 **Q:** What is AWS DDK?
