@@ -15,16 +15,22 @@
 
 import boto3
 import json
+import sys
 
-s3_client = boto3.client('s3')
-s3_resource = boto3.resource('s3')
-dynamodb_client = boto3.client('dynamodb')
-kms_client = boto3.client('kms')
-sqs_client = boto3.client("sqs")
-lambda_client = boto3.client("lambda")
-events_client = boto3.client('events')
-cfn_client = boto3.client('cloudformation')
-cw_client = boto3.client('logs')
+
+profile_name = str(sys.argv[1])
+
+session = boto3.session.Session(profile_name=profile_name)
+
+s3_client = session.client('s3')
+s3_resource = session.resource('s3')
+dynamodb_client = session.client('dynamodb')
+kms_client = session.client('kms')
+sqs_client = session.client("sqs")
+lambda_client = session.client("lambda")
+events_client = session.client('events')
+cfn_client = session.client('cloudformation')
+cw_client = session.client('logs')
 
 def empty_bucket(bucket_name):
     response = s3_client.list_objects_v2(Bucket=bucket_name)

@@ -223,9 +223,11 @@ $ make delete_all
 
 _NOTE:_ Before running this command, look into the `Makefile` and ensure that:
 
-1.  The `delete_repositories` function is passing the correct `-d AMC_QUICKSTART_REPO_NAME` (default: `ddk-amc-quickstart`)
+1.  The `CICD` and `CHILD` variables are set to the correct AWS profile names.
 
-2.  The `delete_bootstrap` function is passing the correct `--stack-name BOOTSTRAP_STACK_NAME` (default: `DdkDevBootstrap`)
+2.  The `delete_repositories` function is passing the correct `-d AMC_QUICKSTART_REPO_NAME` (default: `ddk-amc-quickstart`)
+
+3.  The `delete_bootstrap` function is passing the correct `--stack-name BOOTSTRAP_STACK_NAME` (default: `DdkDevBootstrap`)
 
 This command will go through the following sequence of steps in order to clean up your AWS account environment:
 
