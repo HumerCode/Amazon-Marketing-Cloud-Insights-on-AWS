@@ -1,1 +1,7 @@
-This guide provides instructions for deploying the {partner-product-short-name} Quick Start reference architecture on the AWS Cloud. It is for Amazon Marketing Cloud users who want to build custom analytics using data lakes, tenant provisions, and workflow-management features.
+This guide provides instructions for deploying the {partner-product-short-name} Quick Start reference architecture on the AWS Cloud. It is for Amazon Marketing Cloud users who want to build custom analytics using the data lake, multi-tenant, and workflow-management features.
+
+The Quick Start provides a 3 modules to enable you meet your deployment requirements:
+[start=1]
+. Deploying the Foundational Infrastructure - the AWS infrastructure for the data lake and microservices
+. Hydrating the Data Lake with Sagemaker Notebooks - how to start pulling AMC reports into your data lake
+. Building Your first QuickSight Dashboard - visualizing your AMC reports

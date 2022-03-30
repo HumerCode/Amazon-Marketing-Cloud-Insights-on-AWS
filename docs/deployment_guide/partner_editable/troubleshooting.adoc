@@ -21,8 +21,6 @@ For additional information, see [Troubleshooting AWS CloudFormation](https://doc
 
 *A:* If deploying in a new AWS Account, the Assets stage of the CodePipeline may fail due to limitations for the number of concurrent file assets to publish. This is a current limitation of AWS CodeBuild. To fix, click the `Retry` button in CodePipeline for the Assets Stage. This will manually continue the Assets Stage to continue building file assets from its most current progress.
 
-#
-
 *Q:* How do I set up Amazon QuickSight dashboards to visualize the data populated on S3?
 
 *A:* Follow the documentation [here](README.md) to set up QuickSight Dashboards for your AMC Instance data.
