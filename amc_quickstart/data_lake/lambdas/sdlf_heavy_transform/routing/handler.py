@@ -34,7 +34,6 @@ def lambda_handler(event, context):
         context {dict} -- Dictionary with details on Lambda context 
     """
 
-    # TODO Implement Redrive Logic (through message_group_id)
     try:
         team = event['team']
         pipeline = event['pipeline']

@@ -162,12 +162,11 @@ class CustomTransform():
 
 
             print ("output Path : " + output_path)
-            #Handle camelcase and make exception for jnj
-            if table_prefix != 'jnj':
-                output_path = os.path.splitext(output_path)[0].rsplit('/', 1)[0].split('/')
-                output_path[0] = wr.catalog.sanitize_table_name(output_path[0])
-                output_path = '/'.join(output_path)
-                output_path = '{}/{}.{}'.format(output_path,fileBasename,fileExtension)
+
+            output_path = os.path.splitext(output_path)[0].rsplit('/', 1)[0].split('/')
+            output_path[0] = wr.catalog.sanitize_table_name(output_path[0])
+            output_path = '/'.join(output_path)
+            output_path = '{}/{}.{}'.format(output_path,fileBasename,fileExtension)
 
             # Uploading file to Stage bucket at appropriate path
             # IMPORTANT: Build the output s3_path without the s3://stage-bucket/
