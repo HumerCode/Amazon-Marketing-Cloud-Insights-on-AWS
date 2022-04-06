@@ -15,13 +15,14 @@
 from typing import Any, Dict, List, Optional
 import json
 from aws_cdk.aws_kms import Key, IKey
-from aws_cdk.aws_iam import Effect, ManagedPolicy, PolicyDocument, PolicyStatement, Role, ServicePrincipal, AccountRootPrincipal, AnyPrincipal
+from aws_cdk.aws_iam import Effect, ManagedPolicy, PolicyDocument, PolicyStatement, Role, ServicePrincipal, AccountRootPrincipal, ArnPrincipal
 from aws_ddk_core.base import BaseStack
 import aws_cdk as cdk
 import aws_cdk.aws_sagemaker as sagemaker
 from aws_cdk.aws_s3 import Bucket, IBucket
 from aws_cdk.aws_s3_deployment import BucketDeployment, ServerSideEncryption, Source
 from aws_cdk.aws_ssm import StringParameter
+import aws_cdk.aws_lakeformation as lakeformation
 from aws_ddk_core.resources import KMSFactory
 
 
@@ -94,49 +95,66 @@ class PlatformManagerSageMaker(BaseStack):
     def _create_sagemaker_kms_key(self) -> None:
         """kms key and alias"""
 
-        self._kms_key_policy = PolicyDocument(
-            statements=[PolicyStatement(
-                effect=Effect.ALLOW,
-                actions=[
-                    "kms:*"
-                ],
-                principals=[AccountRootPrincipal()],
-                resources=["*"]
-            ),
-            PolicyStatement(
-                effect=Effect.ALLOW,
-                actions=[
-                    "kms:Encrypt",
-                    "kms:Decrypt",
-                    "kms:ReEncrypt*",
-                    "kms:GenerateDataKey*",
-                    "kms:CreateGrant",
-                    "kms:DescribeKey"
-                ],
-                principals=[AnyPrincipal()],
-                resources=["*"],
-                conditions={
-                        "StringEquals": {
-                            "kms:CallerAccount": f"{cdk.Aws.ACCOUNT_ID}",
-                            "kms:ViaService": "sagemaker.amazonaws.com"
-                        },
-                        "Bool": {
-                           "kms:GrantIsForAWSResource": "true"
-                         }
-                         }            
-            )]
-        )
+        # self._kms_key_policy = PolicyDocument(
+        #     statements=[PolicyStatement(
+        #         effect=Effect.ALLOW,
+        #         actions=[
+        #             "kms:CreateGrant",
+        #             "kms:Decrypt",
+        #             "kms:DescribeKey",
+        #             "kms:Encrypt",
+        #             "kms:GenerateDataKey",
+        #             "kms:GenerateDataKeyPair",
+        #             "kms:GenerateDataKeyPairWithoutPlaintext",
+        #             "kms:GenerateDataKeyWithoutPlaintext",
+        #             "kms:ReEncryptTo",
+        #             "kms:ReEncryptFrom",
+        #             "kms:ListAliases",
+        #             "kms:ListGrants",
+        #             "kms:ListKeys",
+        #             "kms:ListKeyPolicies"
+        #         ],
+        #         principals=[AccountRootPrincipal()],
+        #         resources=["*"]
+        #     ),
+        #     PolicyStatement(
+        #         effect=Effect.ALLOW,
+        #         actions=[
+        #             "kms:CreateGrant",
+        #             "kms:Decrypt",
+        #             "kms:DescribeKey",
+        #             "kms:Encrypt",
+        #             "kms:GenerateDataKey",
+        #             "kms:GenerateDataKeyPair",
+        #             "kms:GenerateDataKeyPairWithoutPlaintext",
+        #             "kms:GenerateDataKeyWithoutPlaintext",
+        #             "kms:ReEncryptTo",
+        #             "kms:ReEncryptFrom"
+        #         ],
+        #         principals=[ArnPrincipal(f"arn:aws:iam::{cdk.Aws.ACCOUNT_ID}:role/*")],
+        #         resources=["*"],
+        #         conditions={
+        #                 "StringEquals": {
+        #                     "kms:CallerAccount": f"{cdk.Aws.ACCOUNT_ID}",
+        #                     "kms:ViaService": "sagemaker.amazonaws.com"
+        #                 },
+        #                 "Bool": {
+        #                    "kms:GrantIsForAWSResource": "true"
+        #                  }
+        #                  }            
+        #     )]
+        # )
 
         self._sagemaker_kms_key = KMSFactory.key(
             self,
             id=f"{self._microservice_name}-table-key",
             environment_id = self._environment_id,
             description=f"{self._microservice_name.title()} Table Key",
-            alias=f"sagemaker-demo-cm",
+            alias=f"pmn-sagemaker-cmk",
             enable_key_rotation=True,
             pending_window=cdk.Duration.days(30),
-            removal_policy=cdk.RemovalPolicy.DESTROY,
-            policy=self._kms_key_policy
+            removal_policy=cdk.RemovalPolicy.DESTROY
+            # policy=self._kms_key_policy
         )
 
         
@@ -195,13 +213,20 @@ class PlatformManagerSageMaker(BaseStack):
                 PolicyStatement(
                     effect=Effect.ALLOW,
                     actions=[
-                        "kms:Encrypt",
+                        "kms:CreateGrant",
                         "kms:Decrypt",
-                        "kms:ReEncrypt*",
-                        "kms:GenerateDataKey*",
                         "kms:DescribeKey",
-                        "kms:List*",
-                        "kms:Describe*"
+                        "kms:Encrypt",
+                        "kms:GenerateDataKey",
+                        "kms:GenerateDataKeyPair",
+                        "kms:GenerateDataKeyPairWithoutPlaintext",
+                        "kms:GenerateDataKeyWithoutPlaintext",
+                        "kms:ReEncryptTo",
+                        "kms:ReEncryptFrom",
+                        "kms:ListAliases",
+                        "kms:ListGrants",
+                        "kms:ListKeys",
+                        "kms:ListKeyPolicies"
                     ],
                     resources=[f"arn:aws:kms:{cdk.Aws.REGION}:{cdk.Aws.ACCOUNT_ID}:key/*"],
                 ),
@@ -211,6 +236,91 @@ class PlatformManagerSageMaker(BaseStack):
                         "lambda:InvokeFunction"
                     ],
                     resources=[f"arn:aws:lambda:{cdk.Aws.REGION}:{cdk.Aws.ACCOUNT_ID}:function:wfm-*"],
+                ),
+                PolicyStatement(
+                    effect=Effect.ALLOW,
+                    actions=[
+                        "quicksight:ListAnalyses",
+                        "quicksight:ListDashboards",
+                        "quicksight:ListDataSets",
+                        "quicksight:ListDataSources",
+                        "quicksight:ListGroups",
+                        "quicksight:ListIAMPolicyAssignmentsForUser",
+                        "quicksight:ListTemplates",
+                        "quicksight:ListTemplateAliases",
+                        "quicksight:ListDashboardVersions",
+                        "quicksight:ListTemplateVersions",
+                        "quicksight:ListUsers",
+                        "quicksight:DescribeAnalysis",
+                        "quicksight:DescribeDashboard",
+                        "quicksight:DescribeDataSet",
+                        "quicksight:DescribeDataSource",
+                        "quicksight:DescribeTemplate",
+                        "quicksight:DescribeTemplateAlias",
+                        "quicksight:DescribeUser",
+                        "quicksight:PassDataSet",
+                        "quicksight:PassDataSource",
+                        "quicksight:CreateAnalysis",
+                        "quicksight:CreateDashboard",
+                        "quicksight:CreateDataSet",
+                        "quicksight:CreateDataSource",
+                        "quicksight:CreateTemplate",
+                        "quicksight:CreateTemplateAlias",
+                        "quicksight:DeleteAnalysis",
+                        "quicksight:DeleteDashboard",
+                        "quicksight:DeleteDataSet",
+                        "quicksight:DeleteDataSource",
+                        "quicksight:DeleteTemplate",
+                        "quicksight:DeleteTemplateAlias",
+                        "quicksight:RegisterUser",
+                        "quicksight:Subscribe",
+                        "quicksight:Unsubscribe",
+                        "quicksight:UpdateAnalysis",
+                        "quicksight:UpdateDashboard",
+                        "quicksight:UpdateDataSet",
+                        "quicksight:UpdateDataSource",
+                        "quicksight:UpdateTemplate",
+                        "quicksight:UpdateTemplateAlias",
+                        "quicksight:UpdateDashboardPublishedVersion",
+                        "lakeformation:DeregisterResource",
+                        "lakeformation:GetDataAccess",
+                        "lakeformation:GrantPermissions",
+                        "lakeformation:PutDataLakeSettings",
+                        "lakeformation:GetDataLakeSettings",
+                        "lakeformation:RegisterResource",
+                        "lakeformation:RevokePermissions",
+                        "lakeformation:UpdateResource",
+                        "glue:CreateDatabase",
+                        "glue:CreateJob",
+                        "glue:CreateSecurityConfiguration",
+                        "glue:DeleteDatabase",
+                        "glue:DeleteJob",
+                        "glue:DeleteSecurityConfiguration",
+                        "glue:GetDatabase",
+                        "glue:GetDatabases",
+                        "glue:GetMapping",
+                        "glue:GetPartition",
+                        "glue:GetPartitions",
+                        "glue:GetPartitionIndexes",
+                        "glue:GetSchema",
+                        "glue:GetSchemaByDefinition",
+                        "glue:GetSchemaVersion",
+                        "glue:GetSchemaVersionsDiff",
+                        "glue:GetTable",
+                        "glue:GetTables",
+                        "glue:GetTableVersion",
+                        "glue:GetTableVersions",
+                        "glue:GetTags",
+                        "glue:PutDataCatalogEncryptionSettings",
+                        "glue:SearchTables",
+                        "glue:TagResource",
+                        "glue:UntagResource",
+                        "glue:UpdateDatabase",
+                        "glue:UpdateJob",
+                        "glue:ListSchemas",
+                        "glue:ListSchemaVersions"
+                    ],
+                    resources=["*"],
                 ),
                 ]
             ),
@@ -222,14 +332,29 @@ class PlatformManagerSageMaker(BaseStack):
             self, 
             f"{self._microservice_name}-lc",
             notebook_instance_lifecycle_config_name=f"{self._microservice_name}-lc",
-            on_create=[sagemaker.CfnNotebookInstanceLifecycleConfig.NotebookInstanceLifecycleHookProperty(
+            on_start=[sagemaker.CfnNotebookInstanceLifecycleConfig.NotebookInstanceLifecycleHookProperty(
                 content=cdk.Fn.base64(f"""
-                #!/bin/bash
+#!/bin/bash
               
-                set -e
-                S3_BUCKET={self._artifacts_bucket_name}
-                aws s3 sync s3://$S3_BUCKET/platform_notebook_manager_samples/ /home/ec2-user/SageMaker/
+set -e
+                
+S3_BUCKET={self._artifacts_bucket_name}
+aws s3 sync s3://$S3_BUCKET/platform_notebook_manager_samples/ /home/ec2-user/SageMaker/
+chmod 777 /home/ec2-user/SageMaker/platform_manager
+chmod 777 /home/ec2-user/SageMaker/platform_manager/client_manager_microservices/tps
+chmod 777 /home/ec2-user/SageMaker/platform_manager/datalake_hydration_microservices/wfm
 
+sudo -u ec2-user -i << 'EOF'
+                
+# PARAMETERS
+PACKAGE=awswrangler
+ENVIRONMENT=python3
+                
+source /home/ec2-user/anaconda3/bin/activate "$ENVIRONMENT"
+pip install --upgrade "$PACKAGE"
+source /home/ec2-user/anaconda3/bin/deactivate
+                
+EOF
                 """)
             )]
         )
@@ -241,8 +366,12 @@ class PlatformManagerSageMaker(BaseStack):
             role_arn=sagemaker_role.role_arn,
             kms_key_id=self._sagemaker_kms_key.key_id,
             lifecycle_config_name=sagemaker_lifecycle_config.attr_notebook_instance_lifecycle_config_name,
-            notebook_instance_name="saw-platform-manager",
+            notebook_instance_name=f"{self._resource_prefix}-quickstart-platform-manager-notebooks",
             root_access="Enabled",
             
         )
+        cfn_data_lake_settings = lakeformation.CfnDataLakeSettings(self, "SageMakerDataLakeSettings",
+            admins=[lakeformation.CfnDataLakeSettings.DataLakePrincipalProperty(
+                data_lake_principal_identifier=sagemaker_role.role_arn
+        )])
 

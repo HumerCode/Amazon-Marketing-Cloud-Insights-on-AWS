@@ -77,11 +77,6 @@ class SDLFDatasetStack(BaseStack):
             ),
         )
 
-        # self._glue_job_role_arn = get_ssm_value(
-        #     self,
-        #     f"glue-job-{self._dataset}-role-arn",
-        #     parameter_name=f"/Orion/IAM/{self._team}/{self._dataset}/HeavyTranformGlueRoleARN"
-        # )
         self._glue_path = "amc_quickstart/foundations/glue/pyshell_scripts"
         self._get_artifacts()
         self._create_sdlf_glue_artifacts()
@@ -136,31 +131,13 @@ class SDLFDatasetStack(BaseStack):
             }
             }
 
-
         RegisterConstruct(self, self._props["id"], props=self._props)
-
-        # #Glue DB, crawler etc
-        # database: Database = Database(
-        #     self,
-        #     f"orion-{name}-database",
-        #     database_name=f"aws_datalake_{self._environment_id}_{team}_{name}_db", 
-        #     location_uri=f"s3://{self._stage_bucket.bucket_name}/post-stage/{team}/{name}",
-        # )
-
-     
         
         database: CfnDatabase = CfnDatabase(
             self,
             f"{self._resource_prefix}-{name}-database",
             database_input=CfnDatabase.DatabaseInputProperty(
                 name=f"aws_datalake_{self._environment_id}_{team}_{name}_db"
-            #     location_uri=f"s3://{self._stage_bucket.bucket_name}/post-stage/{team}/{name}",
-            #     create_table_default_permissions=[CfnDatabase.PrincipalPrivilegesProperty(
-            #     permissions=["CREATE_DATABASE", "CREATE_TABLE", "ALTER", "DROP"],
-            #     principal=CfnDatabase.DataLakePrincipalProperty(
-            #         data_lake_principal_identifier=self._glue_job_role_arn
-            #     )
-            # )]
             ),
             catalog_id=cdk.Aws.ACCOUNT_ID,
             
@@ -202,7 +179,22 @@ class SDLFDatasetStack(BaseStack):
 
         sqs_key_policy = PolicyDocument(
             statements=[PolicyStatement(
-                actions=["kms:*"],
+                actions=[
+                    "kms:CreateGrant",
+                    "kms:Decrypt",
+                    "kms:DescribeKey",
+                    "kms:Encrypt",
+                    "kms:GenerateDataKey",
+                    "kms:GenerateDataKeyPair",
+                    "kms:GenerateDataKeyPairWithoutPlaintext",
+                    "kms:GenerateDataKeyWithoutPlaintext",
+                    "kms:ReEncryptTo",
+                    "kms:ReEncryptFrom",
+                    "kms:ListAliases",
+                    "kms:ListGrants",
+                    "kms:ListKeys",
+                    "kms:ListKeyPolicies"
+                ],
                 principals=[ServicePrincipal("lambda.amazonaws.com")],
                 resources=["*"]
             )]
@@ -329,8 +321,12 @@ class SDLFDatasetStack(BaseStack):
                             "kms:Decrypt",
                             "kms:DescribeKey",
                             "kms:Encrypt",
-                            "kms:GenerateDataKey*",
-                            "kms:ReEncrypt*",
+                            "kms:GenerateDataKey",
+                            "kms:GenerateDataKeyPair",
+                            "kms:GenerateDataKeyPairWithoutPlaintext",
+                            "kms:GenerateDataKeyWithoutPlaintext",
+                            "kms:ReEncryptTo",
+                            "kms:ReEncryptFrom"
                         ],
                         resources=[
                             self.format_arn(
@@ -374,8 +370,43 @@ class SDLFDatasetStack(BaseStack):
                     PolicyStatement(
                         effect=Effect.ALLOW,
                         actions=[
-                            "lakeformation:*",
-                            "glue:*"
+                            "lakeformation:DeregisterResource",
+                            "lakeformation:GetDataAccess",
+                            "lakeformation:GrantPermissions",
+                            "lakeformation:PutDataLakeSettings",
+                            "lakeformation:GetDataLakeSettings",
+                            "lakeformation:RegisterResource",
+                            "lakeformation:RevokePermissions",
+                            "lakeformation:UpdateResource",
+                            "glue:CreateDatabase",
+                            "glue:CreateJob",
+                            "glue:CreateSecurityConfiguration",
+                            "glue:DeleteDatabase",
+                            "glue:DeleteJob",
+                            "glue:DeleteSecurityConfiguration",
+                            "glue:GetDatabase",
+                            "glue:GetDatabases",
+                            "glue:GetMapping",
+                            "glue:GetPartition",
+                            "glue:GetPartitions",
+                            "glue:GetPartitionIndexes",
+                            "glue:GetSchema",
+                            "glue:GetSchemaByDefinition",
+                            "glue:GetSchemaVersion",
+                            "glue:GetSchemaVersionsDiff",
+                            "glue:GetTable",
+                            "glue:GetTables",
+                            "glue:GetTableVersion",
+                            "glue:GetTableVersions",
+                            "glue:GetTags",
+                            "glue:PutDataCatalogEncryptionSettings",
+                            "glue:SearchTables",
+                            "glue:TagResource",
+                            "glue:UntagResource",
+                            "glue:UpdateDatabase",
+                            "glue:UpdateJob",
+                            "glue:ListSchemas",
+                            "glue:ListSchemaVersions"
                         ],
                         resources=["*"],
                     ),

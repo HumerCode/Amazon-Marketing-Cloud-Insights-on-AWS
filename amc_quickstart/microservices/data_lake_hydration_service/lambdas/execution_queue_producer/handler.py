@@ -135,7 +135,7 @@ def lambda_handler(event, context):
              "messages_sent_successfully": messages_sent_successfully, "statusCode": max(response_codes),
              "responses": responses.copy()})
     logger.info(sqsResponses)
-    # TODO implement
+
     return {
         'statusCode': max(all_response_codes),
         'body': sqsResponses

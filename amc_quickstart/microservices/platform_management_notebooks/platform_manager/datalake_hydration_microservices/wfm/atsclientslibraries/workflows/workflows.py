@@ -21,15 +21,29 @@ import pandas as pd
 def deserializeDyanmoDBItem(item):
     return {k: TypeDeserializer().deserialize(value=v) for k, v in item.items()}
 
-def set_workflow_record(workflow_details, ATS_TEAM_NAME, ENV):
+def set_workflow_record(workflow_details, TEAM_NAME, ENV):
     dynamodb_client_wr= boto3.resource('dynamodb')
     
-    wf_library_table = dynamodb_client_wr.Table(f'wfm-{ATS_TEAM_NAME}-AMCWorkflows-{ENV}')
+    wf_library_table = dynamodb_client_wr.Table(f'wfm-{TEAM_NAME}-AMCWorkflows-{ENV}')
     
     dynamodb_resp_wr = wf_library_table.put_item(Item=workflow_details)
     
     return dynamodb_resp_wr
 
+def set_workflow_records(workflow_list, TEAM_NAME, ENV, customer_id):
+    responses =[]
+    try:
+        for workflow in workflow_list:
+            workflow["customerId"] = customer_id
+            workflow["workflowId"] = workflow["workflowId"] + "_v" + str(workflow["version"])
+            responses.append(set_workflow_record(workflow_details=workflow, TEAM_NAME=TEAM_NAME, ENV=ENV)) 
+        return responses
+    except Exception as e:
+        print(e)
+        print("Cannot add role/user to Lake Formation")
+        raise e
+    return
+    
 ## DynamoDB scan with pagination
 def dump_table(table_name, dynamodb_client_rd):
     results = []
@@ -51,9 +65,9 @@ def dump_table(table_name, dynamodb_client_rd):
     return results
 
 ## retrieve workflow library table details
-def get_workflow_record(ATS_TEAM_NAME, ENV):
+def get_workflow_record(TEAM_NAME, ENV):
     dynamodb_client_rd= boto3.client('dynamodb')
-    dynamodb_resp_rd = dump_table(table_name=f'wfm-{ATS_TEAM_NAME}-AMCWorkflows-{ENV}', dynamodb_client_rd=dynamodb_client_rd)
+    dynamodb_resp_rd = dump_table(table_name=f'wfm-{TEAM_NAME}-AMCWorkflows-{ENV}', dynamodb_client_rd=dynamodb_client_rd)
     
     wf_dtls_list =[]
     for itm in dynamodb_resp_rd:
@@ -65,10 +79,10 @@ def get_workflow_record(ATS_TEAM_NAME, ENV):
     return df
 
 ## delete a workflow record
-def delete_workflow_record(customerId, workflowId, ATS_TEAM_NAME, ENV):
+def delete_workflow_record(customerId, workflowId, TEAM_NAME, ENV):
     dynamodb_client_wr= boto3.resource('dynamodb')
     
-    wf_library_table = dynamodb_client_wr.Table(f'wfm-{ATS_TEAM_NAME}-AMCWorkflows-{ENV}')
+    wf_library_table = dynamodb_client_wr.Table(f'wfm-{TEAM_NAME}-AMCWorkflows-{ENV}')
     
     response = wf_library_table.delete_item(
         Key = {

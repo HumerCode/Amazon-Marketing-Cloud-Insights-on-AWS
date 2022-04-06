@@ -120,7 +120,7 @@ def lambda_handler(event, context):
                 logger.info('checking if ingestion is from outside data lake...')
 
                 customer_config = ssm.get_parameter(
-                    Name="/AMC/DynamoDB/ats/CustomerConfig",
+                    Name="/AMC/DynamoDB/DataLake/CustomerConfig",
                     WithDecryption=True
                 ).get('Parameter').get('Value')
         
@@ -130,7 +130,6 @@ def lambda_handler(event, context):
                     IndexName = 'amc-index',
                     Select = 'ALL_PROJECTED_ATTRIBUTES',
                     KeyConditionExpression=Key('hash_key').eq(message['bucket'])
-                    #KeyConditionExpression = Key('amc_hash_key').eq(message['bucket'])
                 )
 
                 dataset=response['Items'][0]['dataset']

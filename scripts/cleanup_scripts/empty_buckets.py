@@ -15,9 +15,14 @@
 
 import boto3
 import json
+import sys
 
-s3_client = boto3.client('s3')
-s3_resource = boto3.resource('s3')
+
+profile_name = str(sys.argv[1])
+session = boto3.session.Session(profile_name=profile_name)
+
+s3_client = session.client('s3')
+s3_resource = session.resource('s3')
 
 if __name__ == "__main__":
     try: 

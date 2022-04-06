@@ -21,14 +21,30 @@ import pandas as pd
 def deserializeDyanmoDBItem(item):
     return {k: TypeDeserializer().deserialize(value=v) for k, v in item.items()}
 
-def set_workflow_schedule(workflow_details, ATS_TEAM_NAME, ENV):
+def set_workflow_schedule(workflow_details, TEAM_NAME, ENV):
     dynamodb_client_wr= boto3.resource('dynamodb')
     
-    wf_library_table = dynamodb_client_wr.Table(f'wfm-{ATS_TEAM_NAME}-AMCSchedules-{ENV}')
+    wf_library_table = dynamodb_client_wr.Table(f'wfm-{TEAM_NAME}-AMCWorkflowSchedules-{ENV}')
     
     dynamodb_resp_wr = wf_library_table.put_item(Item=workflow_details)
     
     return dynamodb_resp_wr
+
+def set_workflow_schedules(workflow_list, TEAM_NAME, ENV, customer_id):
+    responses =[]
+    try:
+        for workflow in workflow_list:
+            workflow_record = {}
+            workflow_record = workflow["defaultSchedule"]
+            workflow_record["customerId"] = customer_id
+            workflow_record["Input"]["payload"]["workflowId"] = workflow["workflowId"] + "_v" + str(workflow["version"])
+            workflow_record["Name"] = workflow_record["Name"] + "_v" + str(workflow["version"])
+            responses.append(set_workflow_schedule(workflow_details=workflow_record, TEAM_NAME=TEAM_NAME, ENV=ENV)) 
+        return responses
+    except Exception as e:
+        print(e)
+        print("Cannot add role/user to Lake Formation")
+        raise e
 
 ## DynamoDB scan with pagination
 def dump_table(table_name, dynamodb_client_rd):
@@ -51,9 +67,9 @@ def dump_table(table_name, dynamodb_client_rd):
     return results
 
 ## retrieve workflow schedules table details
-def get_workflow_schedule(ATS_TEAM_NAME, ENV):
+def get_workflow_schedule(TEAM_NAME, ENV):
     dynamodb_client_rd= boto3.client('dynamodb')
-    dynamodb_resp_rd = dump_table(table_name=f'wfm-{ATS_TEAM_NAME}-AMCSchedules-{ENV}', dynamodb_client_rd=dynamodb_client_rd)
+    dynamodb_resp_rd = dump_table(table_name=f'wfm-{TEAM_NAME}-AMCSchedules-{ENV}', dynamodb_client_rd=dynamodb_client_rd)
     
     wf_dtls_list =[]
     for itm in dynamodb_resp_rd:
@@ -65,10 +81,10 @@ def get_workflow_schedule(ATS_TEAM_NAME, ENV):
     return df
 
 ## delete a workflow schedule
-def delete_workflow_schedule(customerId, workflowName, ATS_TEAM_NAME, ENV):
+def delete_workflow_schedule(customerId, workflowName, TEAM_NAME, ENV):
     dynamodb_client_wr= boto3.resource('dynamodb')
     
-    wf_library_table = dynamodb_client_wr.Table(f'wfm-{ATS_TEAM_NAME}-AMCSchedules-{ENV}')
+    wf_library_table = dynamodb_client_wr.Table(f'wfm-{TEAM_NAME}-AMCSchedules-{ENV}')
     
     response = wf_library_table.delete_item(
         Key = {

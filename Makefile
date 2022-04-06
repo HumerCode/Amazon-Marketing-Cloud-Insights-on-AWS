@@ -1,11 +1,13 @@
 SHELL=/bin/bash
-CICD=quickstart
-CHILD=quickstart
+CICD=default
+CHILD=default
 REGION=$(shell aws configure get region --profile ${CICD})
 ENV=dev
 
-.PHONY:  delete_repositories delete_all_items delete_repositories delete_bootstrap empty_buckets delete_adk
 
+.PHONY: delete_repositories deploy_artifacts deploy_satellite deploy_all insert_tps_records create_workflows
+
+ 
 delete_all: empty_buckets delete_adk delete_bootstrap delete_repositories delete_all_items
 
 help:
@@ -22,28 +24,27 @@ delete_repositories:
 	./scripts/cleanup_scripts/delete_repositories.sh -s ${CICD} -t ${CHILD} -r ${REGION} -d ddk-amc-quickstart
 
 empty_buckets:	
-	pushd scripts/cleanup_scripts; python3 ./list_items_to_delete.py; popd;
-	pushd scripts/cleanup_scripts; python3 ./empty_buckets.py; popd;
+	pushd scripts/cleanup_scripts; python3 ./list_items_to_delete.py ${ENV} ${CHILD}; popd;
+	pushd scripts/cleanup_scripts; python3 ./empty_buckets.py ${CHILD}; popd;
 	
 delete_adk:
-	cdk destroy ddk-amc-quickstart-pipeline \
-	AMC-${ENV}-QuickStart/amc-foundations \
+	cdk destroy AMC-${ENV}-QuickStart/amc-foundations \
 	AMC-${ENV}-QuickStart/amc-data-lake-pipeline \
 	AMC-${ENV}-QuickStart/amc-platform-manager \
 	AMC-${ENV}-QuickStart/amc-tps \
 	AMC-${ENV}-QuickStart/amc-wfm \
-	AMC-${ENV}-QuickStart/amc-data-lake-datasets --force --profile ${CICD};
+	AMC-${ENV}-QuickStart/amc-data-lake-datasets --force --profile ${CHILD};
 
+	cdk destroy ddk-amc-quickstart-pipeline --force --profile ${CICD}
 	
 delete_bootstrap:
 	aws cloudformation delete-stack --stack-name DdkDevBootstrap --profile ${CICD}
 
 delete_all_items:
-	sleep 180
-	pushd scripts/cleanup_scripts; python3 ./list_items_to_delete.py; popd;
-	pushd scripts/cleanup_scripts; python3 ./delete_script.py; popd;
+	sleep 120
 
-
+	pushd scripts/cleanup_scripts; python3 ./list_items_to_delete.py ${ENV} ${CHILD}; popd;
+	pushd scripts/cleanup_scripts; python3 ./delete_script.py ${CHILD}; popd;
 
 
 

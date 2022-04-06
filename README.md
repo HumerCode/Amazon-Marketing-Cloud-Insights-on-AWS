@@ -45,18 +45,6 @@ You can verify your git configuration with
 $ git config --list
 ```
 
-The jq Linux command line utility to extract data from JSON documents.
-
-```
-$ jq --version
-```
-
-If not installed already, you can install jq by running in your command line:
-
-```
-$ sudo yum install jq
-```
-
 ### [OPTIONAL] Using AWS Cloud9 for Deployment:
 
 If you would like to deploy this quickstart using an AWS Cloud9 Environment rather than on your local environment, follow these steps to set up AWS Cloud9:
@@ -64,11 +52,6 @@ If you would like to deploy this quickstart using an AWS Cloud9 Environment rath
 1. Log in to the AWS account console using the Admin role and select an AWS region. We recommend choosing a mature region where most services are available (e.g. eu-west-1, us-east-1…)
 2. Navigate to `Cloud9` in the AWS console. Set up a [Cloud9 Environment](https://docs.aws.amazon.com/cloud9/latest/user-guide/create-environment-main.html) in the same AWS region (t3.small or higher, Amazon Linux 2) and open the IDE
 3. Download the package, upload it to your Cloud9 instance, and unzip it
-4. Install jq by running in your command line:
-
-```
-$ sudo yum install jq
-```
 
 Python, Pip, AWS CLI, AWS CDK CLI, and Git CLI packages should all be installed and configured for you by defualt in your Cloud9 environment. Ensure that these pacakges are installed with the correct version with the following commands:
 
@@ -153,8 +136,6 @@ $ ddk create-repository AMC_QUICKSTART_REPO_NAME --profile [AWS_PROFILE] --regio
 Add and push the initial commit to the repository
 
 ```
-$ git config --global credential.helper "!aws codecommit --profile <my-profile> credential-helper $@"
-$ git config --global credential.UseHttpPath true
 $ git add .
 $ git commit -m "Configure AMC QUICKSTART"
 $ git push --set-upstream origin main
@@ -172,7 +153,7 @@ $ ddk deploy --profile [AWS_PROFILE]
 
 The deploy all step deploys an AWS CodePipeline along with its respective AWS CloudFormation Stacks. The last stage of each pipeline delivers the AMC Quickstart infrastructure respectively in the child (default dev) environment through CloudFormation.
 
-![Alt](/docs/images/AMC-Quickstart-Deploy.png)
+![Alt](docs/images/AMC-Quickstart-Deploy.png)
 
 _Foundations:_ This application creates the foundational resources for the quickstart. These resources include Lambda Layers, Glue Jobs, S3 Buckets, routing SQS Queues, and Amazon DynamoDB Tables for data and metadata storage.
 
@@ -193,7 +174,9 @@ To hydrate the data lake and begin populating the data lake with data from your 
 1. Log In to your AWS Account and go to Amazon SageMaker
 2. On the Left Side of Your Screen Click on Notebook --> Notebook Instances (you should see one notebook named `saw-platform-manager` with Status "InService")
 3. Click "Open JupyterLab" to open the Notebook Instance in a new tab
-4. Open the `Getting_Started_With_AMC_Quickstart.ipynb` Notebook in the `platform_manager` folder and follow the steps in the notebook to hydrate the data lake.
+4. Open the `Getting_Started_With_AMC_Quickstart.ipynb` Notebook in the `platform_manager` folder
+   1. Duplicate the Notebook
+   2. Follow the steps in the notebook to hydrate the data lake.
 
 **This Notebook will cover the following:**
 
@@ -215,7 +198,7 @@ _Create Workflows:_ To initialize the creation, scheduling and execution of AMC 
 
 ## AMC Quickstart CodePipeline Steps
 
-![Alt](/docs/images/AMC-Quickstart-CodePipeline-Steps.png)
+![Alt](docs/images/AMC-Quickstart-CodePipeline-Steps.png)
 
 The Code Pipeline Steps (as shown to the right) are:
 
@@ -232,7 +215,7 @@ The Code Pipeline Steps (as shown to the right) are:
 
 ## Cleaning Up the Quickstart
 
-Once the solution has been deployed and tested, use the following command to clean up the resources
+Once the solution has been deployed and tested, use the following command to clean up the resources deployed by the AMC QuickStart:
 
 ```
 $ make delete_all
@@ -240,13 +223,33 @@ $ make delete_all
 
 _NOTE:_ Before running this command, look into the `Makefile` and ensure that:
 
-1.  The `delete_repositories` function is passing the correct `-d AMC_QUICKSTART_REPO_NAME` (default: `ddk-amc-quickstart`)
+1.  The `CICD` and `CHILD` variables are set to the correct AWS profile names.
 
-2.  The `delete_bootstrap` function is passing the correct `--stack-name BOOTSTRAP_STACK_NAME` (default: `DdkDevBootstrap`)
+2.  The `delete_repositories` function is passing the correct `-d AMC_QUICKSTART_REPO_NAME` (default: `ddk-amc-quickstart`)
+
+3.  The `delete_bootstrap` function is passing the correct `--stack-name BOOTSTRAP_STACK_NAME` (default: `DdkDevBootstrap`)
 
 This command will go through the following sequence of steps in order to clean up your AWS account environment:
 
-![Alt](/docs/images/AMC-Quickstart-Delete.png)
+![Alt](docs/images/AMC-Quickstart-Delete.png)
+
+Some CloudWatch General Log Groups May Remain in your Account with Logs specific to AMC Quickstart resources, including:
+
+- /aws/sagemaker/NotebookInstances
+- /aws-glue/jobs/error
+- /aws-glue/jobs/output
+
+#
+
+## Data Visualization Using Amazon QuickSight
+
+If you require more advanced and customizable data visualizations consider using Amazon QuickSight as your BI Tool. With Amazon QuickSight you can perform advanced analytics, gather machine learning (ML) insights and embed interactive visualizations and dashboards with natural language query capabilities.
+
+There are 2 options to help you get started using Amazon QuickSight:
+
+1. Refer to the AWS Solutions Guidance page for this QuickStart for a step-by-step walkthrough of how to configure Amazon QuickSight in your AWS Account.
+
+2. Open the `manage_quicksight.ipynb` Jupyter Notebook in your SageMaker Notebook Instance under the `platform_manager/quicksight/` directory. Follow the instructions and execute the cells in notebook to help automate the creation of your QuickSight resources. **_NOTE: You must have an existing QuickSight template to automate the creation of QuickSight dashboards and analysis_**
 
 #
 

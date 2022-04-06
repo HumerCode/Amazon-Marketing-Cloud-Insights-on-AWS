@@ -35,3 +35,6 @@ class GetApplicationParameters():
 
     def get_cicd_repository(self) -> Dict[str, Any]:
         return self._config.get("repository", "ddk-amc-quickstart")
+    
+    def get_sns_email(self) -> Dict[str, Any]:
+        return self._config.get("email", "nobody@demo.com")

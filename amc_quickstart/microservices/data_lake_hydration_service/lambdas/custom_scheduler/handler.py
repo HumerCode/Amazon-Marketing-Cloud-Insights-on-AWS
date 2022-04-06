@@ -25,7 +25,6 @@ import calendar
 from datetime import datetime, timedelta, date, timedelta
 import time
 
-# POWERTOOLS_SERVICE_NAME defined
 logger = Logger(service="WorkflowManagerService", level="INFO")
 
 dynamo = boto3.resource('dynamodb')

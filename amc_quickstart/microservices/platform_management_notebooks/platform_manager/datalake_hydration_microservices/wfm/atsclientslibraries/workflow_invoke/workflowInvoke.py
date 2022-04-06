@@ -17,7 +17,7 @@ import boto3
 import json
 
 
-def invoke_workflow(workflow, ATS_TEAM_NAME, ENV):
+def invoke_workflow(workflow, TEAM_NAME, ENV):
     client = boto3.client('lambda')
     item = workflow
 
@@ -27,8 +27,24 @@ def invoke_workflow(workflow, ATS_TEAM_NAME, ENV):
     }
 
     response = client.invoke(
-        FunctionName=f'wfm-{ATS_TEAM_NAME}-ExecutionQueueProducer-{ENV}',
+        FunctionName=f'wfm-{TEAM_NAME}-ExecutionQueueProducer-{ENV}',
         InvocationType='Event',
         Payload=json.dumps(payload)
     )
     return response
+
+def invoke_workflows(workflow_list, TEAM_NAME, ENV, customer_id):
+    responses =[]
+    try:
+        for workflow in workflow_list:
+            workflow_record = {}
+            workflow_record["customerId"] = customer_id
+            workflow_record["Input"] = workflow["defaultSchedule"]["Input"]
+            workflow_record["Input"]["payload"]["workflowId"] = workflow["workflowId"] + "_v" + str(workflow["version"])
+            responses.append(invoke_workflow(workflow=workflow_record, TEAM_NAME=TEAM_NAME, ENV=ENV)) 
+        return responses
+    except Exception as e:
+        print(e)
+        print("Cannot add role/user to Lake Formation")
+        raise e
+    return

@@ -19,7 +19,7 @@ from typing import Any
 
 import aws_cdk as cdk
 from aws_cdk.aws_events import EventPattern, Rule, Schedule
-from aws_ddk_core.pipelines.pipeline import Pipeline 
+from aws_ddk_core.pipelines import DataPipeline  
 from aws_cdk.aws_ssm import StringParameter
 from aws_ddk_core.base import BaseStack
 from aws_cdk import ArnFormat
@@ -53,9 +53,7 @@ class SDLFPipelineStack(BaseStack):
         raw_bucket_arn: str = get_ssm_value(self, "raw-bucket-ssm", "/AMC/S3/RawBucketArn")
         stage_bucket_arn: str = get_ssm_value(self, "stage-bucket-ssm", "/AMC/S3/StageBucketArn")
         analytics_bucket_arn: str = get_ssm_value(self, "analytics-bucket-ssm", "/AMC/S3/AnalyticsBucketArn")
-        # self._raw_bucket_name: str = self.parse_arn(raw_bucket_arn).resource
-        # self._stage_bucket_name: str = self.parse_arn(stage_bucket_arn).resource
-        # self._analytics_bucket_name: str = self.parse_arn(analytics_bucket_arn).resource
+
         self._raw_bucket_name: str = self.split_arn(
             arn=raw_bucket_arn, arn_format=ArnFormat.COLON_RESOURCE_NAME
         ).resource
@@ -121,8 +119,8 @@ class SDLFPipelineStack(BaseStack):
         )
     
 
-        self._data_lake_pipeline: Pipeline = (
-            Pipeline(
+        self._data_lake_pipeline: DataPipeline = (
+            DataPipeline(
                 self, 
                 id=pipeline_id,
                 name=f"{pipeline_id}-pipeline",

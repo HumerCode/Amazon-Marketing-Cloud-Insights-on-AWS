@@ -47,8 +47,6 @@ def lambda_handler(event, context):
             for p in processed:
                 table_processed_paths.append(p)
 
-        # processed_keys = S3Interface().list_objects(bucket, processed_keys_path)
-
         processed_keys = table_processed_paths
         team = event['body']['team']
         pipeline = event['body']['pipeline']

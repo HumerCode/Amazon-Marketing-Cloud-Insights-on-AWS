@@ -23,7 +23,7 @@ from aws_cdk.aws_events import EventPattern, IRuleTarget
 from aws_cdk.aws_events_targets import LambdaFunction
 from aws_cdk.aws_iam import Effect, PolicyStatement
 from aws_cdk.aws_lambda import Code, LayerVersion, Runtime
-from aws_ddk_core.pipelines.stage import Stage
+from aws_ddk_core.pipelines.stage import DataStage
 from aws_cdk import aws_stepfunctions as sfn
 from aws_cdk.aws_iam import Effect, ManagedPolicy, PolicyDocument, PolicyStatement, Role, ServicePrincipal
 from aws_cdk.aws_s3 import Bucket, IBucket
@@ -49,7 +49,7 @@ class SDLFHeavyTransformConfig:
     pipeline: str
 
 
-class SDLFHeavyTransform(Stage):
+class SDLFHeavyTransform(DataStage):
     def __init__(
         self,
         scope,
@@ -217,7 +217,20 @@ class SDLFHeavyTransform(Stage):
                 PolicyStatement(
                     effect=Effect.ALLOW,
                     actions=[
-                        "kms:*"
+                        "kms:CreateGrant",
+                        "kms:Decrypt",
+                        "kms:DescribeKey",
+                        "kms:Encrypt",
+                        "kms:GenerateDataKey",
+                        "kms:GenerateDataKeyPair",
+                        "kms:GenerateDataKeyPairWithoutPlaintext",
+                        "kms:GenerateDataKeyWithoutPlaintext",
+                        "kms:ReEncryptTo",
+                        "kms:ReEncryptFrom",
+                        "kms:ListAliases",
+                        "kms:ListGrants",
+                        "kms:ListKeys",
+                        "kms:ListKeyPolicies"
                     ],
                     resources=["*"],
                     conditions={
@@ -275,7 +288,17 @@ class SDLFHeavyTransform(Stage):
                 PolicyStatement(
                     effect=Effect.ALLOW,
                     actions=[
-                        "dynamodb:*"
+                        "dynamodb:DescribeTable",
+                        "dynamodb:Query",
+                        "dynamodb:Scan",
+                        "dynamodb:GetItem",
+                        "dynamodb:PutItem",
+                        "dynamodb:ConditionCheckItem",
+                        "dynamodb:DeleteItem",
+                        "dynamodb:UpdateItem",
+                        "dynamodb:GetRecords",
+                        "dynamodb:ListTables",
+                        "dynamodb:DescribeTable"
                     ],
                     resources=[
                         f"arn:aws:dynamodb:{cdk.Aws.REGION}:{cdk.Aws.ACCOUNT_ID}:table/octagon-*",
@@ -299,7 +322,14 @@ class SDLFHeavyTransform(Stage):
                 PolicyStatement(
                     effect=Effect.ALLOW,
                     actions=[
-                        "sqs:*"
+                        "sqs:SendMessage",
+                        "sqs:ReceiveMessage",
+                        "sqs:DeleteMessage",
+                        "sqs:GetQueueAttributes",
+                        "sqs:ListQueues",
+                        "sqs:GetQueueUrl",
+                        "sqs:ListDeadLetterSourceQueues",
+                        "sqs:ListQueueTags"
                     ],
                     resources=[f"arn:aws:sqs:{cdk.Aws.REGION}:{cdk.Aws.ACCOUNT_ID}:{self._prefix}-{team}-*"],
                 )

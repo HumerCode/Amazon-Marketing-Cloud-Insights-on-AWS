@@ -32,20 +32,20 @@ delete_repositories() {
         if [ ${RETSTAT} -eq 0 ]; then
             echo "Remote Repository ${REPOSITORY} already exists, deleting..."
             aws codecommit delete-repository --profile ${CICD_PROFILE} --region ${REGION} --repository-name ${REPOSITORY}
-            pushd ${REPOSITORY}
+            # pushd ${REPOSITORY}
             rm -rf .git
-            popd
+            # popd
         else
             echo "Repository ${REPOSITORY} does not exists in ${REGION}"
             echo "Deleting local .git directory if it exists."
-            pushd ${REPOSITORY}
+            # pushd ${REPOSITORY}
             if [ -d .git ]; then
                 echo "Local .git Repository exists, deleting..."
                 rm -rf .git
             else
                 echo "Local .git Repository does not exist."
             fi
-            popd
+            # popd
         fi
     done
 

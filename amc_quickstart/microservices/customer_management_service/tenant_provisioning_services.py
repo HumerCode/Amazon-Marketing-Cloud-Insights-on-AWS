@@ -146,12 +146,20 @@ class TenantProvisiongService(BaseStack):
             PolicyStatement(
                 effect=Effect.ALLOW,
                 actions=[
-                    "kms:Encrypt",
-                    "kms:Decrypt",
-                    "kms:ReEncrypt*",
-                    "kms:GenerateDataKey*",
                     "kms:CreateGrant",
-                    "kms:DescribeKey"
+                    "kms:Decrypt",
+                    "kms:DescribeKey",
+                    "kms:Encrypt",
+                    "kms:GenerateDataKey",
+                    "kms:GenerateDataKeyPair",
+                    "kms:GenerateDataKeyPairWithoutPlaintext",
+                    "kms:GenerateDataKeyWithoutPlaintext",
+                    "kms:ReEncryptTo",
+                    "kms:ReEncryptFrom",
+                    "kms:ListAliases",
+                    "kms:ListGrants",
+                    "kms:ListKeys",
+                    "kms:ListKeyPolicies"
                 ],
                 resources=["*"],
                 principals=[
@@ -350,7 +358,8 @@ class TenantProvisiongService(BaseStack):
             "lambda-ddb-event-source-mapping",
             batch_size=100,
             event_source_arn=self._table.table_stream_arn,
-            starting_position=StartingPosition.TRIM_HORIZON
+            starting_position=StartingPosition.TRIM_HORIZON,
+            retry_attempts=1
         )
 
         self._lambda_amc_instance_setup = LambdaFactory.function(
@@ -393,11 +402,14 @@ class TenantProvisiongService(BaseStack):
                 PolicyStatement(
                     effect=Effect.ALLOW,
                     actions=[
-                        "sqs:List*",
+                        "sqs:ListQueues",
+                        "sqs:ListDeadLetterSourceQueues",
+                        "sqs:ListQueueTags",
                         "sqs:ReceiveMessage",
-                        "sqs:SendMessage*",
-                        "sqs:DeleteMessage*",
-                        "sqs:GetQueue*"
+                        "sqs:SendMessage",
+                        "sqs:DeleteMessage",
+                        "sqs:GetQueueAttributes",
+                        "sqs:GetQueueUrl"
                         ],
                     resources=[
                         f"arn:aws:sqs:{cdk.Aws.REGION}:{cdk.Aws.ACCOUNT_ID}:{microservice}-{team}-{environment_id}-*"
@@ -541,10 +553,25 @@ class TenantProvisiongService(BaseStack):
                 PolicyStatement(
                     effect=Effect.ALLOW,
                     actions=[
-                        "events:Put*",
-                        "events:Create*",
-                        "events:List*",
-                        "events:Describe*",
+                        "events:PutTargets",
+                        "events:PutPermission",
+                        "events:PutPartnerEvents",
+                        "events:PutRule",
+                        "events:PutEvents",
+                        "events:CreatePartnerEventSource",
+                        "events:CreateEventBus",
+                        "events:CreateApiDestination",
+                        "events:CreateArchive",
+                        "events:CreateConnection",
+                        "events:ListRuleNamesByTarget",
+                        "events:ListRules",
+                        "events:ListTargetsByRule",
+                        "events:ListTagsForResource",
+                        "events:ListEventSources",
+                        "events:ListEventBuses",
+                        "events:DescribeEventSource",
+                        "events:DescribeEventBus",
+                        "events:DescribeRule",
                         "events:EnableRule",
                         "event:ActivateEventSource",
                         "event:DeactivateEventSource",
@@ -647,12 +674,20 @@ class TenantProvisiongService(BaseStack):
                 PolicyStatement(
                     effect=Effect.ALLOW,
                     actions=[
+                        "kms:CreateGrant",
+                        "kms:Decrypt",
                         "kms:DescribeKey",
                         "kms:Encrypt",
-                        "kms:Decrypt",
-                        "kms:ReEncrypt*",
-                        "kms:GenerateDataKey*",
-                        "kms:CreateGrant*"
+                        "kms:GenerateDataKey",
+                        "kms:GenerateDataKeyPair",
+                        "kms:GenerateDataKeyPairWithoutPlaintext",
+                        "kms:GenerateDataKeyWithoutPlaintext",
+                        "kms:ReEncryptTo",
+                        "kms:ReEncryptFrom",
+                        "kms:ListAliases",
+                        "kms:ListGrants",
+                        "kms:ListKeys",
+                        "kms:ListKeyPolicies"
                     ],
                     resources=["*"],
                     conditions={

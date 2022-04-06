@@ -96,9 +96,6 @@ def getExecutionsByStatus(config, executionStatusFilterValue="RUNNING"):
     # Get the name of the tracking table from an environment variable
     AMC_EXEUCTION_TRACKING_DYNAMODB_TABLE = config['AMC']['WFM']['syncWorkflowStatuses'][
         'amcWorkflowExecutionTrackingDynamoDBTableName']
-    # Create a table object
-    # table = dynamodb.Table(AMC_EXEUCTION_TRACKING_DYNAMODB_TABLE)
-    # ProjectionExpression='workflowId,workflowExecutionId,executionStatus',
 
     workflowExecutions = []
     table = os.environ['CUSTOMERS_DYNAMODB_TABLE']
@@ -260,9 +257,6 @@ def getExecutionStatusByWorkflowId(config, workflowId):
             for exeuction in AMC_API_RESPONSE_DICTIONARY['executions']:
                 if 'workflowId' in exeuction:
                     update_tracking_table_with_statuses(config , exeuction)
-                    #updateResponse = update_tracking_table_with_statuses(config , exeuction)
-                    #message.append(updateResponse['message'])
-                    #logger.info(message)
     else:
         receivedWorkflowStatus = False
         message = 'Failed to receive workflow status for workflow {}'.format(workflowId)

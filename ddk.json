@@ -8,6 +8,9 @@
       "region": "us-east-1",
       "name": "Development",
       "manual_approvals": false,
+      "email": "nobody@demo.com",
+      "execute_security_lint": true,
+      "execute_tests": false,
       "resource_prefix": "amc",
       "data_pipeline_parameters": {
         "team": "demoteam",
@@ -21,7 +24,10 @@
         "amc-stage-bucket": { "versioned": false },
         "amc-analytics-bucket": { "versioned": false },
         "amc-artifacts-bucket": { "versioned": false },
-        "amc-athena-bucket": { "versioned": false }
+        "amc-athena-bucket": { "versioned": false },
+        "codepipelinePipelineArtifactsBucketEncryptionKey3A0FD228": {
+          "enable_key_rotation": true
+        }
       }
     }
   }

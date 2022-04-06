@@ -23,13 +23,13 @@ from datalake_library.octagon import Artifact, EventReasonEnum, peh
 logger = init_logger(__name__)
 
 
-def remove_content_tmp():
-    # Remove contents of the Lambda /tmp folder (Not released by default)
-    for root, dirs, files in os.walk('/tmp'):
-        for f in files:
-            os.unlink(os.path.join(root, f))
-        for d in dirs:
-            shutil.rmtree(os.path.join(root, d))
+# def remove_content_tmp():
+#     # Remove contents of the Lambda /tmp folder (Not released by default)
+#     for root, dirs, files in os.walk('/tmp'):
+#         for f in files:
+#             os.unlink(os.path.join(root, f))
+#         for d in dirs:
+#             shutil.rmtree(os.path.join(root, d))
 
 
 def lambda_handler(event, context):
@@ -66,13 +66,13 @@ def lambda_handler(event, context):
         transform_handler = TransformHandler().stage_transform(team, dataset, stage)
         response = transform_handler().transform_object(
             bucket, key, team, dataset)  # custom user code called
-        remove_content_tmp()
+        # remove_content_tmp()
         octagon_client.update_pipeline_execution(status="{} {} Processing".format(stage, component),
                                                  component=component)
     except Exception as e:
         logger.error("Fatal error", exc_info=True)
         octagon_client.end_pipeline_execution_failed(component=component,
                                                      issue_comment="{} {} Error: {}".format(stage, component, repr(e)))
-        remove_content_tmp()
+        # remove_content_tmp()
         raise e
     return response

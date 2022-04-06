@@ -196,7 +196,7 @@ def lambda_handler(event, context):
         failed_rejected_deleted_executions = failed_executions + rejected_executions + deleted_executions
         logger.info('failed_rejected_deleted_executions count {}'.format(len(failed_rejected_deleted_executions)))
         failed_rejected_deleted_executions_deduplicated = []
-        # removed invalidationOffsetSecs
+        
         items_to_keep = ['customerId', 'workflowId', 'timeWindowStart', 'timeWindowEnd', 'timeWindowTimeZone',
                          'timeWindowType',
                          'parameterValues']

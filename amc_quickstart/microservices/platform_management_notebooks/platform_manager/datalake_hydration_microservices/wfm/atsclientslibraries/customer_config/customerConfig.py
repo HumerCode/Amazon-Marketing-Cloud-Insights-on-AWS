@@ -21,10 +21,10 @@ import pandas as pd
 def deserializeDyanmoDBItem(item):
     return {k: TypeDeserializer().deserialize(value=v) for k, v in item.items()}
 
-def set_customer_config(customer_details, ATS_TEAM_NAME, ENV):
+def set_customer_config(customer_details, TEAM_NAME, ENV):
     dynamodb_client_wr= boto3.resource('dynamodb')
     
-    customer_table = dynamodb_client_wr.Table(f'wfm-{ATS_TEAM_NAME}-CustomerConfig-{ENV}')
+    customer_table = dynamodb_client_wr.Table(f'wfm-{TEAM_NAME}-CustomerConfig-{ENV}')
     
     dynamodb_resp_wr = customer_table.put_item(Item=customer_details)
     
@@ -51,9 +51,9 @@ def dump_table(table_name, dynamodb_client_rd):
     return results
 
 ## retrieve custoemr config table details
-def get_customer_config(ATS_TEAM_NAME, ENV):
+def get_customer_config(TEAM_NAME, ENV):
     dynamodb_client_rd= boto3.client('dynamodb')
-    dynamodb_resp_rd = dump_table(table_name=f'wfm-{ATS_TEAM_NAME}-CustomerConfig-{ENV}', dynamodb_client_rd=dynamodb_client_rd)
+    dynamodb_resp_rd = dump_table(table_name=f'wfm-{TEAM_NAME}-CustomerConfig-{ENV}', dynamodb_client_rd=dynamodb_client_rd)
     
     cust_dtls_list =[]
     for itm in dynamodb_resp_rd:
@@ -65,10 +65,10 @@ def get_customer_config(ATS_TEAM_NAME, ENV):
     return df
 
 ## delete a customer config record
-def delete_customer_config(customerId, ATS_TEAM_NAME, ENV):
+def delete_customer_config(customerId, TEAM_NAME, ENV):
     dynamodb_client_wr= boto3.resource('dynamodb')
     
-    customer_table = dynamodb_client_wr.Table(f'wfm-{ATS_TEAM_NAME}-CustomerConfig-{ENV}')
+    customer_table = dynamodb_client_wr.Table(f'wfm-{TEAM_NAME}-CustomerConfig-{ENV}')
     
     response = customer_table.delete_item(
         Key = {

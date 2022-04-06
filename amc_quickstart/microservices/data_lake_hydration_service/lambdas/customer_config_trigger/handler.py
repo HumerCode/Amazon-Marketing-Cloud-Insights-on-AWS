@@ -66,13 +66,11 @@ def check_iam_policy(config):
                 logger.info('Found invoke statment, resources: {}'.format(statement['Resource']))
                 if endpoint_resource in statement['Resource']:
                     return ()
-                    # logger.info('endpoint resource {} found in statement'.format(endpointResource))
                 else:
                     logger.info('endpoint resource {} NOT found in statement'.format(endpoint_resource))
                     statement['Resource'] = list([statement['Resource']]) if type(statement['Resource']) == str else statement['Resource']
                     statement['Resource'].append(endpoint_resource)
 
-                    # logger.info('udpated policy document with new resource {}'.format(getPolicyVersionResponse['PolicyVersion']['Document']))
                     if len(policy_versions) > 4:
                         logger.info(
                             '{} policy versions already exists, maximum policy version count of 5 exceeded will delete the oldest policies above 5'.format(
@@ -105,8 +103,6 @@ def get_sqs_queue_url(queue_name):
     except Exception as e:
         logger.info(e)
         return ''
-    #except sqs.exceptions.QueueDoesNotExist:
-    #    return ''
 
 
 def get_sqs_queue_attributes(queue_url):
@@ -124,8 +120,6 @@ def get_sqs_queue_attributes(queue_url):
     except Exception as e:
         logger.info(e)
         return ''
-    #except sqs.exceptions.QueueDoesNotExist:
-    #    return ''
 
 
 
@@ -142,9 +136,7 @@ def set_sqs_queue_attributes(queue_url, queue_attributes):
     except Exception as e:
         logger.info(e)
         return ''
-    # TODO implement AWS.SimpleQueueService.QueueDeletedRecently to wait 60 seconds and retry
-    #except sqs.exceptions.QueueDoesNotExist:
-    #    return ''
+
 
 
 def check_sqs_queues(customer_id, item):
@@ -237,7 +229,7 @@ def create_sqs_queue(queue_name, tag, redrive_policy=''):
 
     logger.info('response payload: {}'.format(response))
     return response
-    # TODO implement AWS.SimpleQueueService.QueueDeletedRecently to wait 60 seconds and retry
+
 
 def lambda_handler(event, context):
 
@@ -250,8 +242,7 @@ def lambda_handler(event, context):
         if 'dynamodb' in record and 'NewImage' in record['dynamodb']:
             new_record = wfmutils.deseralize_dynamodb_item(record['dynamodb']['NewImage'])
             item = new_record
-        # if 'dynamodb' in record and 'OldImage' in record['dynamodb']:
-        #     oldRecord = wfmutils.deseralize_dynamodb_item(record['dynamodb']['OldImage'])
+
 
         if record['eventName'] == 'INSERT':
             logger.info('record inserted, checking IAM policy')

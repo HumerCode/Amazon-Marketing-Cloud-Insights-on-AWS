@@ -45,9 +45,9 @@ def dump_table(table_name, dynamodb_client_rd):
     return results
 
 ## retirev custoemr config table details
-def get_customers_config (ATS_TEAM_NAME, ENV):
+def get_customers_config (TEAM_NAME, ENV):
     dynamodb_client_rd= boto3.client('dynamodb')
-    dynamodb_resp_rd = dump_table(table_name=f'tps-{ATS_TEAM_NAME}-CustomerConfig-{ENV}', dynamodb_client_rd=dynamodb_client_rd)
+    dynamodb_resp_rd = dump_table(table_name=f'tps-{TEAM_NAME}-CustomerConfig-{ENV}', dynamodb_client_rd=dynamodb_client_rd)
     cust_dtls_list =[]
     for itm in dynamodb_resp_rd:
         itm_dict = deserializeDyanmoDBItem(itm)
@@ -62,8 +62,6 @@ def get_customers_config (ATS_TEAM_NAME, ENV):
             "amc_aws_orange_account_id":itm_dict.get("AMC",{}).get("amcOrangeAwsAccount",None),
             "amc_aws_green_account_id":itm_dict.get("AMC",{}).get("amcGreenAwsAccount",None),
             "amc_bucket_name":itm_dict.get("AMC",{}).get("amcS3BucketName",None),
-            "amc_advertiser_ids":itm_dict.get("AMC",{}).get("amcAdvertiserIds",None),
-            "amc_entity_ids":itm_dict.get("AMC",{}).get("amcEntityIds",None),
             "amc_team_name":itm_dict.get("AMC",{}).get("amcTeamName",None)
         }
     #     print (tbl_dict)
@@ -73,7 +71,7 @@ def get_customers_config (ATS_TEAM_NAME, ENV):
     return df
 
 
-def set_customers_config (customer_details, ATS_TEAM_NAME, ENV):
+def set_customers_config (customer_details, TEAM_NAME, ENV):
     dynamodb_client_wr= boto3.resource('dynamodb')
 
     cust_details = {
@@ -86,13 +84,11 @@ def set_customers_config (customer_details, ATS_TEAM_NAME, ENV):
             "amcS3BucketName":customer_details.get("amc",{}).get("bucket_name",None),
             "amcDatasetName":customer_details.get("amc",{}).get("amc_dataset_name",None),
             "amcApiEndpoint":customer_details.get("amc",{}).get("endpoint_url",None),
-            "amcAdvertiserIds":customer_details.get("amc",{}).get("advertiser_ids",None),
-            "amcEntityIds":customer_details.get("amc",{}).get("entity_ids",None),
-            "amcTeamName":ATS_TEAM_NAME,
+            "amcTeamName":TEAM_NAME,
             "amcRegion":customer_details['region']
         }
     }
     
-    customer_table = dynamodb_client_wr.Table(f'tps-{ATS_TEAM_NAME}-CustomerConfig-{ENV}')
+    customer_table = dynamodb_client_wr.Table(f'tps-{TEAM_NAME}-CustomerConfig-{ENV}')
     dynamodb_resp_wr = customer_table.put_item(Item=cust_details)
     return dynamodb_resp_wr
