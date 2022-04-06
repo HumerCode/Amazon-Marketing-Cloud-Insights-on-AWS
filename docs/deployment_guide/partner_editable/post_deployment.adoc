@@ -1,8 +1,8 @@
 // Include any postdeployment steps here, such as steps necessary to test that the deployment was successful. If there are no postdeployment steps, leave this file empty.
 
-== Cleaning Up the Quickstart
+== Postdeployment steps
 
-Once the solution has been deployed and tested, use the following command to clean up the resources deployed by the AMC QuickStart:
+Once the solution has been deployed and tested, use the following command to clean up the resources deployed:
 
 ```
 $ make delete_all
@@ -16,7 +16,7 @@ _NOTE:_ Before running this command, look into the `Makefile` and ensure that:
 
 This command will go through the following sequence of steps in order to clean up your AWS account environment:
 
-image::../images/AMC-Quickstart-Delete.png[AMC Quickstart Delete]
+image::../docs/deployment_guide/images/AMC-Quickstart-Delete.png[AMC-Quickstart-Delete]
 
 Some CloudWatch General Log Groups May Remain in your Account with Logs specific to AMC Quickstart resources, including:
 
