@@ -1,6 +1,6 @@
 // Include any predeployment steps here, such as signing up for a Marketplace AMI or making any changes to a partner account. If there are no predeployment steps, leave this file empty.
 
-== Predeployment steps
+== Pre deployment steps
 Follow each of the {partner-product-short-name} Deployment Steps:
 
 . Setup Prerequisites
@@ -252,9 +252,9 @@ _Create Workflows:_ To initialize the creation, scheduling and execution of AMC 
 - Track the status of all workflow executions for customer AMC instances whether they are submitted through WFM or other means (postman, etc.). Having the status synced to DynamoDB allows events to be triggered or notifications to be sent when executions change state. This table can also be used to track historical executions for troubleshooting or performance monitoring.
 
 === [Optional] Building Your First QuickSight Dashboard
-The following section walks you through how to build a QuickSight dashboard with a report from Amazon Marketing Cloud (AMC). With AMC enabling advertisers to query event level data within a privacy friendly environment and Amazon QuickSight offering users a cloud-powered business analytics service to build visualizations, perform ad-hoc analysis, and quickly get business insights from their data - you can begin to build out a business intelligence strategy. 
+The following section walks you through how to build a QuickSight dashboard with a report from Amazon Marketing Cloud (AMC). With AMC enabling advertisers to query event level data within a privacy friendly environment and Amazon QuickSight offering users a cloud-powered business analytics service to build visualizations, perform ad-hoc analysis, and quickly get business insights from their data - you can begin to build out a business intelligence strategy.
 
-Advertisers can use QuickSight to analyze reports from AMC to identify valuable insights and then scheduling, publishing dashboards to provide marketing insights in one central location. Custom-built dashboards can pull from a series of custom workflows built on a scheduled cadence. 
+Advertisers can use QuickSight to analyze reports from AMC to identify valuable insights and then scheduling, publishing dashboards to provide marketing insights in one central location. Custom-built dashboards can pull from a series of custom workflows built on a scheduled cadence.
 
 Note: As a prerequisite, you should have executed at least one Time to Conversion query against AMC. The result will be used in this section to populate a QuickSight visualization.
 
@@ -279,7 +279,7 @@ Use the following procedure to make sure that you successfully authorized Amazon
 
 To perform this action, you must be an Amazon QuickSight administrator. To check if you have access, verify that you see the Manage QuickSight option when you open the menu from your profile at upper right.
 
-For more information, review: https://docs.aws.amazon.com/quicksight/latest/user/lake-formation.html 
+For more information, review: https://docs.aws.amazon.com/quicksight/latest/user/lake-formation.html
 
 **To authorize Amazon QuickSight to access Athena and Amazon S3:**
 
@@ -320,18 +320,18 @@ image::../docs/deployment_guide/images/lf-database-grant.png[LakeFormationDBGran
 
 [start=8]
 
-. Under Tables, open the drop-down menu and select All tables or selectively choose individual tables to permission access to. 
+. Under Tables, open the drop-down menu and select All tables or selectively choose individual tables to permission access to.
 . For **Table permissions**, choose **Select** and **Describe**.
 . Then click **Grant**.
 . Repeat the preceding steps to grant multiple database permissions to your QuickSight user ARN or other users and groups.
 
 
-==== Query & Visualize Your First AMC Use Case 
+==== Query & Visualize Your First AMC Use Case
 In this section, you'll step through how to build and analyze a visualization for the Time to Conversion use case.
 
 #### Overview
 
-Advertisers may typically ask - how long does it takes for our customers to convert after last seeing our ad? This use case will enable you with the dimensions and metrics to answer that question. 
+Advertisers may typically ask - how long does it takes for our customers to convert after last seeing our ad? This use case will enable you with the dimensions and metrics to answer that question.
 
 It is important to understand how long it takes customers who see your ad to complete the conversion, and how that impacts the data you see in your conversion report. Sometimes the conversions happen rapidly, within a few minutes and other times, it might take days for your customers to complete the purchase. You can use this information to adjust the duration of your campaign and promotion to maximize sales.
 
@@ -377,9 +377,9 @@ image::../docs/deployment_guide/images/quicksight-table-selection.png[QuickSight
 [start=4]
 
 . Choose **Select**
-. Create a dataset and analyze the data using the table by choosing **Visualize**. 
+. Create a dataset and analyze the data using the table by choosing **Visualize**.
 .. In the **Fields list** pane, choose **purchases**, **time_to_conversion**, and **total_brand_purchases**.
-.. Amazon QuickSight uses AutoGraph to create the visual, selecting the visual type that it determines is most compatible with those fields. In this case, it selects a horizontal bar chart that shows the purchases and total_brand_purchases by time_to_conversion. 
+.. Amazon QuickSight uses AutoGraph to create the visual, selecting the visual type that it determines is most compatible with those fields. In this case, it selects a horizontal bar chart that shows the purchases and total_brand_purchases by time_to_conversion.
 
 image::../docs/deployment_guide/images/quicksight-time-to-conversion-autograph.png[QuickSightTimeToConversionAutoGraph]
 
@@ -387,7 +387,7 @@ image::../docs/deployment_guide/images/quicksight-time-to-conversion-autograph.p
 . Modify the Auto Graphed visual
 .. In the **Visual types** pane, select **Vertical bar chart** to rotate the chart.
 .. Expand the **Field wells** pane by choosing the expand icon.
-.. Choose the **X axis** field well, choose **Sort by**, and then choose **time_to_conversion**. 
+.. Choose the **X axis** field well, choose **Sort by**, and then choose **time_to_conversion**.
 .. Again from the **X axis** field well, select the **ascending** icon.
 . Add a Title to the visual
 .. On the visual's right, choose the **Format visual** icon.
@@ -418,4 +418,4 @@ Vertical Bar Chart visual in Amazon QuickSight for the Purchases by Time to Conv
 [start=13]
 . To then publish and optionally share a dashboard, choose **Share** on the application bar, and then choose **Publish dashboard**.
 . Then, to create a new dashboard, choose **Publish new dashboard as**, and then type a dashboard name.
-. Choose **Publish dashboard**. 
+. Choose **Publish dashboard**.

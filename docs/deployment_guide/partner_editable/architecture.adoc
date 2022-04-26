@@ -8,13 +8,22 @@ As shown in <<architecture1>>, the Quick Start sets up the following:
 
 A highly available serverless architecture using AWS Services
 
-* Amazon Simple Storage Service (Amazon S3) bucket to store AMC raw, pre-stage, and post-stage data
-* AWS Step Functions for data loading and orchestration
+* Amazon Simple Storage Service (Amazon S3) buckets to store:
+** AMC raw
+** Pre-stage
+** Post-stage data
+* AWS Step Functions for the following:
+** Data loading
+** Orchestration
 * AWS Lambda function for loading raw data to pre-stage
-* AWS Glue Jobs for Parquet conversion and data partitioning in post-stage
+* AWS Glue Jobs for the following:
+** Parquet conversion
+** Data partitioning in post-stage
 * AWS Lake Formation Data Lake database for governance and security
 * Amazon Athena Workgroup to query the database and to access the post-stage data
-* Amazon SageMaker notebooks with sample Jupyter notebooks for Tenant Provisioning and Workflow Management
+* Amazon SageMaker notebooks with sample Jupyter notebooks for:
+** Tenant Provisioning
+** Workflow Management
 * Amazon QuickSight (optional/manual setup) for BI Analytics and creating interactive dashboards and visualizations
 
 
