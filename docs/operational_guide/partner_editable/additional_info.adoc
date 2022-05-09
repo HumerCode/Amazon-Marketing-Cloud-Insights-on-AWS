@@ -1,4 +1,213 @@
-// Add steps as necessary for accessing the software, post-configuration, and testing. Don’t include full usage instructions for your software, but add links to your product documentation for that information.
+==== CodePipeline Steps
+
+image::../docs/deployment_guide/images/AMC-Quickstart-CodePipeline-Steps.png[AMC Quickstart CodePipeline Steps]
+
+The Code Pipeline Steps are:
+
+- Source → Pull code from the source CodeCommit Repository
+- Build → Runs `cdk synth` to translate CDK defintions into CloudFormation Template Definitions
+- UpdatePipeline → Automatically update if new CDK applications or stages are added in the source code
+- Assets → Publish CDK Assets
+- AMCQuickstart → Prepares and Deploys all of the Resources in CloudFormation Stacks, including:
+    - Foundational Resources
+    - Data Lake Resources
+    - Microservice Resources
+
+=== Hydrating the Data Lake with SageMaker Notebooks
+
+To hydrate the data lake and begin populating the data lake with data from your AMC Instance, follow the steps below:
+
+. Log In to your AWS Account and go to Amazon SageMaker
+. On the Left Side of Your Screen Click on Notebook --> Notebook Instances (you should see one notebook named `saw-platform-manager` with Status "InService")
+. Click "Open JupyterLab" to open the Notebook Instance in a new tab
+. Right click the `Getting_Started_With_AMC_Quickstart.ipynb` Notebook in the `platform_manager` folder
+   .. Duplicate the Notebook
+   .. Follow the steps in the notebook to hydrate the data lake.
+
+**This Notebook will cover the following:**
+
+_Insert TPS Records:_ To initialize the process of onboarding your AMC instance on the Amazon AD Tech platform, this notebook will walk through the steps to adds client configurations to a TPS Customer Configuration table in Amazon DynamoDB. The configuration includes your AMC Endpoint URL, AMC Bucket Name and other related information on your AMC Instance. The Tenant Provisioning Service (TPS) will then automatically:
+
+- Onboard clients using configuration which is persisted in a DynamoDB Table. It helps to reduce time to onboard new customers
+- Provide functionality to automatically enable different modules (AMC/Sponsored ADs/DSP) during the onboarding process for each client
+- Provide a centralized location to manage various clients and modules and supports multi-tenancy
+
+_Create Workflows:_ To initialize the creation, scheduling and execution of AMC workflows, this notebook will walk through the steps to add a workflow to an AMC Workflows table in Amazon DynamoDB. From there you will also invoke this workflow to execute and populate data from your AMC Instance to your AMC S3 Bucket. WFM also allows you to:
+
+- Automatically trigger the deployment of the SQS queues, IAM policies, workflows and workflow schedules in WFM for the customer's AMC instance upon adding or updating a customer record to the Tenant Provisioning Service (TPS)
+- Synchronize workflows and workflow schedules in the Workflow Library service with multiple AMC Instances
+- Send execution requests to an SQS queue rather than directly to the AMC endpoint to prevents timeout failures when there are large number of requests in a short period of time
+- Scheduled with dynamic relative time windows rather than using AMC's scheduling feature which only allows predefined scheduled reporting such as Daily or Weekly
+- Track the status of all workflow executions for customer AMC instances whether they are submitted through WFM or other means (postman, etc.). Having the status synced to DynamoDB allows events to be triggered or notifications to be sent when executions change state. This table can also be used to track historical executions for troubleshooting or performance monitoring.
+
+=== [Optional] Building Your First QuickSight Dashboard
+The following section walks you through how to build a QuickSight dashboard with a report from Amazon Marketing Cloud (AMC). With AMC enabling advertisers to query event level data within a privacy friendly environment and Amazon QuickSight offering users a cloud-powered business analytics service to build visualizations, perform ad-hoc analysis, and quickly get business insights from their data - you can begin to build out a business intelligence strategy.
+
+Advertisers can use QuickSight to analyze reports from AMC to identify valuable insights and then scheduling, publishing dashboards to provide marketing insights in one central location. Custom-built dashboards can pull from a series of custom workflows built on a scheduled cadence.
+
+Note: As a prerequisite, you should have executed at least one Time to Conversion query against AMC. The result will be used in this section to populate a QuickSight visualization.
+
+==== Initial QuickSight Setup
+You will need author access to a QuickSight Account to get started with building your first dashboard. If you don't have a QuickSight account already, below are the steps to create one.
+
+[start=1]
+. Launch the **AWS Console** (https://console.aws.amazon.com) in a new browser tab, search for **QuickSight** and launch it.
+. On the **QuickSight** page, click **Sign up for QuickSight** button.
+. Keep the default **Enterprise** edition, scroll down and click the **Continue** button.
+. Enter a **QuickSight account name** & **Notification email address**. Enter your official email as the notification email.
+. Scroll down and click the **Finish** button. (It can take 15-30 Secs to set up the account)
+. Click the **Go to Amazon QuickSight** button. You will now be taken to QuickSight console.
+
+==== Authorize Your QuickSight Connection
+To work with Lake Formation and Athena, make sure that you have AWS resource permissions configured in Amazon QuickSight:
+
+* Enable access to Amazon Athena.
+* Enable access to the correct buckets in Amazon S3 Usually S3 access is enabled when you enable Athena. However, because you can change S3 permissions outside of that process, it's a good idea to verify them separately
+
+Use the following procedure to make sure that you successfully authorized Amazon QuickSight to use Athena. Permissions to AWS resources apply to all Amazon QuickSight users.
+
+To perform this action, you must be an Amazon QuickSight administrator. To check if you have access, verify that you see the Manage QuickSight option when you open the menu from your profile at upper right.
+
+For more information, review: https://docs.aws.amazon.com/quicksight/latest/user/lake-formation.html
+
+**To authorize Amazon QuickSight to access Athena and Amazon S3:**
+
+[start=1]
+. Choose your profile name (upper right). Choose **Manage QuickSight**, and then choose **Security & permissions**.
+. Under **QuickSight access to AWS services**, choose **Manage**.
+. Find **Athena** in the list. Clear the box by Athena, then select it again to enable Athena. Then choose **Next**.
+. Under **S3 Bucket**, choose the S3 buckets that you want to access from Amazon QuickSight.
+
+image::../docs/deployment_guide/images/quicksight-bucket-selection.png[QuickSightBucketPermission]
+
+[start=5]
+. From the right column, **Write permission for Athena Workgroup**, choose the S3 buckets you could write your Athena results too.
+. Choose **Finish** to confirm your selection or choose **Cancel** to exit without saving.
+. Click **Save**, to update your new settings for Amazon QuickSight access to AWS services or choose **Cancel** to exit without making any changes.
+
+**To authorize Amazon QuickSight through AWS Lake Formation:**
+
+[start=1]
+. Collect the Amazon Resource Names (ARNs) of the Amazon QuickSight users and groups that need to access the data in Lake Formation. These users should be Amazon QuickSight authors or administrators.
+.. Use the AWS CLI to find user ARNs or you can construct the ARNs for each user manually.
+.. To construct manually, replace **REGION_NAME**, **ACCOUNT_ID**, and **QUICKSIGHT_USERNAME**:
+`arn:aws:quicksight:<REGION_NAME>:<ACCOUNT_ID>:user/default/<QUICKSIGHT_USERNAME>`
+.. To collect user ARNs programmatically, run the following list-users command in your terminal (Linux or Mac) or at your command prompt (Windows): `aws quicksight list-users --aws-account-id 111122223333 --namespace default --region us-east-1`
+... Note: to find your QuickSight username, click the menu in the top right portion of the page.
+
+image::../docs/deployment_guide/images/quicksight-username.png[QuickSightUsernameView]
+
+[start=2]
+. Next, Sign in to the AWS Console and navigate to AWS Lake Formation as the data lake administrator. A data lake administrator can grant any principal (IAM, QuickSight, or Active Directory) permissions to Data Catalog resources (databases and tables) or data lake locations in Amazon S3.
+. Choose **Databases**.
+. Select the circle next to the database you want to grant access to your QuickSight user.
+. From the **Actions** drop-down menu, choose **Grant**.
+. Select **SAML users and groups** and enter the QuickSight user ARN.
+. Then click into **Named data catalog resources**
+
+image::../docs/deployment_guide/images/lf-database-grant.png[LakeFormationDBGrant]
+
+[start=8]
+
+. Under Tables, open the drop-down menu and select All tables or selectively choose individual tables to permission access to.
+. For **Table permissions**, choose **Select** and **Describe**.
+. Then click **Grant**.
+. Repeat the preceding steps to grant multiple database permissions to your QuickSight user ARN or other users and groups.
+
+
+==== Query & Visualize Your First AMC Use Case
+In this section, you'll step through how to build and analyze a visualization for the Time to Conversion use case.
+
+#### Overview
+
+Advertisers may typically ask - how long does it takes for our customers to convert after last seeing our ad? This use case will enable you with the dimensions and metrics to answer that question.
+
+It is important to understand how long it takes customers who see your ad to complete the conversion, and how that impacts the data you see in your conversion report. Sometimes the conversions happen rapidly, within a few minutes and other times, it might take days for your customers to complete the purchase. You can use this information to adjust the duration of your campaign and promotion to maximize sales.
+
+
+.Key Performance Indicators (KPIs)
+:===
+KPI : Definition
+
+Time to Conversion:The amount of time customers take from last seeing your ad to purchase. The time has been converted to minutes, hours and days from seconds in the query template. You may adjust it based on your use case.
+
+Purchases:The number of times any amount of a promoted product or products are included in a purchase event. Purchase events include video rentals and new Subscribe & Save subscriptions. Sum of purchases from users_that_purchased.
+
+Total Brand Purchases:The number of times any number of products are included in a single purchase event. Purchase events include Subscribe & Save subscriptions and video rentals. This counts purchases for promoted products as well as products from the same brands as the products tracked in the order. (Total purchases = Purchases + Purchases Brand Halo)
+:===
+
+
+#### Creating the Visualization:
+This section provides details on how to create a visualization for the Time to Conversion use case in Amazon QuickSight.
+
+[start=1]
+. Begin by creating a new dataset. Choose **Datasets** from the navigation pane at left, then choose **New dataset**.
+. Next, connect to an Athena Data Source with either a using an existing connection profile (more common) or by creating a new one.
+.. To use an existing Athena connection profile, scroll down to the **FROM EXISTING DATA SOURCES** section, and choose the card for the existing data source that you want to use. Choose **Create dataset**. Cards are labeled with the Athena data source icon and the name provided by the person who created the connection.
+.. Next, create a new Athena connection profile, use the following steps:
+... In the **FROM NEW DATA SOURCES** section, choose the **Athena** data source card.
+... For **Data source name**, enter a descriptive name
+... For **Athena workgroup**, choose your workgroup
+... Choose **Validate connection** to test the connection
+... Choose **Create data source**.
+
+image::../docs/deployment_guide/images/quicksight-athena-workgroup.png[QuickiSightAthenaWorkgroup]
+
+[start=3]
+
+. On the **Choose your table screen**, do the following:
+.. For **Catalog**, choose **AwsDataCatalog**.
+.. Choose one of the following:
+... To choose the database and table created for the Time to Conversion use case, choose your database from the dropdown under **Database** and choose the Time to Conversion table from the **Tables** list that appears for your database.
+... You can optionally pull the data in with a SQL query, by choosing **Use custom SQL**
+
+image::../docs/deployment_guide/images/quicksight-table-selection.png[QuickSightTableSelection]
+
+[start=4]
+
+. Choose **Select**
+. Create a dataset and analyze the data using the table by choosing **Visualize**.
+.. In the **Fields list** pane, choose **purchases**, **time_to_conversion**, and **total_brand_purchases**.
+.. Amazon QuickSight uses AutoGraph to create the visual, selecting the visual type that it determines is most compatible with those fields. In this case, it selects a horizontal bar chart that shows the purchases and total_brand_purchases by time_to_conversion.
+
+image::../docs/deployment_guide/images/quicksight-time-to-conversion-autograph.png[QuickSightTimeToConversionAutoGraph]
+
+[start=6]
+. Modify the Auto Graphed visual
+.. In the **Visual types** pane, select **Vertical bar chart** to rotate the chart.
+.. Expand the **Field wells** pane by choosing the expand icon.
+.. Choose the **X axis** field well, choose **Sort by**, and then choose **time_to_conversion**.
+.. Again from the **X axis** field well, select the **ascending** icon.
+. Add a Title to the visual
+.. On the visual's right, choose the **Format visual** icon.
+.. In the **Format Visual** pane that opens on the left, choose the **Title** tab.
+.. Choose **Edit title**
+.. In the **Edit title** page that opens, type **Purchases by Time to Conversion**
+.. When you're finished editing, choose **Save**.
+. Change the x-axis label
+.. Again, in the **Format Visual** pane open on the left, choose the **X-axis** tab.
+.. In the text box below **time_to_conversion**, enter in **Time to Conversion**.
+.. Close the **Format Visual** pane by choosing the X icon in the upper-right corner of the pane.
+. Add data labels to your chart
+.. Next, in the **Format Visual** pane open on the left, choose the **Data Labels** tab.
+.. Check the box to the left of **Show data labels** to show and customize labels.
+.. Close the **Format Visual** pane by choosing the X icon in the upper-right corner of the pane.
+. Add Filters
+.. On the far left pane, choose **Filter**
+.. Then in the Filters pane, choose the **+** in the top right corner.
+.. Select **advertiser**, then repeat for **campaign** and **file_last_modified**
+. Use a combination of the filters to analyze the performance by time period, to identify windows with the highest conversion rates.
+.. For further information on customizing visualizations checkout: https://docs.aws.amazon.com/quicksight/latest/user/working-with-visuals.html
+
+image::../docs/deployment_guide/images/quicksight-time-to-conversion.png[QuickSightTimeToConversion]
+Vertical Bar Chart visual in Amazon QuickSight for the Purchases by Time to Conversion AMC use case
+
+
+
+[start=13]
+. To then publish and optionally share a dashboard, choose **Share** on the application bar, and then choose **Publish dashboard**.
+. Then, to create a new dashboard, choose **Publish new dashboard as**, and then type a dashboard name.
+. Choose **Publish dashboard**.// Add steps as necessary for accessing the software, post-configuration, and testing. Don’t include full usage instructions for your software, but add links to your product documentation for that information.
 //Should any sections not be applicable, remove them
 
 
