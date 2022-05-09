@@ -1,6 +1,6 @@
 *Q:* What is AWS DDK?
 
-*A:* The AWS DataOps Development Kit is an open source development framework for customers that build data workflows and modern data architecture on AWS. For more information on this open source framework, reference the documentation [here](https://awslabs.github.io/aws-ddk/).
+*A:* The AWS DataOps Development Kit is an open source development framework for customers that build data workflows and modern data architecture on AWS. For more information on this open source framework, reference the documentation https://awslabs.github.io/aws-ddk/[here^].
 
 
 *Q:* I encountered a *CREATE_FAILED* error in CloudFormation when I deployed the Quick Start.
@@ -11,7 +11,7 @@
 
 Also, ensure the `ddk.json` file specifies the correct AWS Account ID for the child environment used to deploy (e.g. default is `dev`).
 
-For additional information, see [Troubleshooting AWS CloudFormation](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/troubleshooting.html).
+For additional information, see https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/troubleshooting.html[Troubleshooting AWS CloudFormation^].
 
 
 *Q:* I encountered a *FAILED* status on the *Assets* Step of the AWS CodePipeline Deployment.

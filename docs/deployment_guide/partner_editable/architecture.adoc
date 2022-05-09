@@ -9,13 +9,13 @@ As shown in <<architecture1>>, the Quick Start sets up the following:
 A highly available serverless architecture using AWS Services
 
 * Amazon Simple Storage Service (Amazon S3) buckets to store:
-** AMC raw
-** Pre-stage
+** AMC raw data
+** Pre-stage data
 ** Post-stage data
 * AWS Step Functions for the following:
 ** Data loading
 ** Orchestration
-* AWS Lambda function for loading raw data to pre-stage
+* AWS Lambda function for loading raw data to pre-stage, pre-stage data partitioning, and S3 file metadata
 * AWS Glue Jobs for the following:
 ** Parquet conversion
 ** Data partitioning in post-stage
