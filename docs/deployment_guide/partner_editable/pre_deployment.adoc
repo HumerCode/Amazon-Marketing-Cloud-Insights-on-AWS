@@ -161,7 +161,9 @@ $ ddk deploy --profile [AWS_PROFILE]
 
 The deploy all step deploys an AWS CodePipeline along with its respective AWS CloudFormation Stacks. The last stage of each pipeline delivers the AMC Quickstart infrastructure respectively in the child (default dev) environment through CloudFormation.
 
-image::../docs/deployment_guide/images/AMC-QuickStart-Deploy.png[AMC Quickstart Deployment Steps]
+[#DeploymentSteps1]
+.Quick Start Deployment Steps for {partner-product-short-name} on AWS
+image::../docs/deployment_guide/images/AMC-QuickStart-Deploy.png[AMC Quickstart Deployment Steps,width=648,height=439]
 
 _Foundations:_ This application creates the foundational resources for the quickstart. These resources include Lambda Layers, Glue Jobs, S3 Buckets, routing SQS Queues, and Amazon DynamoDB Tables for data and metadata storage.
 

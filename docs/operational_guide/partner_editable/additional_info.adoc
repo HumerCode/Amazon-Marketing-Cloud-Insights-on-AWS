@@ -1,6 +1,8 @@
 ==== CodePipeline Steps
 
-image::../docs/operational_guide/images/AMC-Quickstart-CodePipeline-Steps.png[AMC Quickstart CodePipeline Steps]
+[#AMCQuickstartCodePipelineSteps1]
+.AMC Quickstart CodePipeline Steps
+image::../docs/operational_guide/images/AMC-Quickstart-CodePipeline-Steps.png[AMC Quickstart CodePipeline Steps,width=648,height=439]
 
 The Code Pipeline Steps are:
 
@@ -77,7 +79,9 @@ For more information, review: https://docs.aws.amazon.com/quicksight/latest/user
 . Find **Athena** in the list. Clear the box by Athena, then select it again to enable Athena. Then choose **Next**.
 . Under **S3 Bucket**, choose the S3 buckets that you want to access from Amazon QuickSight.
 
-image::../docs/operational_guide/images/quicksight-bucket-selection.png[QuickSightBucketPermission]
+[#QuickSightBucketPermission1]
+.QuickSight Bucket Permission
+image::../docs/operational_guide/images/quicksight-bucket-selection.png[QuickSightBucketPermission,width=648,height=439]
 
 [start=5]
 . From the right column, **Write permission for Athena Workgroup**, choose the S3 buckets you could write your Athena results too.
@@ -94,7 +98,9 @@ image::../docs/operational_guide/images/quicksight-bucket-selection.png[QuickSig
 .. To collect user ARNs programmatically, run the following list-users command in your terminal (Linux or Mac) or at your command prompt (Windows): `aws quicksight list-users --aws-account-id 111122223333 --namespace default --region us-east-1`
 ... Note: to find your QuickSight username, click the menu in the top right portion of the page.
 
-image::../docs/operational_guide/images/quicksight-username.png[QuickSightUsernameView]
+[#QuickSightUsernameView2]
+.QuickSight Username View
+image::../docs/operational_guide/images/quicksight-username.png[QuickSightUsernameView,width=648,height=439]
 
 [start=2]
 . Next, Sign in to the AWS Console and navigate to AWS Lake Formation as the data lake administrator. A data lake administrator can grant any principal (IAM, QuickSight, or Active Directory) permissions to Data Catalog resources (databases and tables) or data lake locations in Amazon S3.
@@ -104,7 +110,9 @@ image::../docs/operational_guide/images/quicksight-username.png[QuickSightUserna
 . Select **SAML users and groups** and enter the QuickSight user ARN.
 . Then click into **Named data catalog resources**
 
-image::../docs/operational_guide/images/lf-database-grant.png[LakeFormationDBGrant]
+[#LakeFormationDBGrant3]
+.Lake Formation DB Grant
+image::../docs/operational_guide/images/lf-database-grant.png[LakeFormationDBGrant,width=648,height=439]
 
 [start=8]
 
@@ -150,7 +158,9 @@ This section provides details on how to create a visualization for the Time to C
 ... Choose **Validate connection** to test the connection
 ... Choose **Create data source**.
 
-image::../docs/operational_guide/images/quicksight-athena-workgroup.png[QuickiSightAthenaWorkgroup]
+[#QuickiSightAthenaWorkgroup1]
+.QuickSights Athena WorkGroup
+image::../docs/operational_guide/images/quicksight-athena-workgroup.png[QuickiSightAthenaWorkgroup,width=648,height=439]
 
 [start=3]
 
@@ -160,7 +170,9 @@ image::../docs/operational_guide/images/quicksight-athena-workgroup.png[QuickiSi
 ... To choose the database and table created for the Time to Conversion use case, choose your database from the dropdown under **Database** and choose the Time to Conversion table from the **Tables** list that appears for your database.
 ... You can optionally pull the data in with a SQL query, by choosing **Use custom SQL**
 
-image::../docs/operational_guide/images/quicksight-table-selection.png[QuickSightTableSelection]
+[#QuickSightTableSelection2]
+.QuickSights Table Selection
+image::../docs/operational_guide/images/quicksight-table-selection.png[QuickSightTableSelection,width=648,height=439]
 
 [start=4]
 
@@ -169,7 +181,9 @@ image::../docs/operational_guide/images/quicksight-table-selection.png[QuickSigh
 .. In the **Fields list** pane, choose **purchases**, **time_to_conversion**, and **total_brand_purchases**.
 .. Amazon QuickSight uses AutoGraph to create the visual, selecting the visual type that it determines is most compatible with those fields. In this case, it selects a horizontal bar chart that shows the purchases and total_brand_purchases by time_to_conversion.
 
-image::../docs/operational_guide/images/quicksight-time-to-conversion-autograph.png[QuickSightTimeToConversionAutoGraph]
+[#QuickSightsTimeCOnvAuto3]
+.QuickSights Time to Conversion AutoGraph
+image::../docs/operational_guide/images/quicksight-time-to-conversion-autograph.png[QuickSightTimeToConversionAutoGraph,width=648,height=439]
 
 [start=6]
 . Modify the Auto Graphed visual
@@ -198,7 +212,10 @@ image::../docs/operational_guide/images/quicksight-time-to-conversion-autograph.
 . Use a combination of the filters to analyze the performance by time period, to identify windows with the highest conversion rates.
 .. For further information on customizing visualizations checkout: https://docs.aws.amazon.com/quicksight/latest/user/working-with-visuals.html
 
-image::../docs/operational_guide/images/quicksight-time-to-conversion.png[QuickSightTimeToConversion]
+
+[#QuickSightTimeToConversion4]
+.QuickSight Time to Conversion
+image::../docs/operational_guide/images/quicksight-time-to-conversion.png[QuickSightTimeToConversion,width=648,height=439]
 Vertical Bar Chart visual in Amazon QuickSight for the Purchases by Time to Conversion AMC use case
 
 
