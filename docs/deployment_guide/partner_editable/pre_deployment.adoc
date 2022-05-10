@@ -56,13 +56,8 @@ $ git config --list
 If you would like to deploy this quickstart using an AWS Cloud9 Environment rather than on your local environment, follow these steps to set up AWS Cloud9:
 
 1. Log in to the AWS account console using the Admin role and select an AWS region. We recommend choosing a mature region where most services are available (e.g. eu-west-1, us-east-1…)
-2. Navigate to `Cloud9` in the AWS console. Set up a [Cloud9 Environment](https://docs.aws.amazon.com/cloud9/latest/user-guide/create-environment-main.html) in the same AWS region (t3.small or higher, Amazon Linux 2) and open the IDE
+2. Navigate to `Cloud9` in the AWS console. Set up a https://docs.aws.amazon.com/cloud9/latest/user-guide/create-environment-main.html[Cloud9 Environment^] in the same AWS region (t3.small or higher, Amazon Linux 2) and open the IDE
 3. Download the package, upload it to your Cloud9 instance, and unzip it
-4. Install jq by running in your command line:
-
-```
-$ sudo yum install jq
-```
 
 Python, Pip, AWS CLI, AWS CDK CLI, and Git CLI packages should all be installed and configured for you by defualt in your Cloud9 environment. Ensure that these pacakges are installed with the correct version with the following commands:
 
@@ -89,6 +84,7 @@ Deploying the Foundational Infrastructure
 ```
 $ git clone GITHUB-PATH
 $ cd amc_quickstart
+$ rm -rf .git
 ```
 
 Install AWS DDK CLI, a command line interface to manage your DDK apps
@@ -165,7 +161,7 @@ $ ddk deploy --profile [AWS_PROFILE]
 
 The deploy all step deploys an AWS CodePipeline along with its respective AWS CloudFormation Stacks. The last stage of each pipeline delivers the AMC Quickstart infrastructure respectively in the child (default dev) environment through CloudFormation.
 
-image::../docs/deployment_guide/images/AMC-Quickstart-Deploy.png[AMC Quickstart Deployment Steps]
+image::../docs/deployment_guide/images/amc-quickstart-deploy.png[AMC Quickstart Deployment Steps]
 
 _Foundations:_ This application creates the foundational resources for the quickstart. These resources include Lambda Layers, Glue Jobs, S3 Buckets, routing SQS Queues, and Amazon DynamoDB Tables for data and metadata storage.
 
@@ -173,7 +169,7 @@ _Data Lake:_ This application creates the resources for the data lake. All the r
 
 _Microservices:_ This application creates the resources for the supporting Microservices. All the resources needed for orchestration between the microservices, data processing code, and data and metadata storage for the microservices are provisioned here.
 
-For a walkthrough of the steps the AWS CodePipeline goes through to deploy these resources please refer to [here](#amc-quickstart-codepipeline-steps).
+For a walkthrough of the steps the AWS CodePipeline goes through to deploy these resources please refer to the CodePipeline Steps in the Quickstart Operational Guide.
 
 _NOTE:_ If deploying in a new AWS Account, the Assets stage of the CodePipeline may fail due to limitations for the number of concurrent file assets to publish. This is a current limitation of AWS CodeBuild. To fix, click the `Retry` button in CodePipeline for the Assets Stage. This will manually continue the Assets Stage to continue building file assets from its most current progress.
 
