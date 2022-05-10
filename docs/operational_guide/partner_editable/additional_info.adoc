@@ -2,7 +2,7 @@
 
 [#AMCQuickstartCodePipelineSteps1]
 .AMC Quickstart CodePipeline Steps
-image::../docs/operational_guide/images/AMC-Quickstart-CodePipeline-Steps.png[AMC Quickstart CodePipeline Steps,width=648,height=439]
+image::../docs/operational_guide/images/AMC-Quickstart-CodePipeline-Steps.png[AMC Quickstart CodePipeline Steps]
 
 The Code Pipeline Steps are:
 
@@ -81,7 +81,7 @@ For more information, review: https://docs.aws.amazon.com/quicksight/latest/user
 
 [#QuickSightBucketPermission1]
 .QuickSight Bucket Permission
-image::../docs/operational_guide/images/quicksight-bucket-selection.png[QuickSightBucketPermission,width=648,height=439]
+image::../docs/operational_guide/images/quicksight-bucket-selection.png[QuickSightBucketPermission]
 
 [start=5]
 . From the right column, **Write permission for Athena Workgroup**, choose the S3 buckets you could write your Athena results too.
@@ -100,7 +100,7 @@ image::../docs/operational_guide/images/quicksight-bucket-selection.png[QuickSig
 
 [#QuickSightUsernameView2]
 .QuickSight Username View
-image::../docs/operational_guide/images/quicksight-username.png[QuickSightUsernameView,width=648,height=439]
+image::../docs/operational_guide/images/quicksight-username.png[QuickSightUsernameView]
 
 [start=2]
 . Next, Sign in to the AWS Console and navigate to AWS Lake Formation as the data lake administrator. A data lake administrator can grant any principal (IAM, QuickSight, or Active Directory) permissions to Data Catalog resources (databases and tables) or data lake locations in Amazon S3.
@@ -112,7 +112,7 @@ image::../docs/operational_guide/images/quicksight-username.png[QuickSightUserna
 
 [#LakeFormationDBGrant3]
 .Lake Formation DB Grant
-image::../docs/operational_guide/images/lf-database-grant.png[LakeFormationDBGrant,width=648,height=439]
+image::../docs/operational_guide/images/lf-database-grant.png[LakeFormationDBGrant]
 
 [start=8]
 
@@ -160,7 +160,7 @@ This section provides details on how to create a visualization for the Time to C
 
 [#QuickiSightAthenaWorkgroup1]
 .QuickSights Athena WorkGroup
-image::../docs/operational_guide/images/quicksight-athena-workgroup.png[QuickiSightAthenaWorkgroup,width=648,height=439]
+image::../docs/operational_guide/images/quicksight-athena-workgroup.png[QuickiSightAthenaWorkgroup]
 
 [start=3]
 
@@ -172,7 +172,7 @@ image::../docs/operational_guide/images/quicksight-athena-workgroup.png[QuickiSi
 
 [#QuickSightTableSelection2]
 .QuickSights Table Selection
-image::../docs/operational_guide/images/quicksight-table-selection.png[QuickSightTableSelection,width=648,height=439]
+image::../docs/operational_guide/images/quicksight-table-selection.png[QuickSightTableSelection]
 
 [start=4]
 
@@ -183,7 +183,7 @@ image::../docs/operational_guide/images/quicksight-table-selection.png[QuickSigh
 
 [#QuickSightsTimeCOnvAuto3]
 .QuickSights Time to Conversion AutoGraph
-image::../docs/operational_guide/images/quicksight-time-to-conversion-autograph.png[QuickSightTimeToConversionAutoGraph,width=648,height=439]
+image::../docs/operational_guide/images/quicksight-time-to-conversion-autograph.png[QuickSightTimeToConversionAutoGraph]
 
 [start=6]
 . Modify the Auto Graphed visual
@@ -215,7 +215,7 @@ image::../docs/operational_guide/images/quicksight-time-to-conversion-autograph.
 
 [#QuickSightTimeToConversion4]
 .QuickSight Time to Conversion
-image::../docs/operational_guide/images/quicksight-time-to-conversion.png[QuickSightTimeToConversion,width=648,height=439]
+image::../docs/operational_guide/images/quicksight-time-to-conversion.png[QuickSightTimeToConversion]
 Vertical Bar Chart visual in Amazon QuickSight for the Purchases by Time to Conversion AMC use case
 
 
