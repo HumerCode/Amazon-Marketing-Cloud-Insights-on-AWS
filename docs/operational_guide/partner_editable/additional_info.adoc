@@ -1,6 +1,6 @@
 ==== CodePipeline Steps
 
-image::../docs/operational_guide/images/amc-quickstart-codepipeline-steps.png[AMC Quickstart CodePipeline Steps]
+image::../docs/operational_guide/images/AMC-Quickstart-CodePipeline-Steps.png[AMC Quickstart CodePipeline Steps]
 
 The Code Pipeline Steps are:
 
