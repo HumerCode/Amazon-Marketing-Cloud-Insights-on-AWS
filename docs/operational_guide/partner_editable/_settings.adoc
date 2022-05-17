@@ -1,6 +1,6 @@
 // Change the following attributes.
 :quickstart-project-name: quickstart-amazon-marketing-cloud
-:partner-product-name: AMC Analytics on AWS Solution
+:partner-product-name: AMC Analytics
 // For the following attribute, if you have no short name, enter the same name as partner-product-name.
 :partner-product-short-name: AMC Analytics
 // If there's no partner, comment partner-company-name.
@@ -21,3 +21,5 @@
 :deployment_time: 1.5 hours
 :default_deployment_region: us-east-1
 :parameters_as_appendix:
+
+//TODO Marcia to update these settings to match deployment guide.
