@@ -1,21 +1,178 @@
-For troubleshooting common Quick Start issues, refer to the https://fwd.aws/rA69w?[AWS Quick Start General Information Guide^] and https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/troubleshooting.html[Troubleshooting CloudFormation^].
+// Include any predeployment steps here, such as signing up for a Marketplace AMI or making any changes to a partner account. If there are no predeployment steps, leave this file empty.
 
-'''
+== Predeployment steps
 
-*Q:* I encountered a *CREATE_FAILED* error in CloudFormation when I deployed the Quick Start.
+=== Set up your environment
 
-*A:* Ensure that you have bootstrapped the AWS accounts in use by running the following command, replacing the information in brackets.
+Before you deploy this Quick Start, you need to set up an environment that has programmatic access to your AWS account and that has various tools installed at the appropriate versions. You can set up your environment locally or in AWS Cloud9, as detailed in the following sections.
 
-`ddk bootstrap --profile <AWS_PROFILE> --trusted-accounts <AWS_ACCOUNT_ID>`
+==== Set up a local environment
 
-Also ensure that the `ddk.json` file specifies the correct AWS account for the child environment used to deploy (for example, default is set to `dev`).
+. Confirm that your local environment has Python version 3.7 or later and its package manager, pip, version 9.0.3 or later.
++
+```
+$ python --version
+$ pip --version
+```
 
-'''
+. Confirm that the AWS Command Line Interface (AWS CLI) is installed and configured.
++
+```
+$ aws --version
+```
 
-*Q:* I can't find the configuration for my AMC instance.
+. Confirm that you have AWS CDK version 2.10 or later.
++
+```
+$ cdk --version
+```
 
-*A:* In the AMC user interface, you can view the *Instance Information* page for detailed information on the AMC instance S3 bucket, endpoint URL, data-upload account, advertiser IDs, and entity IDs. You can also retrieve this information by raising a ticket to the AMC team.
+. Confirm that Git is installed and configured.
++
+```
+$ git --version
+```
 
-//TODO Troy, What do we mean by "AMC user interface"?
+. If this is your first time using Git, set your user name and email address as follows, replacing the information in brackets.
++
+```
+$ git config --global user.name <YOUR NAME>
+$ git config --global user.email <YOU@EMAIL.COM>
+```
+//TODO Troy, I added these quotation marks. Correct?
+-- No I have removed them.
 
-//TODO Troy, How do people raise a ticket to the AMC team?
+. Confirm that Git is configured.
++
+```
+$ git config --list
+```
+
+==== Set up an AWS Cloud9 environment
+
+. Sign in to the AWS Management Console using the *Admin* role, and choose an AWS Region. Choose a mature Region where most services are available, such as eu-west-1 or us-east-1.
+
+. Open the AWS Cloud9 console, and create an EC2 environment in your chosen AWS Region. Choose instance type t3.small or larger, Amazon Linux 2. For details refer to https://docs.aws.amazon.com/cloud9/latest/user-guide/create-environment-main.html[Creating an EC2 Environment^].
+
+. In your integrated development environment (IDE), download the package, upload it to your AWS Cloud9 instance, and unzip it.
++
+By default, Python, pip, AWS CLI, AWS CDK, and Git are installed and configured for you in your AWS Cloud9 environment.
+
+. Confirm that the packages are all installed by entering the following commands:
++
+```
+$ python --version
+$ pip --version
+$ aws --version
+$ cdk --version
+$ git --version
+```
+//TODO Troy, Where we say, "download the package," which "package" are we referring to? And where do we download it from?
+
+. Verify the following versions:
+* Python 3.7 or later.
+* pip 9.0.3 or later.
+* AWS CDK version 2.10 or later.
+
+=== Install AWS DDK
+
+The https://github.com/awslabs/aws-ddk/blob/main/README.md[AWS DataOps Development Kit (AWS DDK)^] is an open-source development framework for developers who build data workflows and modern data architecture on AWS. Follow these steps to install AWS DDK.
+
+. Clone the https://github.com/aws-quickstart/quickstart-amazon-marketing-cloud[{partner-product-name} Quick Start repository^] as follows, replacing the information in brackets.
++
+```
+$ git clone <GITHUB-PATH>
+$ cd quickstart-amazon-marketing-cloud
+$ rm -rf .git
+```
+//TODO Troy, I added the brackets. Correct? - Yes
+//TODO Troy, Please review all the code throughout this doc to make sure there are brackets wherever needed. - Done
+//TODO Troy, is "cd amc_quickstart" correct? The repo path doesn't contain that text string. - No fixed it.
+
+. Install AWS DDK.
++
+```
+$ pip install aws-ddk
+```
+. Verify the installation.
++
+```
+$ ddk --help
+```
+
+. Create and activate a virtual environment.
++
+```
+$ python -m venv .venv && source .venv/bin/activate
+```
+
+. Install the dependencies from `requirements.txt`.
++
+```
+$ pip install -r requirements.txt --no-cache-dir
+```
++
+The AWS DDK Core, a library of AWS CDK constructs, is installed.
+
+. If your AWS account hasn't been used to deploy AWS DDK apps before, bootstrap your environment as follows, replacing the information in brackets.
++
+```
+$ ddk bootstrap --help
+$ ddk bootstrap --profile <AWS_PROFILE> --trusted-accounts <AWS_ACCOUNT_ID>
+```
++
+You might recognize a number of files typically found in an AWS CDK Python application, such as `app.py` and `cdk.json. In addition, `ddk.json` holds configuration information about AWS DDK constructs.
+
+. Edit `ddk.json`, entering your account ID, the name of the CodeCommit repository to reference (you'll create this repository in a later step), and names of data-lake parameters such as `app`, `org`, `team`, `dataset`, and `pipeline`.
++
+```
+$ vi ddk.json
+```
+//TODO Troy, Should this be "edit" (lowercase)?
+
+. Initialize Git for the repository.
++
+
+```
+$ git init --initial-branch main
+```
+
+. Create a new CodeCommit repository as follows. Replace the information in brackets, using the repository name value from the `ddk.json` configuration file.
++
+```
+$ ddk create-repository <AMC_QUICKSTART_REPO_NAME> --profile <AWS_PROFILE> --region <AWS_REGION>
+```
+
+//TODO Troy, Should we add, "Choose a mature Region where most services are available, such as eu-west-1 or us-east-1" (or any other guidance about choosing a Region)? - No as this depends on what region the end uses chooses.
+
+. Add and push the initial commit to the repository as follows, replacing the information in brackets.
++
+
+```
+$ git config --global credential.helper "!aws codecommit --profile <my-profile> credential-helper $@"
+$ git config --global credential.UseHttpPath true
+$ git add .
+$ git commit -m "Configure AMC QUICKSTART"
+$ git push --set-upstream origin main
+```
+
+
+== Deployment steps
+
+Deploying this Quick Start takes about {deployment_time} to complete.
+
+//TODO Troy, Does deployment (building the stacks) really take 1.5 hours? - Yes
+
+//TODO Troy, What do we have to be signed in to before we do Step 1? - This is not CFN so nothing all pre-deploy steps take care of that.
+
+. Run the `deploy` command as follows, replacing the information in brackets.
++
+```
+$ ddk deploy --profile <AWS_PROFILE>
+```
+
+
+. If the status is FAILED in the assets stage of deploying AWS CodePipeline (due to the limited number of file assets that AWS CodeBuild can publish concurrently), choose the *Retry* button. This prompts CodePipeline to continue building the file assets.
+
+//TODO Troy, When and how do we choose the correct AWS Region? - it is choosen here:
+//$ ddk create-repository <AMC_QUICKSTART_REPO_NAME> --profile <AWS_PROFILE> --region <AWS_REGION>

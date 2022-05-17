@@ -11,7 +11,7 @@
 :partner-contributors: Arpan Shah, Naomi Joshi, and Chaitra Nayak, Ad Tech Solutions
 :aws-contributors: Chip Reno, AWS WW AD & Mktg Sols GTMS
 :aws-ia-contributors: Troy Ameigh, AWS Integration & Automation team
-:other-contributors: Ramesh Jetty, Brian Maguire, Bret Pontillo, Noah Paige, Alex Burkleaux, Eric Beard,Igor Londero Gentil
+:other-contributors: Ramesh Jetty, Brian Maguire,Igor Londero Gentil - AWS Geo Solutions Architecture, Bret Pontillo, Noah Paige - AWS ProServe, Alex Burkleaux AWS M&E Solutions Architecture, Eric Beard - AWS Partner Core
 
 
 // For deployment_time, use minutes if deployment takes an hour or less,

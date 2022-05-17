@@ -1,4 +1,4 @@
-This guide provides instructions for using the AWS Cloud Development Kit (AWS CDK) to deploy the Amazon Marketing Cloud (AMC) Analytics Quick Start on AWS. 
+This guide provides instructions for using the AWS Cloud Development Kit (AWS CDK) to deploy the Amazon Marketing Cloud (AMC) Analytics Quick Start on AWS.
 
 For information about AMC, refer to https://advertising.amazon.com/solutions/products/amazon-marketing-cloud[What is Amazon Marketing Cloud?^].
 
@@ -7,11 +7,15 @@ If you are unfamiliar with AWS Quick Starts, refer to the https://fwd.aws/rA69w?
 //For advanced information about using the architecture that you deploy with this Quick Start, refer to the https://fwd.aws/<permalink>?[{partner-product-name} Quick Start Operational Guide^].
 
 //TODO Troy, What will the URL be for the operational guide: https://aws-quickstart.github.io/quickstart-amazon-marketing-cloud/operational/index.html?
+//I can add this once we push to gh-pages with Doc-Build command
 
-//TODO Marcia to uncomment and swap in the permalink when the op guide goes live (after initial QS launch). 
+//TODO Marcia to uncomment and swap in the permalink when the op guide goes live (after initial QS launch).
 
-//TODO Troy, How do we generate a local preview of the operational guide? 
+//TODO Troy, How do we generate a local preview of the operational guide?
+//$> asciidoctor --base-dir docs/ --backend=html5 -o ../index.html -w --doctype=book -a toc2 -a production_build docs/boilerplate/index_operational_guide.adoc && open index.html
 
 //TODO Troy, Is the Swingline preview of the operational guide working yet?
+//No this is not setup in Swingline. use link from SIM and let me know if you have issues.
 
 //TODO Troy: I’ve moved some content out of the deployment guide into the operational guide. Is this guide missing any info that people need to complete deployment? Please confirm yes or no.
+//Yes

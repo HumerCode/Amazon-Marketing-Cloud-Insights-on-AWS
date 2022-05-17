@@ -17,27 +17,36 @@ $ pip --version
 
 . Confirm that the AWS Command Line Interface (AWS CLI) is installed and configured.
 +
-`$ aws --version`
+```
+$ aws --version
+```
 
 . Confirm that you have AWS CDK version 2.10 or later.
 +
-`$ cdk --version`
+```
+$ cdk --version
+```
 
 . Confirm that Git is installed and configured.
 +
-`$ git --version`
+```
+$ git --version
+```
 
 . If this is your first time using Git, set your user name and email address as follows, replacing the information in brackets.
 +
 ```
-$ git config --global user.name "<YOUR NAME>"
-$ git config --global user.email "<YOU@EMAIL.COM>"
+$ git config --global user.name <YOUR NAME>
+$ git config --global user.email <YOU@EMAIL.COM>
 ```
 //TODO Troy, I added these quotation marks. Correct?
+-- No I have removed them.
 
 . Confirm that Git is configured.
 +
-`$ git config --list`
+```
+$ git config --list
+```
 
 ==== Set up an AWS Cloud9 environment
 
@@ -47,7 +56,7 @@ $ git config --global user.email "<YOU@EMAIL.COM>"
 
 . In your integrated development environment (IDE), download the package, upload it to your AWS Cloud9 instance, and unzip it.
 +
-By default, Python, pip, AWS CLI, AWS CDK, and Git are installed and configured for you in your AWS Cloud9 environment. 
+By default, Python, pip, AWS CLI, AWS CDK, and Git are installed and configured for you in your AWS Cloud9 environment.
 
 . Confirm that the packages are all installed by entering the following commands:
 +
@@ -73,28 +82,35 @@ The https://github.com/awslabs/aws-ddk/blob/main/README.md[AWS DataOps Developme
 +
 ```
 $ git clone <GITHUB-PATH>
-$ cd amc_quickstart
+$ cd quickstart-amazon-marketing-cloud
 $ rm -rf .git
 ```
-//TODO Troy, I added the brackets. Correct? 
-//TODO Troy, Please review all the code throughout this doc to make sure there are brackets wherever needed.
-//TODO Troy, is "cd amc_quickstart" correct? The repo path doesn't contain that text string.
+//TODO Troy, I added the brackets. Correct? - Yes
+//TODO Troy, Please review all the code throughout this doc to make sure there are brackets wherever needed. - Done
+//TODO Troy, is "cd amc_quickstart" correct? The repo path doesn't contain that text string. - No fixed it.
 
 . Install AWS DDK.
 +
-`$ pip install aws-ddk`
-
+```
+$ pip install aws-ddk
+```
 . Verify the installation.
 +
-`$ ddk --help`
+```
+$ ddk --help
+```
 
 . Create and activate a virtual environment.
 +
-`$ python -m venv .venv && source .venv/bin/activate`
+```
+$ python -m venv .venv && source .venv/bin/activate
+```
 
 . Install the dependencies from `requirements.txt`.
 +
-`$ pip install -r requirements.txt --no-cache-dir`
+```
+$ pip install -r requirements.txt --no-cache-dir
+```
 +
 The AWS DDK Core, a library of AWS CDK constructs, is installed.
 
@@ -105,24 +121,33 @@ $ ddk bootstrap --help
 $ ddk bootstrap --profile <AWS_PROFILE> --trusted-accounts <AWS_ACCOUNT_ID>
 ```
 +
-You might recognize a number of files typically found in an AWS CDK Python application, such as `app.py` and `cdk.json. In addition, `ddk.json` holds configuration information about AWS DDK constructs. 
+You might recognize a number of files typically found in an AWS CDK Python application, such as `app.py` and `cdk.json. In addition, `ddk.json` holds configuration information about AWS DDK constructs.
 
 . Edit `ddk.json`, entering your account ID, the name of the CodeCommit repository to reference (you'll create this repository in a later step), and names of data-lake parameters such as `app`, `org`, `team`, `dataset`, and `pipeline`.
 +
-`$ Edit ddk.json`
+```
+$ vi ddk.json
+```
 //TODO Troy, Should this be "edit" (lowercase)?
 
 . Initialize Git for the repository.
 +
-`$ git init --initial-branch main`
+
+```
+$ git init --initial-branch main
+```
 
 . Create a new CodeCommit repository as follows. Replace the information in brackets, using the repository name value from the `ddk.json` configuration file.
 +
-`$ ddk create-repository <AMC_QUICKSTART_REPO_NAME> --profile <AWS_PROFILE> --region <AWS_REGION>`
-//TODO Troy, Should we add, "Choose a mature Region where most services are available, such as eu-west-1 or us-east-1" (or any other guidance about choosing a Region)?
+```
+$ ddk create-repository <AMC_QUICKSTART_REPO_NAME> --profile <AWS_PROFILE> --region <AWS_REGION>
+```
+
+//TODO Troy, Should we add, "Choose a mature Region where most services are available, such as eu-west-1 or us-east-1" (or any other guidance about choosing a Region)? - No as this depends on what region the end uses chooses.
 
 . Add and push the initial commit to the repository as follows, replacing the information in brackets.
 +
+
 ```
 $ git config --global credential.helper "!aws codecommit --profile <my-profile> credential-helper $@"
 $ git config --global credential.UseHttpPath true
@@ -131,18 +156,23 @@ $ git commit -m "Configure AMC QUICKSTART"
 $ git push --set-upstream origin main
 ```
 
+
 == Deployment steps
-  
-Deploying this Quick Start takes about {deployment_time} to complete. 
 
-//TODO Troy, Does deployment (building the stacks) really take 1.5 hours?
+Deploying this Quick Start takes about {deployment_time} to complete.
 
-//TODO Troy, What do we have to be signed in to before we do Step 1?
+//TODO Troy, Does deployment (building the stacks) really take 1.5 hours? - Yes
+
+//TODO Troy, What do we have to be signed in to before we do Step 1? - This is not CFN so nothing all pre-deploy steps take care of that.
 
 . Run the `deploy` command as follows, replacing the information in brackets.
 +
-`$ ddk deploy --profile <AWS_PROFILE>`
+```
+$ ddk deploy --profile <AWS_PROFILE>
+```
+
 
 . If the status is FAILED in the assets stage of deploying AWS CodePipeline (due to the limited number of file assets that AWS CodeBuild can publish concurrently), choose the *Retry* button. This prompts CodePipeline to continue building the file assets.
 
-//TODO Troy, When and how do we choose the correct AWS Region?
+//TODO Troy, When and how do we choose the correct AWS Region? - it is choosen here:
+//$ ddk create-repository <AMC_QUICKSTART_REPO_NAME> --profile <AWS_PROFILE> --region <AWS_REGION>
