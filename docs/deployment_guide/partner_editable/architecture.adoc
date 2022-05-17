@@ -1,30 +1,18 @@
 :xrefstyle: short
 
+Deploying this Quick Start with default parameters builds the following {partner-product-short-name} serverless environment in the AWS Cloud.
+
 [#architecture1]
 .Quick Start architecture for {partner-product-short-name} on AWS
-image::../docs/deployment_guide/images/architecture_diagram.png[Architecture,width=648,height=439]
+image::../docs/deployment_guide/images/AMC-architecture-diagram.png[Architecture]
 
 As shown in <<architecture1>>, the Quick Start sets up the following:
 
-A highly available serverless architecture using AWS Services
-
-* Amazon Simple Storage Service (Amazon S3) buckets to store:
-** AMC raw data
-** Pre-stage data
-** Post-stage data
-* AWS Step Functions for the following:
-** Data loading
-** Orchestration
-* AWS Lambda function for loading raw data to pre-stage, pre-stage data partitioning, and S3 file metadata
-* AWS Glue Jobs for the following:
-** Parquet conversion
-** Data partitioning in post-stage
-* AWS Lake Formation Data Lake database for governance and security
-* Amazon Athena Workgroup to query the database and to access the post-stage data
-* Amazon SageMaker notebooks with sample Jupyter notebooks for:
-** Tenant Provisioning
-** Workflow Management
-* Amazon QuickSight (optional/manual setup) for BI Analytics and creating interactive dashboards and visualizations
-
-
-For more information about AMC, see https://advertising.amazon.com/solutions/products/amazon-marketing-cloud[Amazon Marketing Cloud^].
+* Three Amazon Simple Storage Service (Amazon S3) buckets to store aggregate AMC data, prestage data, and poststage data.
+* AWS Step Functions for loading and orchestrating data.
+* An AWS Lambda function for loading raw data to prestage, partitioning prestage data, and managing S3 file metadata.
+* AWS Glue for converting Parquet files and partitioning poststage data.
+* An AWS Lake Formation data lake for governance and security.
+* Amazon Athena to query the data lake and access the poststage data.
+* (Optional) Amazon QuickSight for business-intelligence analytics, interactive dashboards, and visualizations that business stakeholders can use.
+* Amazon SageMaker with sample Jupyter notebooks that analysts can use to provision tenants and manage workflows.

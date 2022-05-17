@@ -1,13 +1,25 @@
-==== CodePipeline Steps
+//TODO Troy, Note that I haven't edited the operational guide yet. That will follow release of the Quick Start.
+
+For information on deploying this Quick Start, refer to the https://fwd.aws/<permalink>?[{partner-product-name} Quick Start Deployment Guide^].
+
+//TODO Marcia to swap in the permalink above. 
+
+//TODO Troy, What order should the following sections go in?
+
+==== CodePipeline steps
+
+//TODO Troy, Why do we provide this info? What does it help customers do? We wouldn't normally include this kind of description in our docs unless it's actionable. Let's chat.
+
+//TODO Troy, If people truly need everything in this section, please clean up the redundancies and rearrange for logical flow.
 
 [#AMCQuickstartCodePipelineSteps1]
 .AMC Quickstart CodePipeline Steps
 image::../docs/operational_guide/images/AMC-Quickstart-CodePipeline-Steps.png[AMC Quickstart CodePipeline Steps]
 
-The Code Pipeline Steps are:
+The Code Pipeline steps are:
 
 - Source → Pull code from the source CodeCommit Repository
-- Build → Runs `cdk synth` to translate CDK defintions into CloudFormation Template Definitions
+- Build → Runs `cdk synth` to translate CDK definitons into CloudFormation Template Definitions
 - UpdatePipeline → Automatically update if new CDK applications or stages are added in the source code
 - Assets → Publish CDK Assets
 - AMCQuickstart → Prepares and Deploys all of the Resources in CloudFormation Stacks, including:
@@ -15,18 +27,44 @@ The Code Pipeline Steps are:
     - Data Lake Resources
     - Microservice Resources
 
-=== Hydrating the Data Lake with SageMaker Notebooks
 
-To hydrate the data lake and begin populating the data lake with data from your AMC Instance, follow the steps below:
+As shown in <<DeploymentSteps1>>, the architecture that you deploy with this Quick Start includes a CI/CD pipeline along with AWS CloudFormation stacks. The last stage of each pipeline delivers the {partner-product-short-name} infrastructure in the child (default development) environment through CloudFormation.  
 
-. Log In to your AWS Account and go to Amazon SageMaker
-. On the Left Side of Your Screen Click on Notebook --> Notebook Instances (you should see one notebook named `saw-platform-manager` with Status "InService")
+//TODO Troy, How does the following diagram relate to the preceding one as well as to Fig. 1 in the deployment guide? 
+
+[#DeploymentSteps1]
+.CI/CD pipeline and CloudFormation stacks deployed with the {partner-product-short-name} Quick Start
+image::../docs/deployment_guide/images/AMC-QuickStart-Deploy.png[CFN stacks]
+
+//TODO Marcia: Somewhere, give the full names of all the services shown in Fig. 2. 
+
+In addition to the foundational stack, these are the main stacks, or modules, that this Quick Start deploys:  
+
+* *Serverless Data Lake Framework (SDLF):* This module processes advertising-related datasets in AMC. It's based on the AWS Professional Services open-source https://github.com/awslabs/aws-serverless-data-lake-framework[Serverless Data Lake Framework (SDLF)^]. For details, refer to https://github.com/aws-quickstart/quickstart-amazon-marketing-cloud/blob/main/amc_quickstart/data_lake/README.md[AMC Quick Start Data Lake^].
+* *Tenant Provisioning Service (TPS):* This module manages AMC tenants. For details, refer to https://github.com/aws-quickstart/quickstart-amazon-marketing-cloud/blob/main/amc_quickstart/microservices/customer_management_service/README.md[Tenant Provisioning Service (Client Manager Microservice)^].
+* *Workflow Management Service (WFM):* This module manages AMC workflows. For details, refer to https://github.com/aws-quickstart/quickstart-amazon-marketing-cloud/blob/main/amc_quickstart/microservices/data_lake_hydration_service/README.md[Workflow Management Service^].
+* *Platform Management Notebook (PMN):* This module contains sample Jupyter notebooks for the TPS and WFM modules. For details, refer to https://github.com/aws-quickstart/quickstart-amazon-marketing-cloud/blob/main/amc_quickstart/microservices/platform_management_notebooks/README.md[Platform Notebook Manager^].
+
+When you deploy this Quick Start, resources are created by three applications as follows: 
+
+* *Foundations:* This application creates the foundational resources for the Quick Start. These resources include Lambda layers, AWS Glue jobs, S3 buckets, routing Amazon SQS queues, and Amazon DynamoDB tables for data and metadata storage.
+
+* *Data Lake:* This application creates the resources for the data lake. All the resources needed for orchestration between services and data-processing code are provisioned here.
+
+* *Microservices:* This application creates the resources for the supporting microservices. All the resources needed for orchestration between the microservices, data-processing code, and data and metadata storage for the microservices are provisioned here.
+
+=== Hydrate your data lake with Jupyter notebooks
+
+To hydrate the data lake and begin populating it with data from your AMC instance, follow these steps. When you're finished, business stakeholders can use Amazon Athena to access the data returned from the workflow execution.
+
+. Sign in to the AWS Management Console, and open the Amazon SageMaker console.
+. On the left side of your screen, choose *Notebook*, *Notebook Instances*. (You should see one notebook named `saw-platform-manager` with status *In Service*.)
 . Click "Open JupyterLab" to open the Notebook Instance in a new tab
 . Right click the `Getting_Started_With_AMC_Quickstart.ipynb` Notebook in the `platform_manager` folder
    .. Duplicate the Notebook
    .. Follow the steps in the notebook to hydrate the data lake.
 
-**This Notebook will cover the following:**
+This notebook covers the following:
 
 _Insert TPS Records:_ To initialize the process of onboarding your AMC instance on the Amazon AD Tech platform, this notebook will walk through the steps to adds client configurations to a TPS Customer Configuration table in Amazon DynamoDB. The configuration includes your AMC Endpoint URL, AMC Bucket Name and other related information on your AMC Instance. The Tenant Provisioning Service (TPS) will then automatically:
 
@@ -41,17 +79,16 @@ _Create Workflows:_ To initialize the creation, scheduling and execution of AMC 
 - Scheduled with dynamic relative time windows rather than using AMC's scheduling feature which only allows predefined scheduled reporting such as Daily or Weekly
 - Track the status of all workflow executions for customer AMC instances whether they are submitted through WFM or other means (postman, etc.). Having the status synced to DynamoDB allows events to be triggered or notifications to be sent when executions change state. This table can also be used to track historical executions for troubleshooting or performance monitoring.
 
-=== [Optional] Building Your First QuickSight Dashboard
-The following section walks you through how to build a QuickSight dashboard with a report from Amazon Marketing Cloud (AMC). With AMC enabling advertisers to query event level data within a privacy friendly environment and Amazon QuickSight offering users a cloud-powered business analytics service to build visualizations, perform ad-hoc analysis, and quickly get business insights from their data - you can begin to build out a business intelligence strategy.
+=== (Optional) Build a QuickSight dashboard for visualizing AMC data
+This section walks you through how to build a QuickSight dashboard with an AMC report. With AMC enabling advertisers to query event-level data within a privacy friendly environment and Amazon QuickSight offering users a cloud-powered business analytics service to build visualizations, perform ad-hoc analysis, and quickly get business insights from their data, you can build out a business intelligence strategy.
 
 Advertisers can use QuickSight to analyze reports from AMC to identify valuable insights and then scheduling, publishing dashboards to provide marketing insights in one central location. Custom-built dashboards can pull from a series of custom workflows built on a scheduled cadence.
 
-Note: As a prerequisite, you should have executed at least one Time to Conversion query against AMC. The result will be used in this section to populate a QuickSight visualization.
+Prerequisite: Have executed at least one time-to-conversion query against AMC so that you have results to populate the QuickSight visualization.
 
-==== Initial QuickSight Setup
-You will need author access to a QuickSight Account to get started with building your first dashboard. If you don't have a QuickSight account already, below are the steps to create one.
+==== Set up QuickSight
+You need author access to a QuickSight account to get started with building your first dashboard. If you don't have a QuickSight account already, create one by following these steps.
 
-[start=1]
 . Launch the https://console.aws.amazon.com[AWS Console^] in a new browser tab, search for **QuickSight** and launch it.
 . On the **QuickSight** page, click **Sign up for QuickSight** button.
 . Keep the default **Enterprise** edition, scroll down and click the **Continue** button.
@@ -59,8 +96,8 @@ You will need author access to a QuickSight Account to get started with building
 . Scroll down and click the **Finish** button. (It can take 15-30 Secs to set up the account)
 . Click the **Go to Amazon QuickSight** button. You will now be taken to QuickSight console.
 
-==== Authorize Your QuickSight Connection
-To work with Lake Formation and Athena, make sure that you have AWS resource permissions configured in Amazon QuickSight:
+==== Authorize your QuickSight connection
+To work with Lake Formation and Athena, ensure that you have AWS resource permissions configured in Amazon QuickSight:
 
 * Enable access to Amazon Athena.
 * Enable access to the correct buckets in Amazon S3 Usually S3 access is enabled when you enable Athena. However, because you can change S3 permissions outside of that process, it's a good idea to verify them separately
@@ -103,12 +140,12 @@ image::../docs/operational_guide/images/quicksight-bucket-selection.png[QuickSig
 image::../docs/operational_guide/images/quicksight-username.png[QuickSightUsernameView]
 
 [start=2]
-. Next, Sign in to the AWS Console and navigate to AWS Lake Formation as the data lake administrator. A data lake administrator can grant any principal (IAM, QuickSight, or Active Directory) permissions to Data Catalog resources (databases and tables) or data lake locations in Amazon S3.
-. Choose **Databases**.
+. Sign in to the AWS Console, and open the AWS Lake Formation console as the data lake administrator. A data lake administrator can grant any principal (IAM, QuickSight, or Active Directory) permissions to Data Catalog resources (databases and tables) or data lake locations in Amazon S3.
+. Choose *Databases*.
 . Select the circle next to the database you want to grant access to your QuickSight user.
-. From the **Actions** drop-down menu, choose **Grant**.
-. Select **SAML users and groups** and enter the QuickSight user ARN.
-. Then click into **Named data catalog resources**
+. From the *Actions* drop-down menu, choose *Grant*.
+. Select *SAML users and groups* and enter the QuickSight user ARN.
+. Choose *Named data catalog resources*.
 
 [#LakeFormationDBGrant3]
 .Lake Formation DB Grant
@@ -122,8 +159,8 @@ image::../docs/operational_guide/images/lf-database-grant.png[LakeFormationDBGra
 . Repeat the preceding steps to grant multiple database permissions to your QuickSight user ARN or other users and groups.
 
 
-==== Query & Visualize Your First AMC Use Case
-In this section, you'll step through how to build and analyze a visualization for the Time to Conversion use case.
+==== Query and visualize an AMC use case
+This section walks through how to build and analyze a visualization for the time-to-conversion use case.
 
 #### Overview
 
@@ -133,6 +170,8 @@ It is important to understand how long it takes customers who see your ad to com
 
 
 .Key Performance Indicators (KPIs)
+
+//TODO What's the purpose of these colons?
 :===
 KPI : Definition
 
@@ -164,11 +203,14 @@ image::../docs/operational_guide/images/quicksight-athena-workgroup.png[QuickiSi
 
 [start=3]
 
-. On the **Choose your table screen**, do the following:
-.. For **Catalog**, choose **AwsDataCatalog**.
+. On the *Choose your table screen*, do the following:
+.. Under *Catalog*, choose *AwsDataCatalog*.
 .. Choose one of the following:
-... To choose the database and table created for the Time to Conversion use case, choose your database from the dropdown under **Database** and choose the Time to Conversion table from the **Tables** list that appears for your database.
-... You can optionally pull the data in with a SQL query, by choosing **Use custom SQL**
+... To choose the database and table created for the Time to Conversion use case, choose your database from the dropdown under *Database* and choose the Time to Conversion table from the *Tables* list that appears for your database.
+... You can optionally pull the data in with a SQL query, by choosing *Use custom SQL*.
+
+//TODO Marcia to review the above; "the following" twice is awk.
+//TODO Marcia to eliminate "start=x" throughout.
 
 [#QuickSightTableSelection2]
 .QuickSights Table Selection
@@ -224,7 +266,19 @@ Vertical Bar Chart visual in Amazon QuickSight for the Purchases by Time to Conv
 . To then publish and optionally share a dashboard, choose **Share** on the application bar, and then choose **Publish dashboard**.
 . Then, to create a new dashboard, choose **Publish new dashboard as**, and then type a dashboard name.
 . Choose **Publish dashboard**.// Add steps as necessary for accessing the software, post-configuration, and testing. Don’t include full usage instructions for your software, but add links to your product documentation for that information.
-//Should any sections not be applicable, remove them
 
+=== Create, schedule, and manage your AMC workflow queries
 
+On the AMC UI, you can view the Interactive Query Library (IQL) for a list of available queries for a set of use cases. You can also create custom queries. To learn how to create, schedule, and manage your workflow queries, refer to the Platform Manager WFM Notebooks in Amazon SageMaker. 
 
+//TODO Troy, What do we mean by "AMC UI"?
+
+//TODO Troy, What URL do we point to here?
+
+=== (Optional) Build custom analytics
+
+To build custom, self-service analytics for Amazon Advertising customers, you use the SDLF, TPS, WFM, and PMN modules ... [?]
+
+//TODO Troy, What do we need to say about custom analytics that we haven't already covered?
+
+//TODO Troy, Bret Pontillo wrote, "Should any sections not be applicable, remove them." What should we remove?

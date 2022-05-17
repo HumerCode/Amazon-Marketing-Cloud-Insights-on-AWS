@@ -1,7 +1,17 @@
-This guide provides instructions for deploying the {partner-product-short-name} Quick Start reference architecture on the AWS Cloud. It is for Amazon Marketing Cloud users who want to build custom analytics using the data lake, multi-tenant, and workflow-management features.
+This guide provides instructions for using the AWS Cloud Development Kit (AWS CDK) to deploy the Amazon Marketing Cloud (AMC) Analytics Quick Start on AWS. 
 
-The Quick Start provides a 3 modules to enable you meet your deployment requirements:
-[start=1]
-. Deploying the Foundational Infrastructure - the AWS infrastructure for the data lake and microservices
-. Hydrating the Data Lake with Sagemaker Notebooks - how to start pulling AMC reports into your data lake
-. Building Your first QuickSight Dashboard - visualizing your AMC reports
+For information about AMC, refer to https://advertising.amazon.com/solutions/products/amazon-marketing-cloud[What is Amazon Marketing Cloud?^].
+
+If you are unfamiliar with AWS Quick Starts, refer to the https://fwd.aws/rA69w?[AWS Quick Start General Information Guide^].
+
+//For advanced information about using the architecture that you deploy with this Quick Start, refer to the https://fwd.aws/<permalink>?[{partner-product-name} Quick Start Operational Guide^].
+
+//TODO Troy, What will the URL be for the operational guide: https://aws-quickstart.github.io/quickstart-amazon-marketing-cloud/operational/index.html?
+
+//TODO Marcia to uncomment and swap in the permalink when the op guide goes live (after initial QS launch). 
+
+//TODO Troy, How do we generate a local preview of the operational guide? 
+
+//TODO Troy, Is the Swingline preview of the operational guide working yet?
+
+//TODO Troy: I’ve moved some content out of the deployment guide into the operational guide. Is this guide missing any info that people need to complete deployment? Please confirm yes or no.

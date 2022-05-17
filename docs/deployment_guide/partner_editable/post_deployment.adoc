@@ -1,28 +1,43 @@
-// Include any postdeployment steps here, such as steps necessary to test that the deployment was successful. If there are no postdeployment steps, leave this file empty.
+== Postdeployment steps
 
-== Post deployment steps
+=== Set AWS Lake Formation permissions
 
-Once the solution has been deployed and tested, use the following command to clean up the resources deployed:
+Follow these steps to enable AWS Lake Formation to control your AWS Glue Data Catalog resources and to give your AWS Identity and Access Management (IAM) role permission to access the tables in the Data Catalog.  
 
-```
-$ make delete_all
-```
+. Sign in to the AWS Management Console, and open the AWS Lake Formation console.
 
-_NOTE:_ Before running this command, look into the `Makefile` and ensure that:
+. Enable Lake Formation to control your Data Catalog resources.
+.. In the navigation pane, under *Data catalog*, choose *Settings*. 
+.. Clear both check boxes and choose *Save*. 
 
-1.  The `delete_repositories` function is passing the correct `-d AMC_QUICKSTART_REPO_NAME` (default: `ddk-amc-quickstart`)
+. Give your IAM role permission to access the tables in the Data Catalog.
+.. In the navigation pane, under *Permissions*, choose *Data Lake Permissions*. 
+.. Choose *Grant* in the upper right, and do the following:
+* For *IAM users and roles*, enter your current IAM role.
+* For *LF-Tags or catalog resources*, choose *Named data catalog resources*.
+* For *Databases*, choose your database: `aws_datalake_<environment>_<team>_<name>_db"` (default `aws_datalake_dev_demoteam_amcdataset_db`).
+* For *Tables*, choose *All Tables*.
+* Keep *Data Filters - Optional* empty.
+* For *Table Permissions*, choose *Super*.
+.. Choose *Grant* at the bottom.
 
-2.  The `delete_bootstrap` function is passing the correct `--stack-name BOOTSTRAP_STACK_NAME` (default: `DdkDevBootstrap`)
+=== Delete deployed resources when finished
 
-This command will go through the following sequence of steps in order to clean up your AWS account environment:
+When you're finished with the architecture deployed by this Quick Start, delete the resources from your AWS account—including S3 buckets, CloudFormation stacks, AWS DDK bootstrap, CodeCommit repos, AWS Key Management Service (AWS KMS) keys, Lambda layers, and Amazon Simple Queue Service (Amazon SQS) queues and rules—so that you're no longer charged for them. To delete all these resources, follow these steps.
 
-[#DeleteSteps1]
-.Quick Start Delete All Command for {partner-product-short-name}
-image::../docs/deployment_guide/images/AMC-Quickstart-Delete.png[AMC-Quickstart-Delete,width=648,height=439]
+. Look into `Makefile` and ensure that the following functions are passing the correct stack names:
++
+//TODO Troy, How do we "look into" Makefile?
+* The `delete_repositories` function is passing `-d <AMC_QUICKSTART_REPO_NAME>` (default: `ddk-amc-quickstart`).
++
+* The `delete_bootstrap` function is passing `--stack-name <BOOTSTRAP_STACK_NAME>` (default: `DdkDevBootstrap`).
 
-Some CloudWatch General Log Groups May Remain in your Account with Logs specific to AMC Quickstart resources, including:
+. Enter the following command: 
++
+`$ make delete_all`
 
-- /aws/sagemaker/NotebookInstances
-- /aws-glue/jobs/error
-- /aws-glue/jobs/output
+Some CloudWatch general log groups may remain in your account with logs specific to AMC Quick Start resources. Examples:
 
+* `/aws/sagemaker/NotebookInstances`
+* `/aws-glue/jobs/error`
+* `/aws-glue/jobs/output`

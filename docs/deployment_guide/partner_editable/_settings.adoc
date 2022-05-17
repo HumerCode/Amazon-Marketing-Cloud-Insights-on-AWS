@@ -1,16 +1,15 @@
 :quickstart-project-name: quickstart-amazon-marketing-cloud
 :quickstart-github-org: aws-quickstart
-:partner-product-name: AMC Analytics on AWS Solution
+:partner-product-name: Amazon Marketing Cloud Analytics
 :partner-product-short-name: AMC Analytics
-:partner-company-name: Ad Tech Solutions
+:partner-company-name: the Amazon Ad Tech Solutions team
 :doc-month: May
 :doc-year: 2022
-//:partner-contributors: John Smith, {partner-company-name}
-// :other-contributors: Akua Mansa, Trek10
-:partner-contributors: Arpan Shah, Naomi Joshi, and Chaitra Nayak, Ad Tech Solutions
-:aws-contributors: Chip Reno, AWS WW AD & Mktg Sols GTMS
+:partner-contributors: Arpan Shah, Naomi Joshi, and Chaitra Nayak, Amazon Ad Tech Solutions team
+:other-contributors: Ramesh Jetty, Brian Maguire, Bret Pontillo, Noah Paige, Alex Burkleaux, Eric Beard, Igor Londero Gentil, [___?] team
+:aws-contributors: Chip Reno, AWS Advertising & Marketing Solutions team
 :aws-ia-contributors: Troy Ameigh, AWS Integration & Automation team
-:other-contributors: Ramesh Jetty, Brian Maguire, Bret Pontillo, Noah Paige, Alex Burkleaux, Eric Beard,Igor Londero Gentil
 :deployment_time: 1.5 hours
 :default_deployment_region: us-east-1
-// :private_repo:
+
+//TODO Troy, Please fill in the team name for the "other-contributors" group.
