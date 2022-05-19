@@ -14,7 +14,7 @@ Also ensure that the `ddk.json` file specifies the correct AWS account for the c
 
 *Q:* I can't find the configuration for my AMC instance.
 
-*A:* In the AMC user interface, you can view the *Instance Information* page for detailed information on the AMC instance S3 bucket, endpoint URL, data-upload account, advertiser IDs, and entity IDs. You can also retrieve this information by raising a ticket to the AMC team.
+*A:* In the AMC user interface, you can view the https://advertising.amazon.com/marketing-cloud/instances[*Instance Information*] page for detailed information on the AMC instance S3 bucket, endpoint URL, data-upload account, advertiser IDs, and entity IDs. You can also retrieve this information by raising a ticket to the AMC team.
 
 //TODO Troy, What do we mean by "AMC user interface"? - Getting Clarification
 
