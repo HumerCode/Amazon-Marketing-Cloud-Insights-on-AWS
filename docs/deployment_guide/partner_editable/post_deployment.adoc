@@ -25,15 +25,14 @@ Follow these steps to enable AWS Lake Formation to control your AWS Glue Data Ca
 
 When you're finished with the architecture deployed by this Quick Start, delete the resources from your AWS account—including S3 buckets, CloudFormation stacks, AWS DDK bootstrap, CodeCommit repos, AWS Key Management Service (AWS KMS) keys, Lambda layers, and Amazon Simple Queue Service (Amazon SQS) queues and rules—so that you're no longer charged for them. To delete all these resources, follow these steps.
 
-. Look into `Makefile` and ensure that the following functions are passing the correct stack names:
-+
-//TODO Troy, How do we "look into" Makefile?
-* Change directory into the project root directory, and them cat MakeFile
+. Look into `Makefile`.
 +
 ```
 $ cd quickstart-amazon-marketing-cloud
 $ cat MakeFile
 ```
+
+. Verify that the following functions are passing the correct stack names.
 
 * The `delete_repositories` function is passing `-d <AMC_QUICKSTART_REPO_NAME>` (default: `ddk-amc-quickstart`).
 +
