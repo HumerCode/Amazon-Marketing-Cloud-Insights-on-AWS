@@ -1,4 +1,8 @@
-// Include any predeployment steps here, such as signing up for a Marketplace AMI or making any changes to a partner account. If there are no predeployment steps, leave this file empty.
+//TODO Troy, Somehow in your PR, the content that was in this file ("troubleshooting.adoc") got overwritten by a duplicate of what's in pre_deployment.adoc. Would you please restore the "Troubleshooting" section and address any issues? It included these two notes:
+
+//TODO Troy, What do we mean by "AMC user interface"? —from Troy: Getting Clarification
+//TODO Troy, How do people raise a ticket to the AMC team? —from Troy: Getting Clarification
+
 
 == Predeployment steps
 
@@ -173,6 +177,3 @@ $ ddk deploy --profile <AWS_PROFILE>
 
 
 . If the status is FAILED in the assets stage of deploying AWS CodePipeline (due to the limited number of file assets that AWS CodeBuild can publish concurrently), choose the *Retry* button. This prompts CodePipeline to continue building the file assets.
-
-//TODO Troy, When and how do we choose the correct AWS Region? - it is choosen here:
-//$ ddk create-repository <AMC_QUICKSTART_REPO_NAME> --profile <AWS_PROFILE> --region <AWS_REGION>

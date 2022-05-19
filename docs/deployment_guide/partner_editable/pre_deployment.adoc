@@ -26,6 +26,7 @@ $ aws --version
 ```
 $ cdk --version
 ```
+//TODO Troy, the landing page used to say, "Ensure that you have AWS CDK installed with the required environment variables." What are the "required environment variables," and how do we confirm that we have them?
 
 . Confirm that Git is installed and configured.
 +
@@ -39,8 +40,6 @@ $ git --version
 $ git config --global user.name <YOUR NAME>
 $ git config --global user.email <YOU@EMAIL.COM>
 ```
-//TODO Troy, I added these quotation marks. Correct?
--- No I have removed them.
 
 . Confirm that Git is configured.
 +
@@ -67,7 +66,7 @@ $ aws --version
 $ cdk --version
 $ git --version
 ```
-//TODO Troy, Where we say, "download the package," which "package" are we referring to? And where do we download it from?
+//TODO Troy, Where we say, "download the package" (above), which "package" are we referring to? And where do we download it from?
 
 . Verify the following versions:
 * Python 3.7 or later.
@@ -76,7 +75,7 @@ $ git --version
 
 === Install AWS DDK
 
-The https://github.com/awslabs/aws-ddk/blob/main/README.md[AWS DataOps Development Kit (AWS DDK)^] is an open-source development framework for developers who build data workflows and modern data architecture on AWS. Follow these steps to install AWS DDK.
+The https://github.com/awslabs/aws-ddk/blob/main/README.md[AWS DataOps Development Kit (DDK)^] is an open-source development framework for developers who build data workflows and modern data architecture on AWS. Follow these steps to install AWS DDK.
 
 . Clone the https://github.com/aws-quickstart/quickstart-amazon-marketing-cloud[{partner-product-name} Quick Start repository^] as follows, replacing the information in brackets.
 +
@@ -85,9 +84,6 @@ $ git clone <GITHUB-PATH>
 $ cd quickstart-amazon-marketing-cloud
 $ rm -rf .git
 ```
-//TODO Troy, I added the brackets. Correct? - Yes
-//TODO Troy, Please review all the code throughout this doc to make sure there are brackets wherever needed. - Done
-//TODO Troy, is "cd amc_quickstart" correct? The repo path doesn't contain that text string. - No fixed it.
 
 . Install AWS DDK.
 +
@@ -106,7 +102,7 @@ $ ddk --help
 $ python -m venv .venv && source .venv/bin/activate
 ```
 
-. Install the dependencies from `requirements.txt`.
+. Install the application's dependencies.
 +
 ```
 $ pip install -r requirements.txt --no-cache-dir
@@ -114,7 +110,7 @@ $ pip install -r requirements.txt --no-cache-dir
 +
 The AWS DDK Core, a library of AWS CDK constructs, is installed.
 
-. If your AWS account hasn't been used to deploy AWS DDK apps before, bootstrap your environment as follows, replacing the information in brackets.
+. If your AWS account hasn't been used to deploy AWS DDK apps before, bootstrap your environment as follows, replacing the information in brackets. .
 +
 ```
 $ ddk bootstrap --help
@@ -128,7 +124,6 @@ You might recognize a number of files typically found in an AWS CDK Python appli
 ```
 $ vi ddk.json
 ```
-//TODO Troy, Should this be "edit" (lowercase)?
 
 . Initialize Git for the repository.
 +
@@ -137,13 +132,12 @@ $ vi ddk.json
 $ git init --initial-branch main
 ```
 
-. Create a new CodeCommit repository as follows. Replace the information in brackets, using the repository name value from the `ddk.json` configuration file.
+. Create a new CodeCommit repository as follows. Replace the information in brackets, using the repository name value from the `ddk.json` configuration file. The template is launched in the {default_deployment_region} Region by default.
 +
 ```
 $ ddk create-repository <AMC_QUICKSTART_REPO_NAME> --profile <AWS_PROFILE> --region <AWS_REGION>
 ```
-
-//TODO Troy, Should we add, "Choose a mature Region where most services are available, such as eu-west-1 or us-east-1" (or any other guidance about choosing a Region)? - No as this depends on what region the end uses chooses.
+//TODO Troy, per our standard language, I added "The template is launched in the {default_deployment_region} Region by default" above. Is that accurate here? 
 
 . Add and push the initial commit to the repository as follows, replacing the information in brackets.
 +
@@ -159,11 +153,11 @@ $ git push --set-upstream origin main
 
 == Deployment steps
 
+Use AWS CDK to deploy this Quick Start. AWS CDK provides familiar programming tools and syntax to define infrastructure as code and to provision it through AWS CloudFormation. For more information, refer to https://docs.aws.amazon.com/cdk/v2/guide/work-with.html[Working with the AWS CDK^]. 
+
+//TODO Troy, I added our standard CDK lead-in paragraph (above). Do we need more context since step 1 is "ddk deploy" instead of "cdk deploy"? 
+
 Deploying this Quick Start takes about {deployment_time} to complete.
-
-//TODO Troy, Does deployment (building the stacks) really take 1.5 hours? - Yes
-
-//TODO Troy, What do we have to be signed in to before we do Step 1? - This is not CFN so nothing all pre-deploy steps take care of that.
 
 . Run the `deploy` command as follows, replacing the information in brackets.
 +
@@ -171,8 +165,4 @@ Deploying this Quick Start takes about {deployment_time} to complete.
 $ ddk deploy --profile <AWS_PROFILE>
 ```
 
-
 . If the status is FAILED in the assets stage of deploying AWS CodePipeline (due to the limited number of file assets that AWS CodeBuild can publish concurrently), choose the *Retry* button. This prompts CodePipeline to continue building the file assets.
-
-//TODO Troy, When and how do we choose the correct AWS Region? - it is choosen here:
-//$ ddk create-repository <AMC_QUICKSTART_REPO_NAME> --profile <AWS_PROFILE> --region <AWS_REGION>
