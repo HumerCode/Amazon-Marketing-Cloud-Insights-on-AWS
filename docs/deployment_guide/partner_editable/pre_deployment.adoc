@@ -53,7 +53,7 @@ $ git config --list
 
 . Open the AWS Cloud9 console, and create an EC2 environment in your chosen AWS Region. Choose instance type t3.small or larger, Amazon Linux 2. For details refer to https://docs.aws.amazon.com/cloud9/latest/user-guide/create-environment-main.html[Creating an EC2 Environment^].
 
-. In your integrated development environment (IDE), download the package, upload it to your AWS Cloud9 instance, and unzip it.
+. In your integrated development environment (IDE), download the Quick Start from GitHub using this https://github.com/aws-quickstart/quickstart-amazon-marketing-cloud[Link], upload it to your AWS Cloud9 instance, and unzip it.
 +
 By default, Python, pip, AWS CLI, AWS CDK, and Git are installed and configured for you in your AWS Cloud9 environment.
 
@@ -137,7 +137,7 @@ $ git init --initial-branch main
 ```
 $ ddk create-repository <AMC_QUICKSTART_REPO_NAME> --profile <AWS_PROFILE> --region <AWS_REGION>
 ```
-//TODO Troy, per our standard language, I added "The template is launched in the {default_deployment_region} Region by default" above. Is that accurate here? 
+//TODO Troy, per our standard language, I added "The template is launched in the {default_deployment_region} Region by default" above. Is that accurate here? NO this is CDK so there are no templates that the end uer will see.
 
 . Add and push the initial commit to the repository as follows, replacing the information in brackets.
 +
@@ -153,9 +153,9 @@ $ git push --set-upstream origin main
 
 == Deployment steps
 
-Use AWS CDK to deploy this Quick Start. AWS CDK provides familiar programming tools and syntax to define infrastructure as code and to provision it through AWS CloudFormation. For more information, refer to https://docs.aws.amazon.com/cdk/v2/guide/work-with.html[Working with the AWS CDK^]. 
+Use AWS CDK to deploy this Quick Start. AWS CDK provides familiar programming tools and syntax to define infrastructure as code and to provision it through AWS CloudFormation. For more information, refer to https://docs.aws.amazon.com/cdk/v2/guide/work-with.html[Working with the AWS CDK^]. For more information on AWS DataOps Development Kit (DDK) core please refer to https://pypi.org/project/aws-ddk-core/[AWS DDK Core]
 
-//TODO Troy, I added our standard CDK lead-in paragraph (above). Do we need more context since step 1 is "ddk deploy" instead of "cdk deploy"? 
+//TODO Troy, I added our standard CDK lead-in paragraph (above). Do we need more context since step 1 is "ddk deploy" instead of "cdk deploy"?
 
 Deploying this Quick Start takes about {deployment_time} to complete.
 
