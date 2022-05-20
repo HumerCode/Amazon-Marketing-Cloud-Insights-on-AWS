@@ -75,7 +75,7 @@ $ git --version
 
 === Clone the Quick Start repo
 
-. Clone the https://github.com/aws-quickstart/quickstart-amazon-marketing-cloud[{partner-product-name} Quick Start repository^] as follows, replacing the information in brackets.
+Clone the https://github.com/aws-quickstart/quickstart-amazon-marketing-cloud[{partner-product-short-name} Quick Start repository^] as follows, replacing the information in brackets.
 
 ```
 $ git clone <GITHUB-PATH>
