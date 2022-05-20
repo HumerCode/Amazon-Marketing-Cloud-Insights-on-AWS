@@ -1,9 +1,15 @@
-This guide provides instructions for using the AWS Cloud Development Kit (AWS CDK) to deploy the Amazon Marketing Cloud (AMC) Analytics Quick Start on AWS.
+This guide provides instructions for deploying the Amazon Marketing Cloud (AMC) Insights Quick Start on AWS using AWS Cloud Development Kit (AWS CDK) and AWS DataOps Development Kit (AWS DDK). 
 
-For information about AMC, refer to https://advertising.amazon.com/solutions/products/amazon-marketing-cloud[What is Amazon Marketing Cloud?^].
+More information:
 
-If you are unfamiliar with AWS Quick Starts, refer to the https://fwd.aws/rA69w?[AWS Quick Start General Information Guide^].
+* For details on AMC, refer to https://advertising.amazon.com/solutions/products/amazon-marketing-cloud[What is Amazon Marketing Cloud^].
 
-//For advanced information about using the architecture that you deploy with this Quick Start, refer to the https://fwd.aws/<permalink>?[{partner-product-name} Quick Start Operational Guide^].
+* For details on AWS CDK, refer to https://aws.amazon.com/cdk/[AWS Cloud Development Kit^], https://docs.aws.amazon.com/cdk/v2/guide/work-with.html[Working with the AWS CDK^], and https://docs.aws.amazon.com/cdk/index.html[AWS Cloud Development Kit (CDK) Documentation].
 
-//TODO Marcia to uncomment and swap in the permalink when the op guide goes live (after initial QS launch). URL = https://aws-quickstart.github.io/quickstart-amazon-marketing-cloud/operational/index.html
+* For details on AWS DDK, refer to https://github.com/awslabs/aws-ddk/blob/main/README.md[AWS DataOps Development Kit (DDK)^] and https://pypi.org/project/aws-ddk-core/[AWS DataOps Development Kit (DDK) Core^].
+
+* If you are unfamiliar with AWS Quick Starts, refer to the https://fwd.aws/rA69w?[AWS Quick Start General Information Guide^].
+
+//For advanced information about using the environment that you've deployed with this Quick Start, refer to the https://fwd.aws/WeWKX?[{partner-product-name} Quick Start Operational Guide^].
+
+//TODO Marcia to check the permalink, then uncomment when the op guide goes live.
