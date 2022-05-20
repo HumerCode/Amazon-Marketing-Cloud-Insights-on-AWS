@@ -1,5 +1,3 @@
-// Edit this placeholder text as necessary to describe the deployment options.
-
 This Quick Start provides one deployment option:
 
 * *AWS CDK deployment*. Use the https://github.com/aws-quickstart/quickstart-amazon-marketing-cloud[{partner-product-name} Quick Start repository^] to deploy this Quick Start. 
