@@ -1,17 +1,17 @@
 // Change the following attributes.
 :quickstart-project-name: quickstart-amazon-marketing-cloud
-:partner-product-name: AMC Analytics on AWS Solution
+:partner-product-name: AMC Analytics
 // For the following attribute, if you have no short name, enter the same name as partner-product-name.
 :partner-product-short-name: AMC Analytics
 // If there's no partner, comment partner-company-name.
 :partner-company-name: Ad Tech Solutions
-:doc-month: March
+:doc-month: May
 :doc-year: 2022
 // Uncomment the following "contributor" attributes as appropriate. If the partner agrees to include names, enter contributor names for every line we use. If partner doesn't want to include names, delete all placeholder names and keep only "{partner-company-name}" and "AWS Integration & Automation team."
 :partner-contributors: Arpan Shah, Naomi Joshi, and Chaitra Nayak, Ad Tech Solutions
 :aws-contributors: Chip Reno, AWS WW AD & Mktg Sols GTMS
 :aws-ia-contributors: Troy Ameigh, AWS Integration & Automation team
-:other-contributors: Ramesh Jetty, Brian Maguire, Bret Pontillo, Noah Paige, Alex Burkleaux, Eric Beard,Igor Londero Gentil
+:other-contributors: Ramesh Jetty, Brian Maguire,Igor Londero Gentil - AWS Geo Solutions Architecture, Bret Pontillo, Noah Paige, Anmol Gandhi - AWS ProServe, Alex Burkleaux AWS M&E Solutions Architecture, Eric Beard - AWS Partner Core
 
 
 // For deployment_time, use minutes if deployment takes an hour or less,
@@ -21,3 +21,5 @@
 :deployment_time: 1.5 hours
 :default_deployment_region: us-east-1
 :parameters_as_appendix:
+
+//TODO Marcia to update these settings to match deployment guide.
