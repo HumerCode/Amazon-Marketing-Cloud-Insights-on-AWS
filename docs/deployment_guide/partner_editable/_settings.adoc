@@ -5,9 +5,9 @@
 :partner-company-name: the Amazon Ad Tech Solutions team
 :doc-month: May
 :doc-year: 2022
-:partner-contributors: Arpan Shah, Naomi Joshi, and Chaitra Nayak, Amazon Ad Tech Solutions
-//:other-contributors: 
-:aws-contributors: Ramesh Jetty, Brian Maguire, and Igor Londero Gentil, AWS Geo Solutions Architecture | Bret Pontillo, Noah Paige, and Anmol Gandhi, AWS Professional Services | Alex Burkleaux, AWS Media & Entertainment Solutions Architecture | Eric Beard, AWS Partner Core | Chip Reno, AWS Advertising & Marketing Solutions
+:partner-contributors: Arpan Shah, Ronak Parikh, & Chaitra Nayak, Amazon Ad Tech Solutions
+//:other-contributors:
+:aws-contributors: Ramesh Jetty, Brian Maguire, & Gerry Louw, AWS Geo Solutions Architecture - Bret Pontillo, Noah Paige, Naomi Joshi & Anmol Gandhi, AWS ProServe - Eric Beard, AWS Partner Core - Chip Reno, AWS Advertising & Marketing Solutions
 :aws-ia-contributors: Troy Ameigh, AWS Integration & Automation
 :deployment_time: 1.5 hours
 :default_deployment_region: us-east-1
