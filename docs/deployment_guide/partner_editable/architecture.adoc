@@ -8,11 +8,11 @@ image::../docs/deployment_guide/images/AMC-architecture-diagram.png[Architecture
 
 As shown in <<architecture1>>, the Quick Start sets up the following:
 
-* Three Amazon Simple Storage Service (Amazon S3) buckets to store aggregate AMC data, prestage data, and poststage data.
+* Three Amazon Simple Storage Service (Amazon S3) buckets to store AMC query results, prestage data, and poststage data.
 * AWS Step Functions for loading and orchestrating data.
 * An AWS Lambda function for loading raw data to prestage, partitioning prestage data, and managing S3 file metadata.
 * AWS Glue for converting Parquet files and partitioning poststage data.
 * An AWS Lake Formation data lake for governance and security.
 * Amazon Athena to query the data lake and access the poststage data.
 * (Optional) Amazon QuickSight for business-intelligence analytics, interactive dashboards, and visualizations that business stakeholders can use.
-* Amazon SageMaker with sample Jupyter notebooks that analysts can use to provision tenants and manage workflows.
+* (Optional) Amazon SageMaker with sample Jupyter notebooks that analysts can use to provision tenants and manage workflows.

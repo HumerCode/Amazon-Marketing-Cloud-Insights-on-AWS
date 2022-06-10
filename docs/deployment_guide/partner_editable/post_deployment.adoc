@@ -23,7 +23,7 @@ Follow these steps to enable AWS Lake Formation to control your AWS Glue Data Ca
 
 === Delete deployed resources when finished
 
-When you're finished with the architecture deployed by this Quick Start, delete the resources from your AWS account so that you're no longer charged for them. These resources include S3 buckets, AWS CloudFormation stacks, AWS DDK bootstrap, CodeCommit repos, AWS Key Management Service (AWS KMS) keys, Lambda layers, and Amazon Simple Queue Service (Amazon SQS) queues and rules. To delete all these resources, follow these steps.
+When you're finished with the architecture deployed by this Quick Start, delete the resources from your AWS account so that you're no longer charged for them. These resources include S3 buckets, AWS CloudFormation stacks, DDK bootstrap, CodeCommit repos, AWS Key Management Service (AWS KMS) keys, Lambda layers, and Amazon Simple Queue Service (Amazon SQS) queues and rules. To delete all these resources, follow these steps.
 
 . Look into `Makefile`.
 +

@@ -84,9 +84,9 @@ $ rm -rf .git
 
 ```
 
-=== Install and set up AWS DDK
+=== Install and set up the DDK
 
-. Install AWS DDK.
+. Install the DataOps Development Kit.
 +
 ```
 $ pip install aws-ddk
@@ -110,16 +110,16 @@ $ python -m venv .venv && source .venv/bin/activate
 $ pip install -r requirements.txt --no-cache-dir
 ```
 +
-The https://pypi.org/project/aws-ddk-core/[AWS DDK Core^], a library of AWS CDK constructs, is installed.
+The https://pypi.org/project/aws-ddk-core/[AWS DataOps Development Kit (DDK) Core^], a library of AWS CDK constructs, is installed.
 
-. If your AWS account hasn't been used to deploy AWS DDK apps before, bootstrap your environment as follows, replacing the information in brackets. .
+. If your AWS account hasn't been used to deploy DDK apps before, bootstrap your environment as follows, replacing the information in brackets. .
 +
 ```
 $ ddk bootstrap --help
 $ ddk bootstrap --profile <AWS_PROFILE> --trusted-accounts <AWS_ACCOUNT_ID>
 ```
 +
-You might recognize a number of files typically found in an AWS CDK Python application, such as `app.py` and `cdk.json`. In addition, `ddk.json` holds configuration information about AWS DDK constructs.
+You might recognize a number of files typically found in an AWS CDK Python application, such as `app.py` and `cdk.json`. In addition, `ddk.json` holds configuration information about DDK constructs.
 
 . Edit the required parameters in `ddk.json`. Enter your account ID, the name of the AWS CodeCommit repository to reference (you'll create this repository in a later step), and names of data lake parameters such as `app`, `org`, `team`, `dataset`, and `pipeline`.
 +
