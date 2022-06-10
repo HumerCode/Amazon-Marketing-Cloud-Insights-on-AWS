@@ -1,15 +1,13 @@
-This guide provides instructions for deploying the Amazon Marketing Cloud (AMC) Insights Quick Start on AWS using AWS Cloud Development Kit (AWS CDK) and AWS DataOps Development Kit (AWS DDK). 
+This guide provides instructions for deploying the Amazon Marketing Cloud (AMC) Insights Quick Start on AWS using AWS Cloud Development Kit (AWS CDK) and AWS DataOps Development Kit (DDK). 
 
-More information:
+If you are unfamiliar with AWS Quick Starts, refer to the https://fwd.aws/rA69w?[AWS Quick Start General Information Guide^]. More information: 
 
-* For details on AMC, refer to https://advertising.amazon.com/solutions/products/amazon-marketing-cloud[What is Amazon Marketing Cloud^].
+* https://advertising.amazon.com/solutions/products/amazon-marketing-cloud[What is Amazon Marketing Cloud^]
 
-* For details on AWS CDK, refer to https://aws.amazon.com/cdk/[AWS Cloud Development Kit^], https://docs.aws.amazon.com/cdk/v2/guide/work-with.html[Working with the AWS CDK^], and https://docs.aws.amazon.com/cdk/index.html[AWS Cloud Development Kit (CDK) Documentation].
+* https://docs.aws.amazon.com/cdk/[AWS Cloud Development Kit (AWS CDK) Documentation^]
 
-* For details on AWS DDK, refer to https://github.com/awslabs/aws-ddk/blob/main/README.md[AWS DataOps Development Kit (DDK)^] and https://pypi.org/project/aws-ddk-core/[AWS DataOps Development Kit (DDK) Core^].
-
-* If you are unfamiliar with AWS Quick Starts, refer to the https://fwd.aws/rA69w?[AWS Quick Start General Information Guide^].
+* https://github.com/awslabs/aws-ddk/blob/main/README.md[AWS DataOps Development Kit (DDK)^]
 
 //For advanced information about using the environment that you've deployed with this Quick Start, refer to the https://fwd.aws/WeWKX?[{partner-product-name} Quick Start Operational Guide^].
 
-//TODO Marcia to check the permalink, then uncomment when the op guide goes live.
+//TODO When the operational guide goes live, verify the permalink above, then uncomment the reference.
