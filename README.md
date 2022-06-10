@@ -1,4 +1,4 @@
-# Amazon Marketing Cloud Insights on the AWS Cloud
+# Amazon Marketing Cloud Insights on AWS
 
 For architectural details, step-by-step instructions, and customization options, refer to the [deployment guide](https://fwd.aws/nAmW7?).
 
