@@ -54,7 +54,7 @@ $ git config --list
 
 . Open the AWS Cloud9 console, and create an EC2 environment in your chosen AWS Region. Choose instance type t3.small or larger, Amazon Linux 2. For details refer to https://docs.aws.amazon.com/cloud9/latest/user-guide/create-environment-main.html[Creating an EC2 Environment^].
 
-. In your integrated development environment (IDE), download the https://github.com/aws-quickstart/quickstart-amazon-marketing-cloud[{partner-product-name} Quick Start repository^], upload it to your AWS Cloud9 instance, and unzip it.
+. In your integrated development environment (IDE), download the https://fwd.aws/Rp8mK?[{partner-product-short-name} repository^], upload it to your AWS Cloud9 instance, and unzip it.
 +
 By default, Python, pip, AWS CLI, AWS CDK, and Git are installed and configured for you in your AWS Cloud9 environment.
 
@@ -73,9 +73,9 @@ $ git --version
 * pip 9.0.3 or later.
 * AWS CDK version 2.10 or later.
 
-=== Clone the Quick Start repo
+=== Clone the {partner-product-short-name} repo
 
-Clone the https://github.com/aws-quickstart/quickstart-amazon-marketing-cloud[{partner-product-short-name} Quick Start repository^] as follows, replacing the information in brackets.
+Clone the https://fwd.aws/Rp8mK?[{partner-product-short-name} repository^] as follows, replacing the information in brackets.
 
 ```
 $ git clone <GITHUB-PATH>
@@ -153,7 +153,7 @@ $ git push --set-upstream origin main
 
 == Deployment steps
 
-Deploying this Quick Start takes about {deployment_time} to complete.
+Deploying this AWS Solution takes about {deployment_time} to complete.
 
 . Run the `deploy` command as follows, replacing the information in brackets.
 +
