@@ -1,13 +1,9 @@
-This guide provides instructions for deploying the Amazon Marketing Cloud (AMC) Insights Quick Start on AWS using AWS Cloud Development Kit (AWS CDK) and AWS DataOps Development Kit (DDK). 
+This guide provides instructions for deploying the Amazon Marketing Cloud (AMC) Insights AWS Solution using AWS Cloud Development Kit (AWS CDK) and AWS DataOps Development Kit (DDK). 
 
-If you are unfamiliar with AWS Quick Starts, refer to the https://fwd.aws/rA69w?[AWS Quick Start General Information Guide^]. More information: 
+More information: 
 
 * https://advertising.amazon.com/solutions/products/amazon-marketing-cloud[What is Amazon Marketing Cloud^]
 
 * https://docs.aws.amazon.com/cdk/[AWS Cloud Development Kit (AWS CDK) Documentation^]
 
 * https://github.com/awslabs/aws-ddk/blob/main/README.md[AWS DataOps Development Kit (DDK)^]
-
-//For advanced information about using the environment that you've deployed with this Quick Start, refer to the https://fwd.aws/WeWKX?[{partner-product-name} Quick Start Operational Guide^].
-
-//TODO When the operational guide goes live, verify the permalink above, then uncomment the reference.
