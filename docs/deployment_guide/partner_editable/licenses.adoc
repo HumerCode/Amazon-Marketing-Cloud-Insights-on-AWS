@@ -1,1 +1,1 @@
-No licenses are required to deploy this AWS Solution. There is no cost to use this solution, but you will be billed for any AWS services or resources that this solution deploys.
+No licenses are required to deploy this solution. There is no cost to use this solution, but you will be billed for any AWS services or resources that this solution deploys.

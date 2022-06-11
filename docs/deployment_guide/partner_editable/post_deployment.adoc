@@ -23,7 +23,7 @@ Follow these steps to enable AWS Lake Formation to control your AWS Glue Data Ca
 
 === Delete deployed resources when finished
 
-When you're finished with the architecture deployed by this AWS Solution, delete the resources from your AWS account so that you're no longer charged for them. These resources include S3 buckets, AWS CloudFormation stacks, DDK bootstrap, CodeCommit repos, AWS Key Management Service (AWS KMS) keys, Lambda layers, and Amazon Simple Queue Service (Amazon SQS) queues and rules. To delete all these resources, follow these steps.
+When you're finished with the architecture deployed by this solution, delete the resources from your AWS account so that you're no longer charged for them. These resources include S3 buckets, AWS CloudFormation stacks, DDK bootstrap, CodeCommit repos, AWS Key Management Service (AWS KMS) keys, Lambda layers, and Amazon Simple Queue Service (Amazon SQS) queues and rules. To delete all these resources, follow these steps.
 
 . Look into `Makefile`.
 +
@@ -34,7 +34,7 @@ $ cat MakeFile
 
 . Verify that the following functions are passing the correct stack names.
 
-* The `delete_repositories` function is passing `-d <AMC_QUICKSTART_REPO_NAME>` (default: `ddk-amc-quickstart`).
+* The `delete_repositories` function is passing `-d <AMC_REPO_NAME>` (default: `ddk-amc-quickstart`).
 +
 * The `delete_bootstrap` function is passing `--stack-name <BOOTSTRAP_STACK_NAME>` (default: `DdkDevBootstrap`).
 
@@ -44,7 +44,7 @@ $ cat MakeFile
 $ make delete_all
 ```
 
-Some CloudWatch general log groups may remain in your account with logs specific to {partner-product-short-name} AWS Solution resources. Examples:
+Some CloudWatch general log groups may remain in your account with logs specific to {partner-product-name} solution resources. Examples:
 
 * `/aws/sagemaker/NotebookInstances`
 * `/aws-glue/jobs/error`
