@@ -1,7 +1,7 @@
 :quickstart-project-name: quickstart-amazon-marketing-cloud
 :quickstart-github-org: aws-quickstart
 :partner-product-name: Amazon Marketing Cloud Insights
-:partner-product-short-name: AMC Insights
+:partner-product-short-name: AMC Insights on AWS
 :partner-company-name: the Amazon Ad Tech Solutions team
 :doc-month: June
 :doc-year: 2022

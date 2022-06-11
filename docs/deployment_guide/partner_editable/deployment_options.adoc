@@ -1,3 +1,3 @@
-This AWS Solution provides one deployment option:
+This solution provides one deployment option:
 
-* *AWS CDK deployment*. Use the https://fwd.aws/Rp8mK?[{partner-product-name} GitHub repository^] to deploy this AWS Solution. 
+* *AWS CDK deployment*. Use the https://fwd.aws/Rp8mK?[{partner-product-name} GitHub repository^] to deploy this solution. 
