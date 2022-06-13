@@ -1,4 +1,4 @@
-This guide provides instructions for deploying the Amazon Marketing Cloud (AMC) Insights on AWS solution using AWS Cloud Development Kit (AWS CDK) and AWS DataOps Development Kit (DDK). 
+This guide provides instructions for deploying the Amazon Marketing Cloud (AMC) Insights on AWS solution using the AWS Cloud Development Kit (AWS CDK) and DataOps Development Kit (DDK). 
 
 More information: 
 
@@ -6,4 +6,4 @@ More information:
 
 * https://docs.aws.amazon.com/cdk/[AWS Cloud Development Kit (AWS CDK) Documentation^]
 
-* https://github.com/awslabs/aws-ddk/blob/main/README.md[AWS DataOps Development Kit (DDK)^]
+* https://github.com/awslabs/aws-ddk/blob/main/README.md[DataOps Development Kit (DDK)^]

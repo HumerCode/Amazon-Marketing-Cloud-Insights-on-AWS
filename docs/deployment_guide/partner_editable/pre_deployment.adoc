@@ -110,7 +110,7 @@ $ python -m venv .venv && source .venv/bin/activate
 $ pip install -r requirements.txt --no-cache-dir
 ```
 +
-The https://pypi.org/project/aws-ddk-core/[AWS DataOps Development Kit (DDK) Core^], a library of AWS CDK constructs, is installed.
+The https://pypi.org/project/aws-ddk-core/[DataOps Development Kit (DDK) Core^], a library of AWS CDK constructs, is installed.
 
 . If your AWS account hasn't been used to deploy DDK apps before, bootstrap your environment as follows, replacing the information in brackets. .
 +
