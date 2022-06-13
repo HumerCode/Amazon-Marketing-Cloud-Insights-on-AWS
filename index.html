@@ -842,8 +842,8 @@ p.footer-text a{color:#d7d8d8}
 <ul class="sectlevel2">
 <li><a href="#_confirm_your_amc_instance">Confirm your AMC instance</a></li>
 <li><a href="#_set_up_your_environment">Set up your environment</a></li>
-<li><a href="#_clone_the_quick_start_repo">Clone the Quick Start repo</a></li>
-<li><a href="#_install_and_set_up_aws_ddk">Install and set up AWS DDK</a></li>
+<li><a href="#_clone_the_repo">Clone the repo</a></li>
+<li><a href="#_install_and_set_up_the_ddk">Install and set up the DDK</a></li>
 </ul>
 </li>
 <li><a href="#_deployment_steps">Deployment steps</a></li>
@@ -875,9 +875,9 @@ p.footer-text a{color:#d7d8d8}
 </div>
 </div>
 <div class="paragraph text-center">
-<p><strong>May 2022</strong><br>
-<em>Arpan Shah, Naomi Joshi, and Chaitra Nayak, Amazon Ad Tech Solutions</em><br>
-<em>Ramesh Jetty, Brian Maguire, and Igor Londero Gentil, AWS Geo Solutions Architecture | Bret Pontillo, Noah Paige, and Anmol Gandhi, AWS Professional Services | Alex Burkleaux, AWS Media &amp; Entertainment Solutions Architecture | Eric Beard, AWS Partner Core | Chip Reno, AWS Advertising &amp; Marketing Solutions</em><br>
+<p><strong>June 2022</strong><br>
+<em>Arpan Shah, Ronak Parikh, and Chaitra Nayak, Amazon Ad Tech Solutions</em><br>
+<em>Ramesh Jetty, Brian Maguire, and Gerry Louw, AWS Solutions Architecture | Bret Pontillo, Noah Paige, Naomi Joshi and Anmol Gandhi, AWS Professional Services | Eric Beard, AWS Partner Core | Chip Reno and Clark Fredricksen, AWS Advertising &amp; Marketing Industry</em><br>
 <em>Troy Ameigh, AWS Integration &amp; Automation</em><br></p>
 </div>
 <div class="admonitionblock tip text-left">
@@ -901,7 +901,7 @@ Refer to the <a href="https://github.com/aws-quickstart/quickstart-amazon-market
 <h2 id="_overview">Overview</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>This guide provides instructions for deploying the Amazon Marketing Cloud (AMC) Insights Quick Start on AWS using AWS Cloud Development Kit (AWS CDK) and AWS DataOps Development Kit (AWS DDK).</p>
+<p>This guide provides instructions for deploying the Amazon Marketing Cloud (AMC) Insights on AWS solution using the AWS Cloud Development Kit (AWS CDK) and DataOps Development Kit (DDK).</p>
 </div>
 <div class="paragraph">
 <p>More information:</p>
@@ -909,16 +909,13 @@ Refer to the <a href="https://github.com/aws-quickstart/quickstart-amazon-market
 <div class="ulist">
 <ul>
 <li>
-<p>For details on AMC, refer to <a href="https://advertising.amazon.com/solutions/products/amazon-marketing-cloud" target="_blank" rel="noopener">What is Amazon Marketing Cloud</a>.</p>
+<p><a href="https://advertising.amazon.com/solutions/products/amazon-marketing-cloud" target="_blank" rel="noopener">What is Amazon Marketing Cloud</a></p>
 </li>
 <li>
-<p>For details on AWS CDK, refer to <a href="https://aws.amazon.com/cdk/" target="_blank" rel="noopener">AWS Cloud Development Kit</a>, <a href="https://docs.aws.amazon.com/cdk/v2/guide/work-with.html" target="_blank" rel="noopener">Working with the AWS CDK</a>, and <a href="https://docs.aws.amazon.com/cdk/index.html">AWS Cloud Development Kit (CDK) Documentation</a>.</p>
+<p><a href="https://docs.aws.amazon.com/cdk/" target="_blank" rel="noopener">AWS Cloud Development Kit (AWS CDK) Documentation</a></p>
 </li>
 <li>
-<p>For details on AWS DDK, refer to <a href="https://github.com/awslabs/aws-ddk/blob/main/README.md" target="_blank" rel="noopener">AWS DataOps Development Kit (DDK)</a> and <a href="https://pypi.org/project/aws-ddk-core/" target="_blank" rel="noopener">AWS DataOps Development Kit (DDK) Core</a>.</p>
-</li>
-<li>
-<p>If you are unfamiliar with AWS Quick Starts, refer to the <a href="https://fwd.aws/rA69w?" target="_blank" rel="noopener">AWS Quick Start General Information Guide</a>.</p>
+<p><a href="https://github.com/awslabs/aws-ddk/blob/main/README.md" target="_blank" rel="noopener">DataOps Development Kit (DDK)</a></p>
 </li>
 </ul>
 </div>
@@ -928,7 +925,7 @@ Refer to the <a href="https://github.com/aws-quickstart/quickstart-amazon-market
 <h2 id="_costs_and_licenses">Costs and licenses</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>No licenses are required to deploy this Quick Start. There is no cost to use this Quick Start, but you will be billed for any AWS services or resources that this Quick Start deploys. For more information, refer to the <a href="https://fwd.aws/rA69w?" target="_blank" rel="noopener">AWS Quick Start General Information Guide</a>.</p>
+<p>No licenses are required to deploy this solution. There is no cost to use this solution, but you will be billed for any AWS services or resources that this solution deploys.</p>
 </div>
 </div>
 </div>
@@ -936,21 +933,21 @@ Refer to the <a href="https://github.com/aws-quickstart/quickstart-amazon-market
 <h2 id="_architecture">Architecture</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Deploying this Quick Start with default parameters builds the following AMC Insights serverless environment in the AWS Cloud.</p>
+<p>Deploying this solution with default parameters builds the following environment in the AWS Cloud.</p>
 </div>
 <div id="architecture1" class="imageblock">
 <div class="content">
 <img src="docs/deployment_guide/images/AMC-architecture-diagram.png" alt="Architecture">
 </div>
-<div class="title">Figure 1. Quick Start architecture for AMC Insights on AWS</div>
+<div class="title">Figure 1. Architecture for AMC Insights on AWS</div>
 </div>
 <div class="paragraph">
-<p>As shown in <a href="#architecture1">Figure 1</a>, the Quick Start sets up the following:</p>
+<p>As shown in <a href="#architecture1">Figure 1</a>, this solution sets up the following:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>Three Amazon Simple Storage Service (Amazon S3) buckets to store aggregate AMC data, prestage data, and poststage data.</p>
+<p>Three Amazon Simple Storage Service (Amazon S3) buckets to store AMC query results, prestage data, and poststage data.</p>
 </li>
 <li>
 <p>AWS Step Functions for loading and orchestrating data.</p>
@@ -971,7 +968,7 @@ Refer to the <a href="https://github.com/aws-quickstart/quickstart-amazon-market
 <p>(Optional) Amazon QuickSight for business-intelligence analytics, interactive dashboards, and visualizations that business stakeholders can use.</p>
 </li>
 <li>
-<p>Amazon SageMaker with sample Jupyter notebooks that analysts can use to provision tenants and manage workflows.</p>
+<p>(Optional) Amazon SageMaker with sample Jupyter notebooks that analysts can use to provision tenants and manage workflows.</p>
 </li>
 </ul>
 </div>
@@ -1059,7 +1056,7 @@ $ git config --global user.email &lt;YOU@EMAIL.COM&gt;</code></pre>
 <p>Open the AWS Cloud9 console, and create an EC2 environment in your chosen AWS Region. Choose instance type t3.small or larger, Amazon Linux 2. For details refer to <a href="https://docs.aws.amazon.com/cloud9/latest/user-guide/create-environment-main.html" target="_blank" rel="noopener">Creating an EC2 Environment</a>.</p>
 </li>
 <li>
-<p>In your integrated development environment (IDE), download the <a href="https://github.com/aws-quickstart/quickstart-amazon-marketing-cloud" target="_blank" rel="noopener">Amazon Marketing Cloud Insights Quick Start repository</a>, upload it to your AWS Cloud9 instance, and unzip it.</p>
+<p>In your integrated development environment (IDE), download the <a href="https://fwd.aws/Rp8mK?" target="_blank" rel="noopener">Amazon Marketing Cloud Insights repository</a>, upload it to your AWS Cloud9 instance, and unzip it.</p>
 <div class="paragraph">
 <p>By default, Python, pip, AWS CLI, AWS CDK, and Git are installed and configured for you in your AWS Cloud9 environment.</p>
 </div>
@@ -1097,9 +1094,9 @@ $ git --version</code></pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_clone_the_quick_start_repo">Clone the Quick Start repo</h3>
+<h3 id="_clone_the_repo">Clone the repo</h3>
 <div class="paragraph">
-<p>Clone the <a href="https://github.com/aws-quickstart/quickstart-amazon-marketing-cloud" target="_blank" rel="noopener">AMC Insights Quick Start repository</a> as follows, replacing the information in brackets.</p>
+<p>Clone the <a href="https://fwd.aws/Rp8mK?" target="_blank" rel="noopener">Amazon Marketing Cloud Insights repository</a> as follows, replacing the information in brackets.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1110,11 +1107,11 @@ $ rm -rf .git</code></pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_install_and_set_up_aws_ddk">Install and set up AWS DDK</h3>
+<h3 id="_install_and_set_up_the_ddk">Install and set up the DDK</h3>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p>Install AWS DDK.</p>
+<p>Install the DataOps Development Kit.</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code>$ pip install aws-ddk</code></pre>
@@ -1145,11 +1142,11 @@ $ rm -rf .git</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>The <a href="https://pypi.org/project/aws-ddk-core/" target="_blank" rel="noopener">AWS DDK Core</a>, a library of AWS CDK constructs, is installed.</p>
+<p>The <a href="https://pypi.org/project/aws-ddk-core/" target="_blank" rel="noopener">DataOps Development Kit (DDK) Core</a>, a library of AWS CDK constructs, is installed.</p>
 </div>
 </li>
 <li>
-<p>If your AWS account hasn&#8217;t been used to deploy AWS DDK apps before, bootstrap your environment as follows, replacing the information in brackets. .</p>
+<p>If your AWS account hasn&#8217;t been used to deploy DDK apps before, bootstrap your environment as follows, replacing the information in brackets. .</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code>$ ddk bootstrap --help
@@ -1157,7 +1154,7 @@ $ ddk bootstrap --profile &lt;AWS_PROFILE&gt; --trusted-accounts &lt;AWS_ACCOUNT
 </div>
 </div>
 <div class="paragraph">
-<p>You might recognize a number of files typically found in an AWS CDK Python application, such as <code>app.py</code> and <code>cdk.json</code>. In addition, <code>ddk.json</code> holds configuration information about AWS DDK constructs.</p>
+<p>You might recognize a number of files typically found in an AWS CDK Python application, such as <code>app.py</code> and <code>cdk.json</code>. In addition, <code>ddk.json</code> holds configuration information about DDK constructs.</p>
 </div>
 </li>
 <li>
@@ -1180,7 +1177,7 @@ $ ddk bootstrap --profile &lt;AWS_PROFILE&gt; --trusted-accounts &lt;AWS_ACCOUNT
 <p>Create a new CodeCommit repository as follows. Replace the information in brackets, using the repository name value from the <code>ddk.json</code> configuration file. The template is launched in the us-east-1 Region by default; change this Region if necessary in the following command.</p>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>$ ddk create-repository &lt;AMC_QUICKSTART_REPO_NAME&gt; --profile &lt;AWS_PROFILE&gt; --region &lt;AWS_REGION&gt;</code></pre>
+<pre class="highlight"><code>$ ddk create-repository &lt;AMC_REPO_NAME&gt; --profile &lt;AWS_PROFILE&gt; --region &lt;AWS_REGION&gt;</code></pre>
 </div>
 </div>
 </li>
@@ -1191,7 +1188,7 @@ $ ddk bootstrap --profile &lt;AWS_PROFILE&gt; --trusted-accounts &lt;AWS_ACCOUNT
 <pre class="highlight"><code>$ git config --global credential.helper "!aws codecommit --profile &lt;my-profile&gt; credential-helper $@"
 $ git config --global credential.UseHttpPath true
 $ git add .
-$ git commit -m "Configure AMC QUICKSTART"
+$ git commit -m "Configure AMC Insights on AWS"
 $ git push --set-upstream origin main</code></pre>
 </div>
 </div>
@@ -1205,7 +1202,7 @@ $ git push --set-upstream origin main</code></pre>
 <h2 id="_deployment_steps">Deployment steps</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Deploying this Quick Start takes about 1.5 hours to complete.</p>
+<p>Deploying this solution takes about 1.5 hours to complete.</p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
@@ -1294,7 +1291,7 @@ $ git push --set-upstream origin main</code></pre>
 <div class="sect2">
 <h3 id="_delete_deployed_resources_when_finished">Delete deployed resources when finished</h3>
 <div class="paragraph">
-<p>When you&#8217;re finished with the architecture deployed by this Quick Start, delete the resources from your AWS account so that you&#8217;re no longer charged for them. These resources include S3 buckets, AWS CloudFormation stacks, AWS DDK bootstrap, CodeCommit repos, AWS Key Management Service (AWS KMS) keys, Lambda layers, and Amazon Simple Queue Service (Amazon SQS) queues and rules. To delete all these resources, follow these steps.</p>
+<p>When you&#8217;re finished with the architecture deployed by this solution, delete the resources from your AWS account so that you&#8217;re no longer charged for them. These resources include S3 buckets, AWS CloudFormation stacks, DDK bootstrap, CodeCommit repos, AWS Key Management Service (AWS KMS) keys, Lambda layers, and Amazon Simple Queue Service (Amazon SQS) queues and rules. To delete all these resources, follow these steps.</p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
@@ -1312,7 +1309,7 @@ $ cat MakeFile</code></pre>
 <div class="ulist">
 <ul>
 <li>
-<p>The <code>delete_repositories</code> function is passing <code>-d &lt;AMC_QUICKSTART_REPO_NAME&gt;</code> (default: <code>ddk-amc-quickstart</code>).</p>
+<p>The <code>delete_repositories</code> function is passing <code>-d &lt;AMC_REPO_NAME&gt;</code> (default: <code>ddk-amc-quickstart</code>).</p>
 </li>
 <li>
 <p>The <code>delete_bootstrap</code> function is passing <code>--stack-name &lt;BOOTSTRAP_STACK_NAME&gt;</code> (default: <code>DdkDevBootstrap</code>).</p>
@@ -1331,7 +1328,7 @@ $ cat MakeFile</code></pre>
 </ol>
 </div>
 <div class="paragraph">
-<p>Some CloudWatch general log groups may remain in your account with logs specific to AMC Quick Start resources. Examples:</p>
+<p>Some CloudWatch general log groups may remain in your account with logs specific to Amazon Marketing Cloud Insights solution resources. Examples:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -1353,11 +1350,11 @@ $ cat MakeFile</code></pre>
 <h2 id="_troubleshooting">Troubleshooting</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>For troubleshooting common Quick Start issues, refer to the <a href="https://fwd.aws/rA69w?" target="_blank" rel="noopener">AWS Quick Start General Information Guide</a> and <a href="https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/troubleshooting.html" target="_blank" rel="noopener">Troubleshooting CloudFormation</a>.</p>
+<p>For troubleshooting common issues, refer to <a href="https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/troubleshooting.html" target="_blank" rel="noopener">Troubleshooting CloudFormation</a>.</p>
 </div>
 <hr>
 <div class="paragraph">
-<p><strong>Q:</strong> I encountered a <strong>CREATE_FAILED</strong> error in CloudFormation when I deployed the Quick Start.</p>
+<p><strong>Q:</strong> I encountered a <strong>CREATE_FAILED</strong> error in CloudFormation when I deployed this solution.</p>
 </div>
 <div class="paragraph">
 <p><strong>A:</strong> Ensure that you have bootstrapped the AWS accounts in use by running the following command, replacing the information in brackets.</p>
@@ -1425,7 +1422,7 @@ $ cat MakeFile</code></pre>
 </html>
 <!--
 repo commit:
-85037cd4270f867f37ba8aa06cc586d5535813bc
+170282e437b5d2ee358675c0e9ca7ed6fe77c2b5
 
 submodule config:
  4ef16b77d6020a462feba269030c80f9088e6d1b docs/boilerplate (heads/main)

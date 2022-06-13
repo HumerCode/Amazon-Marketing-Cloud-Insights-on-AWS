@@ -5,9 +5,9 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 2.0.17">
-<meta name="description" content="AMC Analytics Operational Guide on AWS">
-<meta name="keywords" content="Quick Start, AWS, AMC Analytics">
-<title>AMC Analytics on the AWS Cloud—Operational Guide</title>
+<meta name="description" content="{partner-product-name} Operational Guide on AWS">
+<meta name="keywords" content="Quick Start, AWS, {partner-product-name}">
+<title>{partner-product-name} on the AWS Cloud—Operational Guide</title>
 <style>
 /* Asciidoctor default stylesheet | MIT License | https://asciidoctor.org */
 /* Uncomment @import statement to use as custom stylesheet */
@@ -852,7 +852,7 @@ p.footer-text a{color:#d7d8d8}
 <div id="content">
 <div id="preamble">
 <div class="sectionbody">
-<h2 id="_amc_analytics_on_the_aws_cloud" class="discrete text-center">AMC Analytics on the AWS Cloud</h2>
+<h2 id="_partner_product_name_on_the_aws_cloud" class="discrete text-center">{partner-product-name} on the AWS Cloud</h2>
 <h2 id="_quick_start_operational_guide" class="discrete text-left text-center">Quick Start Operational Guide</h2>
 <div class="imageblock text-center">
 <div class="content">
@@ -861,15 +861,11 @@ p.footer-text a{color:#d7d8d8}
 </div>
 <div class="imageblock image-container">
 <div class="content">
-<img src="https://aws-quickstart.s3.amazonaws.com/quickstart-amazon-marketing-cloud/docs/boilerplate/.images/aws-quickstart-operational-graphic.png" alt="">
+<img src="https://aws-quickstart.s3.amazonaws.com/{quickstart-project-name}/docs/boilerplate/.images/aws-quickstart-operational-graphic.png" alt="">
 </div>
 </div>
 <div class="paragraph text-center">
-<p><strong>May 2022</strong><br>
-<em>Arpan Shah, Naomi Joshi, and Chaitra Nayak, Ad Tech Solutions</em><br>
-<em>Ramesh Jetty, Brian Maguire,Igor Londero Gentil - AWS Geo Solutions Architecture, Bret Pontillo, Noah Paige, Anmol Gandhi - AWS ProServe, Alex Burkleaux AWS M&amp;E Solutions Architecture, Eric Beard - AWS Partner Core</em><br>
-<em>Chip Reno, AWS WW AD &amp; Mktg Sols GTMS</em><br>
-<em>Troy Ameigh, AWS Integration &amp; Automation team</em><br></p>
+<p><strong>{doc-month} {doc-year}</strong><br></p>
 </div>
 <div class="admonitionblock tip text-left">
 <table>
@@ -878,13 +874,13 @@ p.footer-text a{color:#d7d8d8}
 <i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
-Visit our <a href="https://github.com/{quickstart-github-org}/quickstart-amazon-marketing-cloud" target="_blank" rel="noopener">GitHub repository</a> to view source files, report bugs, submit feature ideas, and post feedback about this Quick Start. To comment on the documentation, refer to <a href="#_feedback">Feedback</a>.
+Visit our <a href="https://github.com/{quickstart-github-org}/{quickstart-project-name}" target="_blank" rel="noopener">GitHub repository</a> to view source files, report bugs, submit feature ideas, and post feedback about this Quick Start. To comment on the documentation, refer to <a href="#_feedback">Feedback</a>.
 </td>
 </tr>
 </table>
 </div>
 <div class="paragraph text-left">
-<p>This Quick Start was created by Ad Tech Solutions in collaboration with Amazon Web Services (AWS). <a href="http://aws.amazon.com/quickstart/" target="_blank" rel="noopener">Quick Starts</a> are automated reference deployments that help people deploy popular technologies on AWS according to AWS best practices.</p>
+<p>This Quick Start was created by Amazon Web Services (AWS). <a href="http://aws.amazon.com/quickstart/" target="_blank" rel="noopener">Quick Starts</a> are automated reference deployments that help people deploy popular technologies on AWS according to AWS best practices.</p>
 </div>
 </div>
 </div>
@@ -892,10 +888,10 @@ Visit our <a href="https://github.com/{quickstart-github-org}/quickstart-amazon-
 <h2 id="_overview">Overview</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>This guide provides instructions for using the architecture deployed by theAMC Analytics Quick Start. It&#8217;s for Amazon Marketing Cloud (AMC) users who want to build custom analytics using the data lake, multi-tenant, and workflow-management features.</p>
+<p>This guide provides instructions for using the architecture deployed by the{partner-product-name} Quick Start. It&#8217;s for Amazon Marketing Cloud (AMC) users who want to build custom analytics using the data lake, multi-tenant, and workflow-management features.</p>
 </div>
 <div class="paragraph">
-<p>For information on deploying this Quick Start, refer to the <a href="https://fwd.aws/&lt;permalink&gt;?" target="_blank" rel="noopener">AMC Analytics Quick Start Deployment Guide</a>.</p>
+<p>For information on deploying this Quick Start, refer to the <a href="https://fwd.aws/&lt;permalink&gt;?" target="_blank" rel="noopener">{partner-product-name} Quick Start Deployment Guide</a>.</p>
 </div>
 <div class="sect3">
 <h4 id="_codepipeline_steps">CodePipeline steps</h4>
@@ -937,13 +933,13 @@ Visit our <a href="https://github.com/{quickstart-github-org}/quickstart-amazon-
 </ul>
 </div>
 <div class="paragraph">
-<p>As shown in <a href="#DeploymentSteps1">CI/CD pipeline and CloudFormation stacks deployed with the AMC Analytics Quick Start</a>, the architecture that you deploy with this Quick Start includes a CI/CD pipeline along with AWS CloudFormation stacks. The last stage of each pipeline delivers the AMC Analytics infrastructure in the child (default development) environment through CloudFormation.</p>
+<p>As shown in <a href="#DeploymentSteps1">CI/CD pipeline and CloudFormation stacks deployed with the {partner-product-short-name} Quick Start</a>, the architecture that you deploy with this Quick Start includes a CI/CD pipeline along with AWS CloudFormation stacks. The last stage of each pipeline delivers the {partner-product-short-name} infrastructure in the child (default development) environment through CloudFormation.</p>
 </div>
 <div id="DeploymentSteps1" class="imageblock">
 <div class="content">
 <img src="docs/deployment_guide/images/AMC-QuickStart-Deploy.png" alt="CFN stacks">
 </div>
-<div class="title">Figure 2. CI/CD pipeline and CloudFormation stacks deployed with the AMC Analytics Quick Start</div>
+<div class="title">Figure 2. CI/CD pipeline and CloudFormation stacks deployed with the {partner-product-short-name} Quick Start</div>
 </div>
 <div class="paragraph">
 <p>In addition to the foundational stack, these are the main stacks, or modules, that this Quick Start deploys:</p>
@@ -1530,21 +1526,21 @@ Visit our <a href="https://github.com/{quickstart-github-org}/quickstart-amazon-
 <h2 id="_feedback">Feedback</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>To submit feature ideas and report bugs, use the <strong>Issues</strong> section of the <a href="https://github.com/{quickstart-github-org}/quickstart-amazon-marketing-cloud" target="_blank" rel="noopener">GitHub repository</a> for this Quick Start. To submit code, refer to the <a href="https://fwd.aws/NwqYA?" target="_blank" rel="noopener">Quick Start Contributor&#8217;s Guide</a>. To submit feedback on this deployment guide, use the following GitHub links:</p>
+<p>To submit feature ideas and report bugs, use the <strong>Issues</strong> section of the <a href="https://github.com/{quickstart-github-org}/{quickstart-project-name}" target="_blank" rel="noopener">GitHub repository</a> for this Quick Start. To submit code, refer to the <a href="https://fwd.aws/NwqYA?" target="_blank" rel="noopener">Quick Start Contributor&#8217;s Guide</a>. To submit feedback on this deployment guide, use the following GitHub links:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p><a href="https://github.com/{quickstart-github-org}/quickstart-amazon-marketing-cloud/issues/new?labels=documentation,grammar+or+spelling&amp;title=Deployment+guide+feedback&amp;body=Section+heading:%0ADocumentation+issue+description:%0A" target="_blank" rel="noopener">Grammar or spelling</a></p>
+<p><a href="https://github.com/{quickstart-github-org}/{quickstart-project-name}/issues/new?labels=documentation,grammar+or+spelling&amp;title=Deployment+guide+feedback&amp;body=Section+heading:%0ADocumentation+issue+description:%0A" target="_blank" rel="noopener">Grammar or spelling</a></p>
 </li>
 <li>
-<p><a href="https://github.com/{quickstart-github-org}/quickstart-amazon-marketing-cloud/issues/new?labels=documentation,broken+link&amp;title=Deployment+guide+feedback&amp;body=Section+heading:%0ADocumentation+issue+description:%0A" target="_blank" rel="noopener">Broken link</a></p>
+<p><a href="https://github.com/{quickstart-github-org}/{quickstart-project-name}/issues/new?labels=documentation,broken+link&amp;title=Deployment+guide+feedback&amp;body=Section+heading:%0ADocumentation+issue+description:%0A" target="_blank" rel="noopener">Broken link</a></p>
 </li>
 <li>
-<p><a href="https://github.com/{quickstart-github-org}/quickstart-amazon-marketing-cloud/issues/new?labels=documentation,inaccurate+content&amp;title=Deployment+guide+feedback&amp;body=Section+heading:%0ADocumentation+issue+description:%0A" target="_blank" rel="noopener">Inaccurate content</a></p>
+<p><a href="https://github.com/{quickstart-github-org}/{quickstart-project-name}/issues/new?labels=documentation,inaccurate+content&amp;title=Deployment+guide+feedback&amp;body=Section+heading:%0ADocumentation+issue+description:%0A" target="_blank" rel="noopener">Inaccurate content</a></p>
 </li>
 <li>
-<p><a href="https://github.com/{quickstart-github-org}/quickstart-amazon-marketing-cloud/issues/new?labels=documentation,display+and+design&amp;title=Deployment+guide+feedback&amp;body=Section+heading:%0ADocumentation+issue+description:%0A" target="_blank" rel="noopener">Display or design</a></p>
+<p><a href="https://github.com/{quickstart-github-org}/{quickstart-project-name}/issues/new?labels=documentation,display+and+design&amp;title=Deployment+guide+feedback&amp;body=Section+heading:%0ADocumentation+issue+description:%0A" target="_blank" rel="noopener">Display or design</a></p>
 </li>
 </ul>
 </div>
@@ -1567,7 +1563,7 @@ Visit our <a href="https://github.com/{quickstart-github-org}/quickstart-amazon-
         <!-- We can use document attributes: -->
         <!-- Generated with Asciidoctor v2.0.17. -->
         <a href="https://aws.amazon.com/privacy/">Privacy</a> | <a href="https://aws.amazon.com/terms/">Site terms</a> |
-        &copy; 2022, Amazon Web Services, Inc. or its affiliates and Ad Tech Solutions. All rights reserved.
+        &copy; 2022, Amazon Web Services, Inc. or its affiliates. All rights reserved.
     </p>
 </footer>
 </body>

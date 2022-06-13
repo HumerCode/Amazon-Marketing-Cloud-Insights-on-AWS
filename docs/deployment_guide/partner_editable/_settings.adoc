@@ -1,13 +1,13 @@
 :quickstart-project-name: quickstart-amazon-marketing-cloud
 :quickstart-github-org: aws-quickstart
 :partner-product-name: Amazon Marketing Cloud Insights
-:partner-product-short-name: AMC Insights
+:partner-product-short-name: AMC Insights on AWS
 :partner-company-name: the Amazon Ad Tech Solutions team
-:doc-month: May
+:doc-month: June
 :doc-year: 2022
-:partner-contributors: Arpan Shah, Naomi Joshi, and Chaitra Nayak, Amazon Ad Tech Solutions
-//:other-contributors: 
-:aws-contributors: Ramesh Jetty, Brian Maguire, and Igor Londero Gentil, AWS Geo Solutions Architecture | Bret Pontillo, Noah Paige, and Anmol Gandhi, AWS Professional Services | Alex Burkleaux, AWS Media & Entertainment Solutions Architecture | Eric Beard, AWS Partner Core | Chip Reno, AWS Advertising & Marketing Solutions
+:partner-contributors: Arpan Shah, Ronak Parikh, and Chaitra Nayak, Amazon Ad Tech Solutions
+//:other-contributors:
+:aws-contributors: Ramesh Jetty, Brian Maguire, and Gerry Louw, AWS Solutions Architecture | Bret Pontillo, Noah Paige, Naomi Joshi and Anmol Gandhi, AWS Professional Services | Eric Beard, AWS Partner Core | Chip Reno and Clark Fredricksen, AWS Advertising & Marketing Industry
 :aws-ia-contributors: Troy Ameigh, AWS Integration & Automation
 :deployment_time: 1.5 hours
 :default_deployment_region: us-east-1
