@@ -1,5 +1,1 @@
-# Amazon Marketing Cloud Insights on AWS
-
-For architectural details, step-by-step instructions, and customization options, refer to the [deployment guide](https://fwd.aws/nAmW7?).
-
-To post feedback, submit feature ideas, or report bugs, use the **Issues** section of this GitHub repo. 
+![Amazon Marketing Cloud Insights on AWS](https://user-images.githubusercontent.com/46302866/180837157-694b42cd-cc0c-4f07-942d-fe13560bb182.png)
